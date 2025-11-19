@@ -1,0 +1,47 @@
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm'
+
+@Entity('venue')
+export class VenueEntity {
+  @PrimaryGeneratedColumn('increment')
+  id!: number
+
+  @Column({ length: 120 })
+  name!: string
+
+  @Column({ type: 'varchar', length: 20 })
+  sportType!: 'basketball' | 'football'
+
+  @Column({ type: 'varchar', length: 6 })
+  cityCode!: string
+
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  address?: string
+
+  @Index()
+  @Column({ type: 'double precision' })
+  lng!: number
+
+  @Index()
+  @Column({ type: 'double precision' })
+  lat!: number
+
+  // PostGIS geometry(Point, 4326)
+  @Column({
+    type: 'geometry',
+    spatialFeatureType: 'Point',
+    srid: 4326,
+    nullable: true,
+  })
+  geom?: any
+
+  @Column({ type: 'int', nullable: true })
+  priceMin?: number
+
+  @Column({ type: 'int', nullable: true })
+  priceMax?: number
+
+  @Column({ type: 'boolean', nullable: true })
+  indoor?: boolean
+}
+
+

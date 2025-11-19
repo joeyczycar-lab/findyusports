@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+Server/api/node_modules/
+Web/webapp/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cursor IDE files (should not be in repo)
+cursor/
+CursorSetup*.exe
+*.exe
+
+# Git source code (if accidentally included)
+git/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+

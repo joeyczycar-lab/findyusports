@@ -1,0 +1,5 @@
+node_modules/
+Server/api/node_modules/
+Web/webapp/node_modules/
+dist/
+.env*
