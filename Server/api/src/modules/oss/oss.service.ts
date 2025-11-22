@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common'
 import * as OSS from 'ali-oss'
 import * as crypto from 'crypto'
 
+type OSSClient = InstanceType<typeof OSS>
+
 @Injectable()
 export class OssService {
-  private client: InstanceType<typeof OSS>
+  private client: OSSClient
 
   constructor() {
     this.client = new OSS({
