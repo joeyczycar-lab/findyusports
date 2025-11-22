@@ -6,18 +6,28 @@ type OSSClient = InstanceType<typeof OSS>
 
 @Injectable()
 export class OssService {
-  private client: OSSClient
+  private client: OSSClient | null = null
 
   constructor() {
-    this.client = new OSS({
-      region: process.env.OSS_REGION || 'oss-cn-hangzhou',
-      accessKeyId: process.env.OSS_ACCESS_KEY_ID || '',
-      accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET || '',
-      bucket: process.env.OSS_BUCKET || 'venues-images',
-    })
+    const accessKeyId = process.env.OSS_ACCESS_KEY_ID
+    const accessKeySecret = process.env.OSS_ACCESS_KEY_SECRET
+    
+    // 只有在配置了 OSS 密钥时才初始化客户端
+    if (accessKeyId && accessKeySecret) {
+      this.client = new OSS({
+        region: process.env.OSS_REGION || 'oss-cn-hangzhou',
+        accessKeyId,
+        accessKeySecret,
+        bucket: process.env.OSS_BUCKET || 'venues-images',
+      })
+    }
   }
 
   async generatePresignedUrl(mime: string, ext: string) {
+    if (!this.client) {
+      throw new Error('OSS未配置，请设置 OSS_ACCESS_KEY_ID 和 OSS_ACCESS_KEY_SECRET')
+    }
+    
     const key = `venues/${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`
     const expires = 3600 // 1小时过期
     
@@ -41,6 +51,10 @@ export class OssService {
   }
 
   async deleteObject(key: string) {
+    if (!this.client) {
+      throw new Error('OSS未配置，请设置 OSS_ACCESS_KEY_ID 和 OSS_ACCESS_KEY_SECRET')
+    }
+    
     try {
       await this.client.delete(key)
       return { success: true }
