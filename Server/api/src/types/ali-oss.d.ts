@@ -20,6 +20,7 @@ declare module 'ali-oss' {
     expires?: number
     method?: string
     headers?: Record<string, string>
+    'Content-Type'?: string
   }
 
   export interface ClientConfig {
@@ -31,14 +32,17 @@ declare module 'ali-oss' {
     endpoint?: string
   }
 
-  export class Client {
-    constructor(config: ClientConfig)
+  interface ClientInstance {
     put(name: string, file: Buffer | string, options?: PutObjectOptions): Promise<PutObjectResult>
     getObjectUrl(name: string, options?: GetObjectUrlOptions): string
     delete(name: string): Promise<{ res: { status: number } }>
     signatureUrl(name: string, options?: GetObjectUrlOptions): string
   }
 
-  export default Client
-}
+  interface ClientConstructor {
+    new (config: ClientConfig): ClientInstance
+  }
 
+  const OSS: ClientConstructor
+  export = OSS
+}
