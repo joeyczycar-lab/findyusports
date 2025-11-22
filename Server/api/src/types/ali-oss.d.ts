@@ -1,12 +1,12 @@
 declare module 'ali-oss' {
-  export interface PutObjectOptions {
+  interface PutObjectOptions {
     headers?: Record<string, string>
     meta?: Record<string, string>
     mime?: string
     callback?: any
   }
 
-  export interface PutObjectResult {
+  interface PutObjectResult {
     name: string
     url: string
     res: {
@@ -16,14 +16,14 @@ declare module 'ali-oss' {
     }
   }
 
-  export interface GetObjectUrlOptions {
+  interface GetObjectUrlOptions {
     expires?: number
     method?: string
     headers?: Record<string, string>
     'Content-Type'?: string
   }
 
-  export interface ClientConfig {
+  interface ClientConfig {
     region: string
     accessKeyId: string
     accessKeySecret: string
@@ -32,17 +32,14 @@ declare module 'ali-oss' {
     endpoint?: string
   }
 
-  interface ClientInstance {
+  class Client {
+    constructor(config: ClientConfig)
     put(name: string, file: Buffer | string, options?: PutObjectOptions): Promise<PutObjectResult>
     getObjectUrl(name: string, options?: GetObjectUrlOptions): string
     delete(name: string): Promise<{ res: { status: number } }>
     signatureUrl(name: string, options?: GetObjectUrlOptions): string
   }
 
-  interface ClientConstructor {
-    new (config: ClientConfig): ClientInstance
-  }
-
-  const OSS: ClientConstructor
+  const OSS: typeof Client
   export = OSS
 }

@@ -4,7 +4,7 @@ import * as crypto from 'crypto'
 
 @Injectable()
 export class OssService {
-  private client: OSS
+  private client: InstanceType<typeof OSS>
 
   constructor() {
     this.client = new OSS({
