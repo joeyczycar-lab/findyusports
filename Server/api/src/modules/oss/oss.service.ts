@@ -34,7 +34,7 @@ export class OssService {
         publicUrl: `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
       }
     } catch (error) {
-      throw new Error(`OSS签名生成失败: ${error.message}`)
+      throw new Error(`OSS签名生成失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -43,7 +43,7 @@ export class OssService {
       await this.client.delete(key)
       return { success: true }
     } catch (error) {
-      throw new Error(`OSS删除失败: ${error.message}`)
+      throw new Error(`OSS删除失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 }

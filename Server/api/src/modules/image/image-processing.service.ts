@@ -54,7 +54,7 @@ export class ImageProcessingService {
       
       return results
     } catch (error) {
-      throw new Error(`图片处理失败: ${error.message}`)
+      throw new Error(`图片处理失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -125,7 +125,7 @@ export class ImageProcessingService {
         .toBuffer()
     } catch (error) {
       // 水印添加失败时返回原图
-      console.warn('水印添加失败:', error.message)
+      console.warn('水印添加失败:', error instanceof Error ? error.message : String(error))
       return buffer
     }
   }

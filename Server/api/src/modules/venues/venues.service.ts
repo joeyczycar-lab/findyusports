@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { QueryVenuesDto } from './dto'
+import { QueryVenuesDto, CreateReviewDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { VenueEntity } from './venue.entity'
@@ -180,7 +180,7 @@ export class VenuesService {
         info: await this.imageProcessing.getImageInfo(buffer)
       }
     } catch (error) {
-      throw new Error(`图片处理上传失败: ${error.message}`)
+      throw new Error(`图片处理上传失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
