@@ -14,7 +14,6 @@ function buildTypeOrmOptions(): DataSourceOptions {
       url: dbUrl,
       ssl,
       synchronize: false,
-      autoLoadEntities: true,
     }
   }
 
@@ -26,14 +25,16 @@ function buildTypeOrmOptions(): DataSourceOptions {
     password: process.env.DB_PASS || 'postgres',
     database: process.env.DB_NAME || 'venues',
     synchronize: false,
-    autoLoadEntities: true,
   }
 }
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory: () => buildTypeOrmOptions(),
+      useFactory: () => ({
+        ...buildTypeOrmOptions(),
+        autoLoadEntities: true,
+      }),
     }),
   ],
 })
