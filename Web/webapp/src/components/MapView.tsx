@@ -72,7 +72,7 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
   // markers render
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !window.AMap) return
+    if (!map || !(window as any).AMap) return
     // 清理旧聚合
     if (clusterRef.current) {
       clusterRef.current.setMap(null)
@@ -106,9 +106,17 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
   }, [activeId, markers])
 
   if (error) {
+    const isMissingKey = error.includes('NEXT_PUBLIC_AMAP_KEY')
     return (
-      <div className="flex items-center justify-center text-red-600 border border-border rounded-card p-4">
-        地图加载失败：{error}
+      <div className="flex flex-col items-center justify-center text-center text-red-600 border border-border rounded-card p-6">
+        <div className="font-semibold mb-2">地图加载失败</div>
+        {isMissingKey ? (
+          <div className="text-sm text-gray-600">
+            请配置高德地图 API Key（NEXT_PUBLIC_AMAP_KEY）
+          </div>
+        ) : (
+          <div className="text-sm text-gray-600">{error}</div>
+        )}
       </div>
     )
   }
