@@ -102,7 +102,8 @@ const cluster = new window.AMap.MarkerCluster(map, points, { gridSize: 60 })
     const map = mapRef.current
    // @ts-ignore - AMap is loaded dynamically
 if (!map || !window.AMap || !markers || !activeId) return
-// ...
+    const target = markers.find(m => m.id === activeId)
+    if (!target) return
 // @ts-ignore
 if (!infoRef.current) infoRef.current = new window.AMap.InfoWindow({ 
   // @ts-ignore
