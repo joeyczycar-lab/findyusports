@@ -1,13 +1,14 @@
 "use client"
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import MapView from '@/components/MapView'
 import MobileDrawer from '@/components/MobileDrawer'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
 import { useDebouncedValue } from '@/lib/hooks'
-
-export default function MapPage() {
+// 强制动态渲染，避免静态生成问题
+export const dynamic = 'force-dynamic'
+function MapPageContent() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [lastQuery, setLastQuery] = useState<any>(null)
   const [items, setItems] = useState<Array<any>>([])
@@ -256,6 +257,12 @@ export default function MapPage() {
         </div>
       </MobileDrawer>
     </main>
+  )
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="container-page py-8">加载中...</div>}>
+      <MapPageContent />
+    </Suspense>
   )
 }
 
