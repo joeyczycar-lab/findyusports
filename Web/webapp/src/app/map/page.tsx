@@ -6,9 +6,12 @@ import MobileDrawer from '@/components/MobileDrawer'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
 import { useDebouncedValue } from '@/lib/hooks'
+
 // 强制动态渲染，避免静态生成问题
 export const dynamic = 'force-dynamic'
+
 function MapPageContent() {
+  // ... 你现有的状态、useEffect、渲染逻辑都在这里 ...
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [lastQuery, setLastQuery] = useState<any>(null)
   const [items, setItems] = useState<Array<any>>([])
@@ -258,6 +261,8 @@ function MapPageContent() {
       </MobileDrawer>
     </main>
   )
+}  // 结束 MapPageContent
+
 export default function MapPage() {
   return (
     <Suspense fallback={<div className="container-page py-8">加载中...</div>}>
@@ -265,5 +270,4 @@ export default function MapPage() {
     </Suspense>
   )
 }
-
 
