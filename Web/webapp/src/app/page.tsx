@@ -1,9 +1,18 @@
 import Link from 'next/link'
-import { fetchJson } from '@/lib/api'
+import { getApiBase } from '@/lib/api'
 
 async function getFeaturedVenues() {
   try {
-    const data = await fetchJson('/venues?limit=6')
+    const base = getApiBase()
+    const url = `${base}/venues?limit=6`
+    const res = await fetch(url, { 
+      next: { revalidate: 60 }, // 重新验证时间：60秒
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+    const data = await res.json()
     return data?.items || []
   } catch (error) {
     console.error('Failed to fetch venues:', error)
