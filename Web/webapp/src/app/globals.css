@@ -6,12 +6,47 @@
   color-scheme: light;
 }
 
+* {
+  @apply antialiased;
+}
+
 body {
-  @apply text-textPrimary bg-white;
+  @apply text-textPrimary bg-white font-sans;
+  letter-spacing: -0.01em;
 }
 
 .container-page {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Nike 风格按钮 */
+.btn-primary {
+  @apply bg-black text-white px-8 py-3 text-sm font-medium uppercase tracking-wider;
+  @apply hover:bg-gray-900 transition-colors duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
+}
+
+.btn-secondary {
+  @apply bg-white text-black border-2 border-black px-8 py-3 text-sm font-medium uppercase tracking-wider;
+  @apply hover:bg-black hover:text-white transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
+}
+
+.btn-text {
+  @apply text-black text-sm font-medium uppercase tracking-wider;
+  @apply hover:underline transition-all duration-200;
+}
+
+/* Nike 风格卡片 */
+.card-nike {
+  @apply bg-white border border-border;
+  @apply hover:shadow-md transition-shadow duration-200;
+}
+
+/* Nike 风格链接 */
+.link-nike {
+  @apply text-black font-medium uppercase tracking-wider text-sm;
+  @apply hover:underline transition-all duration-200;
 }
 
 

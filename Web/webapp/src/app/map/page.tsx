@@ -140,11 +140,11 @@ function MapPageContent() {
     }, suppressMsRef.current)
   }
   return (
-    <main className="container-page py-8">
-      <h1 className="text-2xl font-semibold mb-4">地图探索</h1>
+    <main className="container-page py-12 bg-white">
+      <h1 className="text-heading font-bold mb-8 tracking-tight">地图探索</h1>
       <FiltersBar value={filters} onChange={(f)=>{ setFilters(f); if (lastQuery?.bounds) fetchVenuesByBounds(lastQuery.bounds) }} />
-      <div className="flex items-center justify-between mb-2 gap-3">
-        <div className="flex items-center gap-6 text-xs text-textMuted">
+      <div className="flex items-center justify-between mb-6 gap-3">
+        <div className="flex items-center gap-6 text-caption text-textSecondary uppercase tracking-wide">
           <div className="flex items-center gap-2">
             <span className="whitespace-nowrap">节流 {throttleMs}ms</span>
             <input
@@ -154,7 +154,7 @@ function MapPageContent() {
               step={50}
               value={throttleMs}
               onChange={(e)=>onChangeThrottle(Math.max(0, Math.min(2000, Number(e.target.value)||0)))}
-              className="w-44 accent-primary"
+              className="w-44 accent-black"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -166,32 +166,32 @@ function MapPageContent() {
               step={50}
               value={suppressMs}
               onChange={(e)=>onChangeSuppress(Math.max(0, Math.min(3000, Number(e.target.value)||0)))}
-              className="w-44 accent-brandBlue"
+              className="w-44 accent-black"
             />
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} /> 跟随滚动
+        <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
+          <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} className="accent-black" /> 跟随滚动
         </label>
       </div>
 
-      <div className="hidden lg:grid grid-cols-[360px_1fr] gap-6">
-        <div ref={desktopContainerRef} onScroll={onDesktopScroll} className="space-y-3 overflow-y-auto max-h-[560px] pr-1">
+      <div className="hidden lg:grid grid-cols-[360px_1fr] gap-8">
+        <div ref={desktopContainerRef} onScroll={onDesktopScroll} className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
           {items.map((it) => (
             <div
               key={it.id}
-              className={`border border-border rounded-card p-3 cursor-pointer ${activeId===it.id? 'ring-2 ring-brandBlue' : ''}`}
+              className={`card-nike p-4 cursor-pointer ${activeId===it.id? 'border-black border-2' : ''}`}
               onClick={() => setActiveId(it.id)}
               onMouseEnter={() => setActiveId(it.id)}
               ref={(el) => { desktopItemRefs.current[it.id] = el }}
             >
-              <a href={`/venues/${it.id}`} className="font-medium hover:underline">{it.name}</a>
-              <div className="text-sm text-textSecondary">评分 {it.rating} · {it.distanceKm}km</div>
+              <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
+              <div className="text-body-sm text-textSecondary uppercase tracking-wide">评分 {it.rating} · {it.distanceKm}km</div>
             </div>
           ))}
         </div>
         <MapView
-          className="h-[560px] w-full rounded-card border border-border"
+          className="h-[600px] w-full border border-border"
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => setActiveId(id)}
@@ -200,8 +200,8 @@ function MapPageContent() {
       </div>
 
       <div className="lg:hidden">
-        <div className="flex items-center justify-between mb-2 gap-3">
-          <div className="flex items-center gap-6 text-xs text-textMuted w-full">
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="flex items-center gap-6 text-caption text-textSecondary uppercase tracking-wide w-full">
             <div className="flex items-center gap-2 flex-1">
               <span className="whitespace-nowrap">节流 {throttleMs}ms</span>
               <input
@@ -211,7 +211,7 @@ function MapPageContent() {
                 step={50}
                 value={throttleMs}
                 onChange={(e)=>onChangeThrottle(Math.max(0, Math.min(2000, Number(e.target.value)||0)))}
-                className="w-full accent-primary"
+                className="w-full accent-black"
               />
             </div>
             <div className="flex items-center gap-2 flex-1">
@@ -223,37 +223,37 @@ function MapPageContent() {
                 step={50}
                 value={suppressMs}
                 onChange={(e)=>onChangeSuppress(Math.max(0, Math.min(3000, Number(e.target.value)||0)))}
-                className="w-full accent-brandBlue"
+                className="w-full accent-black"
               />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} /> 跟随滚动
+          <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
+            <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} className="accent-black" /> 跟随滚动
           </label>
         </div>
         <MapView
-          className="h-[70vh] w-full rounded-card border border-border"
+          className="h-[70vh] w-full border border-border"
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => { setActiveId(id); setDrawerOpen(true) }}
           onSearchHere={(payload) => { setLastQuery(payload); fetchVenuesByBounds(payload.bounds); setDrawerOpen(true); }}
         />
-        <div className="mt-3 text-xs text-textMuted">最近查询：{lastQuery ? `${lastQuery.center[0].toFixed(4)}, ${lastQuery.center[1].toFixed(4)} (z${lastQuery.zoom})` : '无'}</div>
-        <button className="mt-3 h-10 px-4 rounded-card border border-border" onClick={() => setDrawerOpen(true)}>打开列表</button>
+        <div className="mt-4 text-caption text-textSecondary uppercase tracking-wide">最近查询：{lastQuery ? `${lastQuery.center[0].toFixed(4)}, ${lastQuery.center[1].toFixed(4)} (z${lastQuery.zoom})` : '无'}</div>
+        <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)}>打开列表</button>
       </div>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <div ref={mobileContainerRef} onScroll={onMobileScroll} className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+        <div ref={mobileContainerRef} onScroll={onMobileScroll} className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
           {items.map((it) => (
             <div
               key={it.id}
-              className={`border border-border rounded-card p-3 cursor-pointer ${activeId===it.id? 'ring-2 ring-brandBlue' : ''}`}
+              className={`card-nike p-4 cursor-pointer ${activeId===it.id? 'border-black border-2' : ''}`}
               onClick={() => setActiveId(it.id)}
               onMouseEnter={() => setActiveId(it.id)}
               ref={(el) => { mobileItemRefs.current[it.id] = el }}
             >
-              <a href={`/venues/${it.id}`} className="font-medium hover:underline">{it.name}</a>
-              <div className="text-sm text-textSecondary">评分 {it.rating} · {it.distanceKm}km</div>
+              <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
+              <div className="text-body-sm text-textSecondary uppercase tracking-wide">评分 {it.rating} · {it.distanceKm}km</div>
             </div>
           ))}
         </div>

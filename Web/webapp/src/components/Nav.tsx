@@ -29,25 +29,23 @@ export default function Nav() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-divider">
-        <div className="container-page h-14 flex items-center justify-between">
-          <Link href="/" className="font-bold flex items-center space-x-2">
-            <MapPin className="h-6 w-6 text-blue-600" />
-            <span>场地分享</span>
+      <header className="sticky top-0 z-40 bg-white border-b border-border">
+        <div className="container-page h-16 flex items-center justify-between">
+          <Link href="/" className="font-bold text-xl tracking-tight flex items-center space-x-2">
+            <span className="text-black">场地发现</span>
           </Link>
           
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/map" className="text-sm hover:text-blue-600">地图</Link>
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link href="/map" className="link-nike">地图探索</Link>
             
             {authState.isAuthenticated ? (
               <UserMenu user={authState.user!} onLogout={handleLogout} />
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center space-x-1 text-sm text-gray-700 hover:text-blue-600"
+                className="link-nike"
               >
-                <LogIn size={16} />
-                <span>登录</span>
+                登录
               </button>
             )}
           </nav>
@@ -56,7 +54,7 @@ export default function Nav() {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600"
+              className="text-black"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -65,27 +63,27 @@ export default function Nav() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-divider">
-            <div className="container-page py-4 space-y-3">
+          <div className="md:hidden border-t border-border bg-white">
+            <div className="container-page py-4 space-y-4">
               <Link
                 href="/map"
-                className="block text-sm hover:text-blue-600"
+                className="block link-nike"
                 onClick={() => setIsMenuOpen(false)}
               >
-                地图
+                地图探索
               </Link>
               
               {authState.isAuthenticated ? (
-                <div className="pt-2 border-t border-divider">
-                  <div className="text-sm text-gray-600 mb-2">
-                    欢迎，{authState.user?.nickname || authState.user?.phone}
+                <div className="pt-4 border-t border-border">
+                  <div className="text-sm text-textSecondary mb-3">
+                    {authState.user?.nickname || authState.user?.phone}
                   </div>
                   <button
                     onClick={() => {
                       handleLogout()
                       setIsMenuOpen(false)
                     }}
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="link-nike"
                   >
                     退出登录
                   </button>
@@ -96,7 +94,7 @@ export default function Nav() {
                     setIsLoginModalOpen(true)
                     setIsMenuOpen(false)
                   }}
-                  className="block text-sm text-gray-700 hover:text-blue-600"
+                  className="block link-nike"
                 >
                   登录/注册
                 </button>

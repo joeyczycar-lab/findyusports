@@ -39,18 +39,48 @@ export default function FiltersBar({ value, onChange }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2 items-center mb-3">
-      <input value={city} onChange={(e)=>setCity(e.target.value)} onBlur={emit} placeholder="城市代码(如110000)" className="h-10 px-3 border border-border rounded-card" />
-      <select value={sport || 'basketball'} onChange={(e)=>{ setSport((e.target.value||undefined) as any); emit() }} className="h-10 px-2 border border-border rounded-card">
+    <div className="flex flex-wrap gap-3 items-center mb-6">
+      <input 
+        value={city} 
+        onChange={(e)=>setCity(e.target.value)} 
+        onBlur={emit} 
+        placeholder="城市代码(如110000)" 
+        className="h-12 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
+      />
+      <select 
+        value={sport || 'basketball'} 
+        onChange={(e)=>{ setSport((e.target.value||undefined) as any); emit() }} 
+        className="h-12 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black"
+      >
         <option value="basketball">篮球</option>
         <option value="football">足球</option>
       </select>
-      <input value={minPrice} onChange={(e)=>setMinPrice(e.target.value)} onBlur={emit} inputMode="numeric" placeholder="最低价" className="h-10 w-24 px-3 border border-border rounded-card" />
-      <input value={maxPrice} onChange={(e)=>setMaxPrice(e.target.value)} onBlur={emit} inputMode="numeric" placeholder="最高价" className="h-10 w-24 px-3 border border-border rounded-card" />
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={indoor} onChange={(e)=>{ setIndoor(e.target.checked); emit() }} /> 室内
+      <input 
+        value={minPrice} 
+        onChange={(e)=>setMinPrice(e.target.value)} 
+        onBlur={emit} 
+        inputMode="numeric" 
+        placeholder="最低价" 
+        className="h-12 w-28 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
+      />
+      <input 
+        value={maxPrice} 
+        onChange={(e)=>setMaxPrice(e.target.value)} 
+        onBlur={emit} 
+        inputMode="numeric" 
+        placeholder="最高价" 
+        className="h-12 w-28 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
+      />
+      <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
+        <input 
+          type="checkbox" 
+          checked={indoor} 
+          onChange={(e)=>{ setIndoor(e.target.checked); emit() }} 
+          className="accent-black"
+        /> 
+        室内
       </label>
-      <button className="h-10 px-4 rounded-card border border-border" onClick={emit}>应用</button>
+      <button className="btn-secondary h-12 px-6" onClick={emit}>应用</button>
     </div>
   )
 }
