@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import Gallery from '@/components/Gallery'
 import Reviews from '@/components/Reviews'
 import ReviewForm from '@/components/ReviewForm'
+import MapPreview from '@/components/MapPreview'
 
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
   const [detail, images, reviews] = await Promise.all([
@@ -12,8 +14,19 @@ export default async function VenueDetailPage({ params }: { params: { id: string
   const v = detail?.id ? detail : null
   // 使用带防盗链保护的URL
   const urls: string[] = images?.items?.map((x: any) => x.protectedUrl || x.url) ?? []
+  
+  // 计算平均评分
+  const avgRating = reviews?.items?.length > 0
+    ? (reviews.items.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.items.length).toFixed(1)
+    : null
+
   return (
     <main className="container-page py-8">
+      <div className="mb-4">
+        <Link href="/map" className="text-sm text-textSecondary hover:text-primary inline-flex items-center gap-1">
+          ← 返回地图
+        </Link>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
         <div>
           <div className="mb-4">
@@ -24,6 +37,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             {v ? (
               <>
                 {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {v.priceMin ? `¥${v.priceMin}` : '免费'}
+                {avgRating && <span className="ml-2">· 评分 {avgRating}⭐</span>}
               </>
             ) : '加载中…'}
           </div>
@@ -51,9 +65,26 @@ export default async function VenueDetailPage({ params }: { params: { id: string
         </div>
 
         <aside className="space-y-4">
-          <div className="h-64 rounded-card border border-border bg-gray-100 flex items-center justify-center text-textMuted">地图预览</div>
-          <a className="w-full h-11 rounded-card bg-primary text-white flex items-center justify-center" href={v ? `https://uri.amap.com/marker?position=${v.location[0]},${v.location[1]}&name=${encodeURIComponent(v.name)}` : '#'} target="_blank">导航到这里</a>
-          <button className="w-full h-11 rounded-card border border-border">收藏</button>
+          {v && (
+            <MapPreview 
+              className="h-64" 
+              position={v.location} 
+              name={v.name}
+              zoom={16}
+            />
+          )}
+          {!v && (
+            <div className="h-64 rounded-card border border-border bg-gray-100 flex items-center justify-center text-textMuted">加载中...</div>
+          )}
+          <a 
+            className="w-full h-11 rounded-card bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors" 
+            href={v ? `https://uri.amap.com/marker?position=${v.location[0]},${v.location[1]}&name=${encodeURIComponent(v.name)}` : '#'} 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            导航到这里
+          </a>
+          <button className="w-full h-11 rounded-card border border-border hover:bg-gray-50 transition-colors">收藏</button>
         </aside>
       </div>
     </main>

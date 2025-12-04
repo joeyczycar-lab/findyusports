@@ -48,17 +48,35 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {venues.length > 0 ? (
-            venues.map((venue: any) => (
-              <Link key={venue.id} href={`/venues/${venue.id}`} className="bg-white rounded-card shadow-sm overflow-hidden border border-border hover:shadow-md transition-shadow">
-                <div className="h-40 bg-gray-100" />
-                <div className="p-4">
-                  <div className="font-semibold mb-1">{venue.name}</div>
-                  <div className="text-sm text-textSecondary">
-                    评分 {venue.rating?.toFixed(1) || '暂无'} · {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+            venues.map((venue: any) => {
+              // 获取第一张图片（如果有）
+              const firstImage = venue.firstImage || null
+              return (
+                <Link key={venue.id} href={`/venues/${venue.id}`} className="bg-white rounded-card shadow-sm overflow-hidden border border-border hover:shadow-md transition-shadow">
+                  <div className="h-40 bg-gray-100 relative overflow-hidden">
+                    {firstImage ? (
+                      <img 
+                        src={firstImage} 
+                        alt={venue.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-textMuted text-sm">
+                        {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                      </div>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))
+                  <div className="p-4">
+                    <div className="font-semibold mb-1 line-clamp-1">{venue.name}</div>
+                    <div className="text-sm text-textSecondary">
+                      {venue.rating ? `⭐ ${venue.rating.toFixed(1)} · ` : ''}
+                      {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                    </div>
+                  </div>
+                </Link>
+              )
+            })
           ) : (
             <div className="col-span-full text-center text-textSecondary py-8">暂无场地数据</div>
           )}
