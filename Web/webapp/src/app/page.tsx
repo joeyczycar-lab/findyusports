@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
+import LotteryAd from '@/components/LotteryAd'
 
 async function getFeaturedVenues() {
   try {
@@ -60,42 +61,57 @@ export default async function HomePage() {
           <h2 className="text-heading font-bold tracking-tight">精选场地</h2>
           <Link href="/map" className="link-nike">查看全部 →</Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {venues.length > 0 ? (
-            venues.map((venue: any) => {
-              // 获取第一张图片（如果有）
-              const firstImage = venue.firstImage || null
-              return (
-                <Link key={venue.id} href={`/venues/${venue.id}`} className="card-nike group">
-                  <div className="h-64 bg-gray-100 relative overflow-hidden">
-                    {firstImage ? (
-                      <img 
-                        src={firstImage} 
-                        alt={venue.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
-                        {venue.sportType === 'basketball' ? '🏀' : '⚽'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
-                    <div className="text-body-sm text-textSecondary uppercase tracking-wide">
-                      {venue.rating ? `${venue.rating.toFixed(1)} · ` : ''}
-                      {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+          {/* 场地列表 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {venues.length > 0 ? (
+              venues.map((venue: any) => {
+                // 获取第一张图片（如果有）
+                const firstImage = venue.firstImage || null
+                return (
+                  <Link key={venue.id} href={`/venues/${venue.id}`} className="card-nike group">
+                    <div className="h-64 bg-gray-100 relative overflow-hidden">
+                      {firstImage ? (
+                        <img 
+                          src={firstImage} 
+                          alt={venue.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
+                          {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </Link>
-              )
-            })
-          ) : (
-            <div className="col-span-full text-center text-textSecondary py-16 text-body">
-              暂无场地数据
+                    <div className="p-6">
+                      <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
+                      <div className="text-body-sm text-textSecondary uppercase tracking-wide">
+                        {venue.rating ? `${venue.rating.toFixed(1)} · ` : ''}
+                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })
+            ) : (
+              <div className="col-span-full text-center text-textSecondary py-16 text-body">
+                暂无场地数据
+              </div>
+            )}
+          </div>
+          
+          {/* 广告区域 - 桌面端显示 */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24">
+              <LotteryAd />
             </div>
-          )}
+          </aside>
+        </div>
+        
+        {/* 广告区域 - 移动端显示 */}
+        <div className="lg:hidden mt-8">
+          <LotteryAd />
         </div>
       </section>
     </main>
