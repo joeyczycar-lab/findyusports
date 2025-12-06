@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
+import { getApiBase } from '@/lib/api'
+import { setAuthState } from '@/lib/auth'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -26,8 +28,9 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     setError('')
 
     try {
+      const apiBase = getApiBase() || process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
       const endpoint = isLogin ? '/auth/login' : '/auth/register'
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${apiBase}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -36,14 +39,19 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || '操作失败')
+        throw new Error(data.message || data.error?.message || '操作失败')
+      }
+
+      // 保存认证信息到 localStorage
+      if (data.user && data.token) {
+        setAuthState(data.user, data.token)
       }
 
       onSuccess(data.user, data.token)
       onClose()
       setFormData({ phone: '', password: '', nickname: '' })
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message || '网络错误，请检查后端服务是否正常运行')
     } finally {
       setLoading(false)
     }
