@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { VenuesService } from './venues.service'
-import { QueryVenuesDto, CreateReviewDto } from './dto'
+import { QueryVenuesDto, CreateReviewDto, CreateVenueDto } from './dto'
 import { JwtAuthGuard } from '../auth/auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { Public } from '../auth/public.decorator'
@@ -15,6 +15,12 @@ export class VenuesController {
   @Get()
   async list(@Query() query: QueryVenuesDto) {
     return this.venuesService.search(query)
+  }
+
+  @Public()
+  @Post()
+  async create(@Body() dto: CreateVenueDto) {
+    return this.venuesService.createVenue(dto)
   }
 
   @Public()

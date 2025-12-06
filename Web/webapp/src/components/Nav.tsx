@@ -37,6 +37,7 @@ export default function Nav() {
           
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/map" className="link-nike">地图探索</Link>
+            <Link href="/admin/add-venue" className="link-nike">添加场地</Link>
             
             {authState.isAuthenticated ? (
               <UserMenu user={authState.user!} onLogout={handleLogout} />
@@ -71,6 +72,13 @@ export default function Nav() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 地图探索
+              </Link>
+              <Link
+                href="/admin/add-venue"
+                className="block link-nike"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                添加场地
               </Link>
               
               {authState.isAuthenticated ? (
