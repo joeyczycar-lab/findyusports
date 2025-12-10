@@ -19,21 +19,7 @@ export default function Nav() {
     // 检查认证状态（只在客户端执行）
     if (typeof window !== 'undefined') {
       const state = getAuthState()
-      // 只设置一次，避免反复更新
       setAuthState(state)
-      
-      // 监听localStorage变化，同步更新状态
-      const handleStorageChange = (e: StorageEvent) => {
-        if (e.key === 'auth_token' || e.key === 'auth_user') {
-          const newState = getAuthState()
-          setAuthState(newState)
-        }
-      }
-      window.addEventListener('storage', handleStorageChange)
-      
-      return () => {
-        window.removeEventListener('storage', handleStorageChange)
-      }
       
       // 强制确保导航栏和按钮可见，移除重复的导航栏
       const ensureVisible = () => {
