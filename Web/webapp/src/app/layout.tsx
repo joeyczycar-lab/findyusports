@@ -1,5 +1,6 @@
 import './globals.css'
 import { ReactNode } from 'react'
+import Link from 'next/link'
 import Nav from '@/components/Nav'
 
 export const metadata = {
@@ -55,7 +56,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     if (!header) {
                       header = document.createElement('header');
                       header.id = 'main-nav-header';
-                      header.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:0 1rem;height:100%;"><a href="/" style="font-weight:bold;font-size:20px;color:#000000;text-decoration:none;">场地发现</a><div style="display:flex;align-items:center;gap:1rem;"><a href="/admin/add-venue" style="background-color:#000000;color:#ffffff;padding:8px 16px;text-decoration:none;font-weight:bold;border-radius:2px;display:inline-flex;align-items:center;">➕ 添加场地</a><a href="/map" style="color:#000000;text-decoration:none;font-weight:500;text-transform:uppercase;font-size:14px;letter-spacing:0.05em;">地图探索</a></div></div>';
+                      // 使用普通链接，避免Next.js路由问题
+                      header.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:0 1rem;height:100%;"><a href="/" style="font-weight:bold;font-size:20px;color:#000000;text-decoration:none;">场地发现</a><div style="display:flex;align-items:center;gap:1rem;"><a href="/admin/add-venue" onclick="event.preventDefault();window.location.href=\'/admin/add-venue\'" style="background-color:#000000;color:#ffffff;padding:8px 16px;text-decoration:none;font-weight:bold;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;">➕ 添加场地</a><a href="/map" onclick="event.preventDefault();window.location.href=\'/map\'" style="color:#000000;text-decoration:none;font-weight:500;text-transform:uppercase;font-size:14px;letter-spacing:0.05em;cursor:pointer;">地图探索</a></div></div>';
                       document.body.insertBefore(header, document.body.firstChild);
                     }
                     return header;
@@ -164,10 +166,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', height: '100%' }}>
-            <a href="/" style={{ fontWeight: 'bold', fontSize: '20px', color: '#000000', textDecoration: 'none' }}>场地发现</a>
+            <Link href="/" style={{ fontWeight: 'bold', fontSize: '20px', color: '#000000', textDecoration: 'none' }}>场地发现</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <a href="/admin/add-venue" style={{ backgroundColor: '#000000', color: '#ffffff', padding: '8px 16px', textDecoration: 'none', fontWeight: 'bold', borderRadius: '2px', display: 'inline-flex', alignItems: 'center' }}>➕ 添加场地</a>
-              <a href="/map" style={{ color: '#000000', textDecoration: 'none', fontWeight: 500, textTransform: 'uppercase', fontSize: '14px', letterSpacing: '0.05em' }}>地图探索</a>
+              <Link href="/admin/add-venue" style={{ backgroundColor: '#000000', color: '#ffffff', padding: '8px 16px', textDecoration: 'none', fontWeight: 'bold', borderRadius: '2px', display: 'inline-flex', alignItems: 'center' }}>➕ 添加场地</Link>
+              <Link href="/map" style={{ color: '#000000', textDecoration: 'none', fontWeight: 500, textTransform: 'uppercase', fontSize: '14px', letterSpacing: '0.05em' }}>地图探索</Link>
             </div>
           </div>
         </header>
