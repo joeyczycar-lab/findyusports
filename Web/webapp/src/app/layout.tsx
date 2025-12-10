@@ -124,9 +124,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body style={{ margin: 0, padding: 0, paddingTop: 0 }}>
-        {/* 后备导航栏 - 确保即使Nav组件未加载也能显示 */}
-        <noscript>
-          <header id="main-nav-header" style={{
+        {/* 静态导航栏 - 确保始终显示 */}
+        <header 
+          id="main-nav-header"
+          dangerouslySetInnerHTML={{
+            __html: `
+              <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 1rem; height: 100%;">
+                <a href="/" style="font-weight: bold; font-size: 20px; color: #000000; text-decoration: none;">场地发现</a>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                  <a href="/admin/add-venue" style="background-color: #000000; color: #ffffff; padding: 8px 16px; text-decoration: none; font-weight: bold; border-radius: 2px; display: inline-flex; align-items: center;">➕ 添加场地</a>
+                  <a href="/map" style="color: #000000; text-decoration: none; font-weight: 500; text-transform: uppercase; font-size: 14px; letter-spacing: 0.05em;">地图探索</a>
+                </div>
+              </div>
+            `
+          }}
+          style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -138,21 +150,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             backgroundColor: '#ffffff',
             borderBottom: '2px solid #000000',
             zIndex: 999999,
-            padding: '0 1rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '20px', color: '#000000' }}>场地发现</span>
-              <a href="/admin/add-venue" style={{
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                padding: '8px 16px',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                borderRadius: '2px'
-              }}>➕ 添加场地</a>
-            </div>
-          </header>
-        </noscript>
+            padding: 0,
+            margin: 0,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          }}
+        />
         <Nav />
         {children}
       </body>
