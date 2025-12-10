@@ -171,34 +171,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body style={{ margin: 0, padding: 0, paddingTop: 0 }}>
-        {/* 静态导航栏 - 确保始终显示，即使Nav组件失败 */}
-        <header 
-          id="main-nav-header"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            width: '100%',
-            height: '64px',
-            display: 'flex',
-            alignItems: 'center',
-            backgroundColor: '#ffffff',
-            borderBottom: '2px solid #000000',
-            zIndex: 999999,
-            padding: 0,
-            margin: 0,
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', height: '100%' }}>
-            <Link href="/" style={{ fontWeight: 'bold', fontSize: '20px', color: '#000000', textDecoration: 'none' }}>场地发现</Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <Link href="/admin/add-venue" style={{ backgroundColor: '#000000', color: '#ffffff', padding: '8px 16px', textDecoration: 'none', fontWeight: 'bold', borderRadius: '2px', display: 'inline-flex', alignItems: 'center' }}>➕ 添加场地</Link>
-              <Link href="/map" style={{ color: '#000000', textDecoration: 'none', fontWeight: 500, textTransform: 'uppercase', fontSize: '14px', letterSpacing: '0.05em' }}>地图探索</Link>
-            </div>
-          </div>
-        </header>
         <Nav />
         {children}
       </body>
