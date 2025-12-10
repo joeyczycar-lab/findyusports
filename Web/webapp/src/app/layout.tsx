@@ -57,7 +57,33 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       header = document.createElement('header');
                       header.id = 'main-nav-header';
                       // 使用普通链接，避免Next.js路由问题
-                      header.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:0 1rem;height:100%;"><a href="/" style="font-weight:bold;font-size:20px;color:#000000;text-decoration:none;">场地发现</a><div style="display:flex;align-items:center;gap:1rem;"><a href="/admin/add-venue" onclick="event.preventDefault();window.location.href=\'/admin/add-venue\'" style="background-color:#000000;color:#ffffff;padding:8px 16px;text-decoration:none;font-weight:bold;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;">➕ 添加场地</a><a href="/map" onclick="event.preventDefault();window.location.href=\'/map\'" style="color:#000000;text-decoration:none;font-weight:500;text-transform:uppercase;font-size:14px;letter-spacing:0.05em;cursor:pointer;">地图探索</a></div></div>';
+                      // 创建导航栏内容，使用正确的链接
+                      const navContent = document.createElement('div');
+                      navContent.style.cssText = 'display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:0 1rem;height:100%;';
+                      
+                      const logo = document.createElement('a');
+                      logo.href = '/';
+                      logo.textContent = '场地发现';
+                      logo.style.cssText = 'font-weight:bold;font-size:20px;color:#000000;text-decoration:none;';
+                      
+                      const rightDiv = document.createElement('div');
+                      rightDiv.style.cssText = 'display:flex;align-items:center;gap:1rem;';
+                      
+                      const addBtn = document.createElement('a');
+                      addBtn.href = '/admin/add-venue';
+                      addBtn.textContent = '➕ 添加场地';
+                      addBtn.style.cssText = 'background-color:#000000;color:#ffffff;padding:8px 16px;text-decoration:none;font-weight:bold;border-radius:2px;display:inline-flex;align-items:center;cursor:pointer;';
+                      
+                      const mapLink = document.createElement('a');
+                      mapLink.href = '/map';
+                      mapLink.textContent = '地图探索';
+                      mapLink.style.cssText = 'color:#000000;text-decoration:none;font-weight:500;text-transform:uppercase;font-size:14px;letter-spacing:0.05em;cursor:pointer;';
+                      
+                      rightDiv.appendChild(addBtn);
+                      rightDiv.appendChild(mapLink);
+                      navContent.appendChild(logo);
+                      navContent.appendChild(rightDiv);
+                      header.appendChild(navContent);
                       document.body.insertBefore(header, document.body.firstChild);
                     }
                     return header;
