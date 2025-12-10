@@ -1,20 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import LocationPicker from '@/components/LocationPicker'
+import { fetchJson } from '@/lib/api'
+import { getAuthState } from '@/lib/auth'
+import LoginModal from '@/components/LoginModal'
 
 export default function AddVenuePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
   
   const [formData, setFormData] = useState({
     name: '',
     sportType: 'basketball' as 'basketball' | 'football',
     cityCode: '110000',
     address: '',
-    lng: '',
-    lat: '',
+    lng: 0,
+    lat: 0,
     priceMin: '',
     priceMax: '',
     indoor: false,
@@ -41,12 +49,19 @@ export default function AddVenuePage() {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
 
+      // 验证经纬度
+      if (!formData.lng || !formData.lat || formData.lng === 0 || formData.lat === 0) {
+        setMessage({ type: 'error', text: '❌ 请在地图上点击选择场地位置' })
+        setLoading(false)
+        return
+      }
+
       const payload: any = {
         name: formData.name,
         sportType: formData.sportType,
         cityCode: formData.cityCode,
-        lng: parseFloat(formData.lng),
-        lat: parseFloat(formData.lat),
+        lng: formData.lng,
+        lat: formData.lat,
       }
 
       if (formData.address) payload.address = formData.address
@@ -65,15 +80,48 @@ export default function AddVenuePage() {
       const data = await response.json()
 
       if (response.ok && !data.error) {
-        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${data.id}` })
-        // 清空表单
+        const venueId = data.id
+        
+        // 如果有选中的图片，自动上传
+        if (selectedImages.length > 0) {
+          setUploadingImages(true)
+          try {
+            const authState = getAuthState()
+            if (!authState.isAuthenticated) {
+              setIsLoginModalOpen(true)
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
+            } else {
+              // 上传所有选中的图片
+              const uploadPromises = selectedImages.map(async (file) => {
+                const formData = new FormData()
+                formData.append('file', file)
+                return fetchJson(`/venues/${venueId}/upload`, {
+                  method: 'POST',
+                  body: formData
+                })
+              })
+              
+              await Promise.all(uploadPromises)
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。` })
+              setSelectedImages([])
+            }
+          } catch (error: any) {
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}` })
+          } finally {
+            setUploadingImages(false)
+          }
+        } else {
+          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。` })
+        }
+        
+        // 清空表单（保留地图位置）
         setFormData({
           name: '',
           sportType: 'basketball',
           cityCode: '110000',
           address: '',
-          lng: '',
-          lat: '',
+          lng: formData.lng, // 保留地图位置
+          lat: formData.lat, // 保留地图位置
           priceMin: '',
           priceMax: '',
           indoor: false,
@@ -172,47 +220,27 @@ export default function AddVenuePage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="lng" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-                经度 (lng) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="lng"
-                required
-                step="any"
-                value={formData.lng}
-                onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                placeholder="例如：116.45"
+          <div>
+            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              地图定位 <span className="text-red-500">*</span>
+            </label>
+            <div className="h-96 w-full border border-gray-900 rounded-none overflow-hidden">
+              <LocationPicker
+                className="w-full h-full"
+                onLocationSelect={(lng, lat) => {
+                  setFormData({ ...formData, lng, lat })
+                }}
+                initialPosition={formData.lng && formData.lat ? [formData.lng, formData.lat] : undefined}
               />
-              <p className="text-caption text-gray-400 mt-1">
-                <a
-                  href="https://lbs.amap.com/tools/picker"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-gray-900"
-                >
-                  获取坐标 →
-                </a>
+            </div>
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：在地图上点击即可选择场地位置，选中的位置会显示标记。经纬度将自动获取。
+            </p>
+            {formData.lng !== 0 && formData.lat !== 0 && (
+              <p className="text-xs text-green-600 mt-1">
+                ✅ 已选择位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
               </p>
-            </div>
-            <div>
-              <label htmlFor="lat" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-                纬度 (lat) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="lat"
-                required
-                step="any"
-                value={formData.lat}
-                onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                placeholder="例如：39.92"
-              />
-            </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -258,13 +286,98 @@ export default function AddVenuePage() {
             </label>
           </div>
 
+          <div>
+            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              上传图片 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || [])
+                  // 验证文件
+                  const validFiles = files.filter(file => {
+                    if (!file.type.startsWith('image/')) {
+                      setMessage({ type: 'error', text: '❌ 请选择图片文件' })
+                      return false
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      setMessage({ type: 'error', text: '❌ 图片大小不能超过10MB' })
+                      return false
+                    }
+                    return true
+                  })
+                  setSelectedImages(validFiles)
+                  if (validFiles.length > 0) {
+                    setMessage(null)
+                  }
+                }}
+                className="hidden"
+              />
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const authState = getAuthState()
+                  if (!authState.isAuthenticated) {
+                    setIsLoginModalOpen(true)
+                    return
+                  }
+                  fileInputRef.current?.click()
+                }}
+                className="w-full h-14 px-4 rounded-none border-2 border-gray-900 hover:bg-gray-900 hover:text-white bg-white text-black font-bold transition-colors flex items-center justify-center gap-3 text-base"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  visibility: 'visible',
+                  opacity: 1,
+                  zIndex: 1
+                }}
+              >
+                <span className="text-xl">📷</span>
+                <span>{selectedImages.length > 0 ? `已选择 ${selectedImages.length} 张图片（点击可重新选择）` : '📤 点击上传图片（支持多选）'}</span>
+              </button>
+              
+              {selectedImages.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {selectedImages.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt={`预览 ${index + 1}`}
+                        className="w-full h-24 object-cover border border-gray-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImages(selectedImages.filter((_, i) => i !== index))
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-600">
+                💡 提示：支持 JPG、PNG 格式，每张最大 10MB。添加场地成功后会自动上传。
+              </p>
+            </div>
+          </div>
+
           <div className="flex space-x-4 pt-4">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingImages}
               className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '添加中...' : '添加场地'}
+              {loading ? '添加中...' : uploadingImages ? '上传图片中...' : '添加场地'}
             </button>
             <button
               type="button"
@@ -276,6 +389,15 @@ export default function AddVenuePage() {
           </div>
         </form>
       </div>
+      
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={() => {
+          setIsLoginModalOpen(false)
+          // 登录成功后，可以继续上传图片
+        }}
+      />
     </div>
   )
 }
