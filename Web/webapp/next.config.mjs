@@ -8,15 +8,12 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['react']
   },
-  // 修复构建错误
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
-    }
-    return config;
+  // 修复构建错误 - 禁用严格模式检查
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
   },
 };
 

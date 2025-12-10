@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
-import LotteryAd from '@/components/LotteryAd'
+import dynamic from 'next/dynamic'
+
+const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
+  ssr: false
+})
 
 async function getFeaturedVenues() {
   try {
