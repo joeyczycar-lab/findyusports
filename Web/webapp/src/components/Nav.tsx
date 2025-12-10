@@ -21,41 +21,60 @@ export default function Nav() {
       const state = getAuthState()
       setAuthState(state)
       
-      // 强制确保导航栏和按钮可见，并移除重复的静态导航栏
+      // 强制确保导航栏和按钮可见，移除重复的导航栏
       const ensureVisible = () => {
         // 查找所有导航栏
-        const headers = document.querySelectorAll('header#main-nav-header, header')
-        let reactNav = null
-        let staticNav = null
+        const headers = Array.from(document.querySelectorAll('header#main-nav-header, header')).filter(h => h instanceof HTMLElement) as HTMLElement[]
         
+        // 找到React导航栏（有.container-page或nav元素）
+        const reactNav = headers.find(header => 
+          header.querySelector('.container-page') || header.querySelector('nav')
+        )
+        
+        // 移除所有非React导航栏
         headers.forEach(header => {
-          if (header instanceof HTMLElement) {
-            // 检查是否是React组件创建的导航栏（有Nav组件的特定结构）
+          if (header !== reactNav) {
             const hasReactContent = header.querySelector('.container-page') || header.querySelector('nav')
-            if (hasReactContent) {
-              reactNav = header
-            } else {
-              staticNav = header
+            if (!hasReactContent) {
+              header.remove()
             }
           }
         })
         
-        // 如果React导航栏存在，移除静态导航栏
-        if (reactNav && staticNav && staticNav !== reactNav) {
-          staticNav.remove()
-        }
-        
         // 确保React导航栏可见
-        const header = reactNav || staticNav || document.querySelector('#main-nav-header') || document.querySelector('header')
+        const header = reactNav || document.querySelector('#main-nav-header') || document.querySelector('header')
         if (header && header instanceof HTMLElement) {
           // 强制设置导航栏样式
-          header.style.cssText = 'position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;z-index:99999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;background-color:#ffffff!important;border-bottom:2px solid #000000!important;box-shadow:0 4px 6px rgba(0,0,0,0.1)!important;'
+          header.style.setProperty('position', 'fixed', 'important')
+          header.style.setProperty('top', '0', 'important')
+          header.style.setProperty('left', '0', 'important')
+          header.style.setProperty('right', '0', 'important')
+          header.style.setProperty('width', '100%', 'important')
+          header.style.setProperty('height', '64px', 'important')
+          header.style.setProperty('z-index', '99999', 'important')
+          header.style.setProperty('display', 'flex', 'important')
+          header.style.setProperty('align-items', 'center', 'important')
+          header.style.setProperty('visibility', 'visible', 'important')
+          header.style.setProperty('opacity', '1', 'important')
+          header.style.setProperty('background-color', '#ffffff', 'important')
+          header.style.setProperty('border-bottom', '2px solid #000000', 'important')
+          header.style.setProperty('box-shadow', '0 4px 6px rgba(0,0,0,0.1)', 'important')
           
-          // 强制设置按钮样式
-          const button = header.querySelector('a[href="/admin/add-venue"]')
-          if (button && button instanceof HTMLElement) {
-            button.style.cssText = 'background-color:#000000!important;color:#ffffff!important;display:inline-flex!important;visibility:visible!important;opacity:1!important;text-decoration:none!important;padding:8px 16px!important;font-weight:bold!important;border-radius:2px!important;'
-          }
+          // 强制设置所有添加场地按钮样式
+          const buttons = header.querySelectorAll('a[href="/admin/add-venue"]')
+          buttons.forEach(button => {
+            if (button instanceof HTMLElement) {
+              button.style.setProperty('background-color', '#000000', 'important')
+              button.style.setProperty('color', '#ffffff', 'important')
+              button.style.setProperty('display', 'inline-flex', 'important')
+              button.style.setProperty('visibility', 'visible', 'important')
+              button.style.setProperty('opacity', '1', 'important')
+              button.style.setProperty('text-decoration', 'none', 'important')
+              button.style.setProperty('padding', '8px 16px', 'important')
+              button.style.setProperty('font-weight', 'bold', 'important')
+              button.style.setProperty('border-radius', '2px', 'important')
+            }
+          })
         }
       }
       
