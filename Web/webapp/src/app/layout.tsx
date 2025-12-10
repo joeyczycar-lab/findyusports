@@ -40,17 +40,29 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // 在页面加载前就确保导航栏样式 - 增强版
+              // 在页面加载前就创建导航栏 - 最激进方案
               (function() {
                 if (typeof document !== 'undefined') {
                   // 创建最高优先级的样式
                   const style = document.createElement('style');
                   style.id = 'nav-force-visible';
-                  style.textContent = 'header#main-nav-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;max-height:64px!important;min-height:64px!important;z-index:999999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;background-color:#ffffff!important;border-bottom:2px solid #000000!important;box-shadow:0 4px 6px rgba(0,0,0,0.1)!important;margin:0!important;padding:0 1rem!important;overflow:visible!important;pointer-events:auto!important;}header#main-nav-header a[href="/admin/add-venue"]{background-color:#000000!important;color:#ffffff!important;display:inline-flex!important;visibility:visible!important;opacity:1!important;text-decoration:none!important;padding:8px 16px!important;font-weight:bold!important;border-radius:2px!important;cursor:pointer!important;pointer-events:auto!important;}header#main-nav-header *{visibility:visible!important;opacity:1!important;pointer-events:auto!important;}';
+                  style.textContent = 'header#main-nav-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;max-height:64px!important;min-height:64px!important;z-index:999999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;background-color:#ffffff!important;border-bottom:2px solid #000000!important;box-shadow:0 4px 6px rgba(0,0,0,0.1)!important;margin:0!important;padding:0!important;overflow:visible!important;pointer-events:auto!important;}header#main-nav-header a[href="/admin/add-venue"]{background-color:#000000!important;color:#ffffff!important;display:inline-flex!important;visibility:visible!important;opacity:1!important;text-decoration:none!important;padding:8px 16px!important;font-weight:bold!important;border-radius:2px!important;cursor:pointer!important;pointer-events:auto!important;}header#main-nav-header *{visibility:visible!important;opacity:1!important;pointer-events:auto!important;}';
                   document.head.insertBefore(style, document.head.firstChild);
                   
+                  // 如果导航栏不存在，直接创建它
+                  function createNavIfMissing() {
+                    let header = document.querySelector('#main-nav-header');
+                    if (!header) {
+                      header = document.createElement('header');
+                      header.id = 'main-nav-header';
+                      header.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1280px;margin:0 auto;padding:0 1rem;height:100%;"><a href="/" style="font-weight:bold;font-size:20px;color:#000000;text-decoration:none;">场地发现</a><div style="display:flex;align-items:center;gap:1rem;"><a href="/admin/add-venue" style="background-color:#000000;color:#ffffff;padding:8px 16px;text-decoration:none;font-weight:bold;border-radius:2px;display:inline-flex;align-items:center;">➕ 添加场地</a><a href="/map" style="color:#000000;text-decoration:none;font-weight:500;text-transform:uppercase;font-size:14px;letter-spacing:0.05em;">地图探索</a></div></div>';
+                      document.body.insertBefore(header, document.body.firstChild);
+                    }
+                    return header;
+                  }
+                  
                   function ensureNavVisible() {
-                    const header = document.querySelector('#main-nav-header') || document.querySelector('header');
+                    const header = createNavIfMissing();
                     if (header && header instanceof HTMLElement) {
                       // 强制设置导航栏样式
                       header.style.setProperty('position', 'fixed', 'important');
@@ -59,7 +71,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       header.style.setProperty('right', '0', 'important');
                       header.style.setProperty('width', '100%', 'important');
                       header.style.setProperty('height', '64px', 'important');
-                      header.style.setProperty('z-index', '99999', 'important');
+                      header.style.setProperty('z-index', '999999', 'important');
                       header.style.setProperty('display', 'flex', 'important');
                       header.style.setProperty('align-items', 'center', 'important');
                       header.style.setProperty('visibility', 'visible', 'important');
@@ -68,7 +80,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       header.style.setProperty('border-bottom', '2px solid #000000', 'important');
                       header.style.setProperty('box-shadow', '0 4px 6px rgba(0,0,0,0.1)', 'important');
                       header.style.setProperty('margin', '0', 'important');
-                      header.style.setProperty('padding', '0 1rem', 'important');
+                      header.style.setProperty('padding', '0', 'important');
                       
                       // 强制设置按钮样式
                       const button = header.querySelector('a[href="/admin/add-venue"]');
@@ -84,16 +96,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         button.style.setProperty('border-radius', '2px', 'important');
                         button.style.setProperty('cursor', 'pointer', 'important');
                       }
-                      
-                      // 确保所有子元素可见
-                      const children = header.querySelectorAll('*');
-                      children.forEach(child => {
-                        if (child instanceof HTMLElement) {
-                          child.style.setProperty('visibility', 'visible', 'important');
-                          child.style.setProperty('opacity', '1', 'important');
-                        }
-                      });
                     }
+                  }
+                  
+                  // 立即执行（在body存在之前就尝试）
+                  if (document.body) {
+                    ensureNavVisible();
+                  } else {
+                    // 如果body还不存在，等待它
+                    const observer = new MutationObserver(function(mutations, obs) {
+                      if (document.body) {
+                        ensureNavVisible();
+                        obs.disconnect();
+                      }
+                    });
+                    observer.observe(document.documentElement, { childList: true, subtree: true });
                   }
                   
                   // 页面加载后立即执行
@@ -103,7 +120,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     ensureNavVisible();
                   }
                   
-                  // 持续监控并修复（每200ms检查一次，更频繁）
+                  // 持续监控并修复（每200ms检查一次）
                   setInterval(ensureNavVisible, 200);
                   
                   // 多个延迟执行，确保React已完全渲染
@@ -116,7 +133,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   
                   // 监听DOM变化
                   const observer = new MutationObserver(ensureNavVisible);
-                  observer.observe(document.body, { childList: true, subtree: true });
+                  if (document.body) {
+                    observer.observe(document.body, { childList: true, subtree: true });
+                  }
                 }
               })();
             `,
