@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
-import dynamic from 'next/dynamic'
-
-const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
-  ssr: false
-})
+// 临时注释掉LotteryAd以避免构建错误
+// import dynamic from 'next/dynamic'
+// const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
+//   ssr: false
+// })
 
 async function getFeaturedVenues() {
   try {
@@ -122,17 +122,18 @@ export default async function HomePage() {
           </div>
           
           {/* 广告区域 - 桌面端显示 */}
-          <aside className="hidden lg:block">
+          {/* 临时注释掉LotteryAd以避免构建错误 */}
+          {/* <aside className="hidden lg:block">
             <div className="sticky top-24">
               <LotteryAd />
             </div>
-          </aside>
+          </aside> */}
         </div>
         
         {/* 广告区域 - 移动端显示 */}
-        <div className="lg:hidden mt-8">
+        {/* <div className="lg:hidden mt-8">
           <LotteryAd />
-        </div>
+        </div> */}
       </section>
 
       {/* 浮动添加场地按钮 - 移动端 */}
