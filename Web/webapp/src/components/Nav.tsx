@@ -21,9 +21,32 @@ export default function Nav() {
       const state = getAuthState()
       setAuthState(state)
       
-      // 强制确保导航栏和按钮可见
+      // 强制确保导航栏和按钮可见，并移除重复的静态导航栏
       const ensureVisible = () => {
-        const header = document.querySelector('#main-nav-header') || document.querySelector('header')
+        // 查找所有导航栏
+        const headers = document.querySelectorAll('header#main-nav-header, header')
+        let reactNav = null
+        let staticNav = null
+        
+        headers.forEach(header => {
+          if (header instanceof HTMLElement) {
+            // 检查是否是React组件创建的导航栏（有Nav组件的特定结构）
+            const hasReactContent = header.querySelector('.container-page') || header.querySelector('nav')
+            if (hasReactContent) {
+              reactNav = header
+            } else {
+              staticNav = header
+            }
+          }
+        })
+        
+        // 如果React导航栏存在，移除静态导航栏
+        if (reactNav && staticNav && staticNav !== reactNav) {
+          staticNav.remove()
+        }
+        
+        // 确保React导航栏可见
+        const header = reactNav || staticNav || document.querySelector('#main-nav-header') || document.querySelector('header')
         if (header && header instanceof HTMLElement) {
           // 强制设置导航栏样式
           header.style.cssText = 'position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;z-index:99999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;background-color:#ffffff!important;border-bottom:2px solid #000000!important;box-shadow:0 4px 6px rgba(0,0,0,0.1)!important;'
