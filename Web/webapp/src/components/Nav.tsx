@@ -10,12 +10,46 @@ import UserMenu from './UserMenu'
 export default function Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const [authState, setAuthState] = useState(getAuthState())
+  const [authState, setAuthState] = useState({ user: null, token: null, isAuthenticated: false })
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // 检查认证状态
-    const state = getAuthState()
-    setAuthState(state)
+    // 确保组件已挂载
+    setMounted(true)
+    // 检查认证状态（只在客户端执行）
+    if (typeof window !== 'undefined') {
+      const state = getAuthState()
+      setAuthState(state)
+      
+      // 强制确保导航栏和按钮可见
+      const ensureVisible = () => {
+        const header = document.querySelector('#main-nav-header') || document.querySelector('header')
+        if (header && header instanceof HTMLElement) {
+          // 强制设置导航栏样式
+          header.style.cssText = 'position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;z-index:99999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;background-color:#ffffff!important;border-bottom:2px solid #000000!important;box-shadow:0 4px 6px rgba(0,0,0,0.1)!important;'
+          
+          // 强制设置按钮样式
+          const button = header.querySelector('a[href="/admin/add-venue"]')
+          if (button && button instanceof HTMLElement) {
+            button.style.cssText = 'background-color:#000000!important;color:#ffffff!important;display:inline-flex!important;visibility:visible!important;opacity:1!important;text-decoration:none!important;padding:8px 16px!important;font-weight:bold!important;border-radius:2px!important;'
+          }
+        }
+      }
+      
+      // 立即执行
+      ensureVisible()
+      // 延迟执行，确保React已完全渲染
+      setTimeout(ensureVisible, 50)
+      setTimeout(ensureVisible, 100)
+      setTimeout(ensureVisible, 300)
+      setTimeout(ensureVisible, 500)
+      setTimeout(ensureVisible, 1000)
+      
+      // 持续监控（每500ms检查一次）
+      const interval = setInterval(ensureVisible, 500)
+      
+      return () => clearInterval(interval)
+    }
   }, [])
 
   const handleLoginSuccess = (user: User, token: string) => {
@@ -27,38 +61,154 @@ export default function Nav() {
     setAuthState({ user: null, token: null, isAuthenticated: false })
   }
 
+  // 强制显示样式
+  const forceVisibleStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: '0px',
+    left: '0px',
+    right: '0px',
+    width: '100%',
+    height: '64px',
+    maxHeight: '64px',
+    minHeight: '64px',
+    display: 'flex',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderBottom: '2px solid #000000',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    zIndex: 99999,
+    overflow: 'hidden',
+    margin: 0,
+    padding: 0,
+    visibility: 'visible',
+    opacity: 1,
+    WebkitTransform: 'translateZ(0)',
+    transform: 'translateZ(0)'
+  }
+
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-border">
-        <div className="container-page h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-xl tracking-tight flex items-center space-x-2">
-            <span className="text-black">场地发现</span>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          header#main-nav-header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 64px !important;
+            max-height: 64px !important;
+            min-height: 64px !important;
+            display: flex !important;
+            align-items: center !important;
+            background-color: #ffffff !important;
+            border-bottom: 2px solid #000000 !important;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+            z-index: 99999 !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          header#main-nav-header a[href="/admin/add-venue"] {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            display: inline-flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            text-decoration: none !important;
+            padding: 8px 16px !important;
+            font-weight: bold !important;
+            border-radius: 2px !important;
+          }
+          header#main-nav-header a,
+          header#main-nav-header button {
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+        `
+      }} />
+      <header 
+        id="main-nav-header"
+        style={{
+          ...forceVisibleStyle,
+          // 添加更多强制样式
+          position: 'fixed' as const,
+          top: '0px',
+          left: '0px',
+          right: '0px',
+          width: '100%',
+          height: '64px',
+          display: 'flex',
+          alignItems: 'center',
+          backgroundColor: '#ffffff',
+          borderBottom: '2px solid #000000',
+          zIndex: 999999,
+          visibility: 'visible',
+          opacity: 1,
+          padding: '0 1rem',
+          margin: 0,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <div className="container-page h-full w-full flex items-center justify-between" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" className="font-bold text-xl tracking-tight flex items-center space-x-2" style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <span style={{ color: '#000000', fontWeight: 'bold', fontSize: '20px' }}>场地发现</span>
           </Link>
           
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/map" className="link-nike">地图探索</Link>
-            <Link href="/admin/add-venue" className="link-nike">添加场地</Link>
-            
-            {authState.isAuthenticated ? (
-              <UserMenu user={authState.user!} onLogout={handleLogout} />
-            ) : (
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="link-nike"
-              >
-                登录
-              </button>
-            )}
-          </nav>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-black"
+          <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* 添加场地按钮 - 所有屏幕都显示 */}
+            <Link 
+              href="/admin/add-venue" 
+              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors rounded-sm inline-flex items-center"
+              style={{
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                display: 'inline-flex',
+                visibility: 'visible',
+                opacity: 1,
+                textDecoration: 'none',
+                cursor: 'pointer',
+                padding: '8px 16px',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                borderRadius: '2px',
+                border: 'none',
+                outline: 'none',
+                minWidth: '120px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                whiteSpace: 'nowrap'
+              }}
             >
-              <Menu className="h-6 w-6" />
-            </button>
+              ➕ 添加场地
+            </Link>
+
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/map" className="link-nike">地图探索</Link>
+              
+              {authState.isAuthenticated ? (
+                <UserMenu user={authState.user!} onLogout={handleLogout} />
+              ) : (
+                <button
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="link-nike"
+                >
+                  登录
+                </button>
+              )}
+            </nav>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-black"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -75,10 +225,10 @@ export default function Nav() {
               </Link>
               <Link
                 href="/admin/add-venue"
-                className="block link-nike"
+                className="block bg-black text-white px-4 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors rounded-sm text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
-                添加场地
+                ➕ 添加场地
               </Link>
               
               {authState.isAuthenticated ? (
