@@ -40,7 +40,8 @@ export default async function HomePage() {
       
       {/* Hero Section - Nike 风格大图 */}
       <section className="relative bg-black text-white min-h-[600px] flex items-center" style={{ zIndex: 1 }}>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544917841-9fdd63f3dcf9?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40" style={{ zIndex: 1 }}></div>
+        <div className="absolute inset-0 bg-[url('/hero-background.jpg')] bg-cover bg-center" style={{ zIndex: 1 }}></div>
+        <div className="absolute inset-0 bg-black/40" style={{ zIndex: 1 }}></div>
         <div className="container-page relative z-10 py-20" style={{ zIndex: 2 }}>
           <h1 className="text-display sm:text-[64px] font-bold mb-8 tracking-tight max-w-2xl">
             发现与分享<br />篮球与足球好场地
