@@ -10,13 +10,13 @@ export default function LotteryAd({ className = '' }: Props) {
   const [imageError, setImageError] = useState(false)
 
   return (
-    <div className={`bg-white border border-border rounded-card p-6 ${className}`}>
+    <div className={`bg-white border border-border p-6 ${className}`} style={{ borderRadius: '2px' }}>
       <div className="text-center">
         <h3 className="text-heading-sm font-bold mb-2 text-primary">体彩竞彩打票</h3>
         <p className="text-body-sm text-textSecondary mb-4">实体店在线打票，安全快速</p>
         
         <div className="flex justify-center mb-4">
-          <div className="relative w-48 h-48 bg-gray-50 border border-border rounded-card overflow-hidden flex items-center justify-center">
+          <div className="relative w-48 h-48 bg-gray-50 border border-border overflow-hidden flex items-center justify-center" style={{ borderRadius: '2px' }}>
             {!imageError ? (
               <img
                 src="/wechat-qrcode.jpg"

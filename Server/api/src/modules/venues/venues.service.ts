@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { QueryVenuesDto, CreateReviewDto } from './dto'
+import { QueryVenuesDto, CreateReviewDto, CreateVenueDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { VenueEntity } from './venue.entity'
@@ -91,6 +91,34 @@ export class VenuesService {
       priceMax: v.priceMax,
       indoor: v.indoor ?? false,
       location: [v.lng, v.lat] as [number, number],
+    }
+  }
+
+  async createVenue(dto: CreateVenueDto) {
+    const venue = new VenueEntity()
+    venue.name = dto.name
+    venue.sportType = dto.sportType
+    venue.cityCode = dto.cityCode
+    venue.address = dto.address
+    venue.lng = dto.lng
+    venue.lat = dto.lat
+    venue.priceMin = dto.priceMin
+    venue.priceMax = dto.priceMax
+    venue.indoor = dto.indoor
+    // 创建 PostGIS geometry point
+    venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
+    
+    const saved = await this.repo.save(venue)
+    return {
+      id: String(saved.id),
+      name: saved.name,
+      sportType: saved.sportType,
+      cityCode: saved.cityCode,
+      address: saved.address,
+      priceMin: saved.priceMin,
+      priceMax: saved.priceMax,
+      indoor: saved.indoor ?? false,
+      location: [saved.lng, saved.lat] as [number, number],
     }
   }
 

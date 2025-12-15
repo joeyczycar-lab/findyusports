@@ -50,8 +50,8 @@ const config: Config = {
         lg: '0 10px 15px rgba(0,0,0,0.1)',
       },
       borderRadius: {
-        card: '0px', // Nike 风格：无圆角或极小圆角
-        modal: '0px',
+        card: '2px', // Nike 风格：小圆角
+        modal: '2px',
       },
       spacing: {
         '18': '4.5rem',

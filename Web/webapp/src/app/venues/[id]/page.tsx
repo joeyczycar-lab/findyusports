@@ -6,11 +6,21 @@ import ReviewForm from '@/components/ReviewForm'
 import MapPreview from '@/components/MapPreview'
 
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
-  const [detail, images, reviews] = await Promise.all([
-    fetchJson(`/venues/${params.id}`),
-    fetchJson(`/venues/${params.id}/images`),
-    fetchJson(`/venues/${params.id}/reviews`),
-  ])
+  let detail: any = null
+  let images: any = { items: [] }
+  let reviews: any = { items: [] }
+  
+  try {
+    [detail, images, reviews] = await Promise.all([
+      fetchJson(`/venues/${params.id}`).catch(() => null),
+      fetchJson(`/venues/${params.id}/images`).catch(() => ({ items: [] })),
+      fetchJson(`/venues/${params.id}/reviews`).catch(() => ({ items: [] })),
+    ])
+  } catch (error) {
+    console.error('Failed to fetch venue data:', error)
+    // 继续渲染，使用默认值
+  }
+  
   const v = detail?.id ? detail : null
   // 使用带防盗链保护的URL
   const urls: string[] = images?.items?.map((x: any) => x.protectedUrl || x.url) ?? []

@@ -13,11 +13,11 @@
 ## 一键启动（Windows）
 - PowerShell：
 ```
-F:\网站\scripts\dev.ps1
+F:\Findyu\scripts\dev.ps1
 ```
 - 批处理：
 ```
-F:\网站\scripts\dev.bat
+F:\Findyu\scripts\dev.bat
 ```
 
 

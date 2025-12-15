@@ -65,4 +65,42 @@ export class CreateReviewDto {
   content!: string
 }
 
+export class CreateVenueDto {
+  @IsString()
+  name!: string
+
+  @IsEnum(SportType)
+  sportType!: SportType
+
+  @IsString()
+  cityCode!: string
+
+  @IsOptional()
+  @IsString()
+  address?: string
+
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  lng!: number
+
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  lat!: number
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceMin?: number
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceMax?: number
+
+  @IsOptional()
+  indoor?: boolean
+}
+
 

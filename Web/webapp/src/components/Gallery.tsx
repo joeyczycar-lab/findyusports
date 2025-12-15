@@ -16,17 +16,21 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   if (!urls || urls.length === 0) {
     return (
       <div className="space-y-4">
-        <div className="h-64 bg-gray-100 rounded-card flex items-center justify-center text-textMuted">
+        <div className="h-64 bg-gray-100 flex items-center justify-center text-textMuted" style={{ borderRadius: '2px' }}>
           暂无图片
         </div>
-        {venueId && <ImageUpload venueId={venueId} onSuccess={onImageAdded} />}
+        {venueId && (
+          <div className="mt-4">
+            <ImageUpload venueId={venueId} onSuccess={onImageAdded} />
+          </div>
+        )}
       </div>
     )
   }
   
   return (
     <div className="space-y-4">
-      <div className="relative h-64 rounded-card overflow-hidden bg-gray-50">
+      <div className="relative h-64 overflow-hidden bg-gray-50" style={{ borderRadius: '2px' }}>
         <ResponsiveImage 
           src={urls[active]} 
           alt="场地图片" 
@@ -37,7 +41,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       
       <div className="flex gap-2 overflow-x-auto">
         {urls.map((u, i) => (
-          <button key={i} onClick={()=>setActive(i)} className={`relative w-24 h-16 rounded-card overflow-hidden border flex-shrink-0 ${active===i? 'border-brandBlue' : 'border-border'}`}>
+          <button key={i} onClick={()=>setActive(i)} className={`relative w-24 h-16 overflow-hidden border flex-shrink-0 ${active===i? 'border-brandBlue' : 'border-border'}`} style={{ borderRadius: '2px' }}>
             <ResponsiveImage 
               src={u} 
               alt="缩略图" 
@@ -47,7 +51,11 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
         ))}
       </div>
       
-      {venueId && <ImageUpload venueId={venueId} onSuccess={onImageAdded} />}
+        {venueId && (
+          <div className="mt-4">
+            <ImageUpload venueId={venueId} onSuccess={onImageAdded} />
+          </div>
+        )}
     </div>
   )
 }

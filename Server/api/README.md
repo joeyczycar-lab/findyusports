@@ -2,7 +2,7 @@
 
 ## 启动数据库（PostgreSQL + PostGIS）
 ```powershell
-cd F:\网站\Server\api
+cd F:\Findyu\Server\api
 docker compose up -d
 ```
 

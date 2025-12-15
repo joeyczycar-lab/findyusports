@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导航栏测试页面</title>
+    <style>
+        #header {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 64px !important;
+            background-color: #ffffff !important;
+            border-bottom: 2px solid #000000 !important;
+            z-index: 99999 !important;
+            display: flex !important;
+            align-items: center !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            padding: 0 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            padding-top: 70px;
+        }
+        .content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <div style="font-weight: bold; font-size: 20px;">场地发现</div>
+            <a href="/admin/add-venue" style="background-color: #000000; color: #ffffff; padding: 8px 16px; text-decoration: none; font-weight: bold;">➕ 添加场地</a>
+        </div>
+    </div>
+    <div class="content">
+        <h1>导航栏测试页面</h1>
+        <p>如果你能看到这个页面顶部的白色导航栏，说明固定头部功能正常。</p>
+        <p>现在让我们检查实际网站的导航栏...</p>
+        <p><a href="/">返回首页</a></p>
+    </div>
+</body>
+</html>
+
+

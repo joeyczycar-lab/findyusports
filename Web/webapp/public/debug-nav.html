@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>导航栏调试工具</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .result { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+    .error { background: #ffcccc; }
+    .success { background: #ccffcc; }
+  </style>
+</head>
+<body>
+  <h1>导航栏调试工具</h1>
+  <p>在浏览器控制台中运行以下代码来检查导航栏状态：</p>
+  
+  <div class="result">
+    <h3>1. 检查导航栏元素是否存在</h3>
+    <pre>const header = document.querySelector('header');
+console.log('导航栏元素:', header);
+console.log('是否存在:', !!header);</pre>
+  </div>
+
+  <div class="result">
+    <h3>2. 检查导航栏样式</h3>
+    <pre>const header = document.querySelector('header');
+if (header) {
+  const styles = window.getComputedStyle(header);
+  console.log('位置:', header.getBoundingClientRect());
+  console.log('display:', styles.display);
+  console.log('position:', styles.position);
+  console.log('z-index:', styles.zIndex);
+  console.log('visibility:', styles.visibility);
+  console.log('opacity:', styles.opacity);
+  console.log('height:', styles.height);
+}</pre>
+  </div>
+
+  <div class="result">
+    <h3>3. 强制显示导航栏（测试用）</h3>
+    <pre>const header = document.querySelector('header');
+if (header) {
+  header.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 64px !important;
+    background-color: red !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  `;
+  console.log('导航栏已强制显示为红色背景');
+}</pre>
+  </div>
+
+  <div class="result">
+    <h3>4. 检查是否有多个导航栏</h3>
+    <pre>const headers = document.querySelectorAll('header');
+console.log('导航栏数量:', headers.length);
+headers.forEach((h, i) => {
+  console.log(`导航栏 ${i + 1}:`, h.getBoundingClientRect());
+});</pre>
+  </div>
+
+  <div class="result">
+    <h3>5. 检查 body 和 html 样式</h3>
+    <pre>const bodyStyles = window.getComputedStyle(document.body);
+const htmlStyles = window.getComputedStyle(document.documentElement);
+console.log('body margin-top:', bodyStyles.marginTop);
+console.log('body padding-top:', bodyStyles.paddingTop);
+console.log('html scroll-padding-top:', htmlStyles.scrollPaddingTop);</pre>
+  </div>
+
+  <script>
+    // 自动运行检查
+    window.addEventListener('load', () => {
+      console.log('=== 导航栏自动检查 ===');
+      const header = document.querySelector('header');
+      if (header) {
+        console.log('✅ 导航栏元素存在');
+        const rect = header.getBoundingClientRect();
+        console.log('位置信息:', rect);
+        const styles = window.getComputedStyle(header);
+        console.log('样式信息:', {
+          display: styles.display,
+          position: styles.position,
+          zIndex: styles.zIndex,
+          visibility: styles.visibility,
+          opacity: styles.opacity,
+          height: styles.height
+        });
+      } else {
+        console.log('❌ 导航栏元素不存在！');
+      }
+    });
+  </script>
+</body>
+</html>
+
+

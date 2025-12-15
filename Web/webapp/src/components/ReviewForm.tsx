@@ -77,7 +77,8 @@ export default function ReviewForm({ venueId, onSuccess }: Props) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={authState.isAuthenticated ? "分享你的体验..." : "请先登录后再点评"}
-            className="w-full h-24 px-3 py-2 border border-border rounded-card resize-none"
+            className="w-full h-24 px-3 py-2 border border-border resize-none"
+            style={{ borderRadius: '2px' }}
             maxLength={500}
             disabled={!authState.isAuthenticated}
           />
@@ -89,7 +90,8 @@ export default function ReviewForm({ venueId, onSuccess }: Props) {
         <button
           type="submit"
           disabled={submitting || rating === 0 || content.trim().length < 5 || !authState.isAuthenticated}
-          className="w-full h-10 px-4 rounded-card bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-10 px-4 bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ borderRadius: '2px' }}
         >
           {submitting ? '提交中...' : (authState.isAuthenticated ? '提交点评' : '请先登录')}
         </button>

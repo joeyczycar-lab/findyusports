@@ -39,9 +39,57 @@ export default async function HomePage() {
       <div className="h-16"></div>
       
       {/* Hero Section - Nike 风格大图 */}
-      <section className="relative bg-black text-white min-h-[600px] flex items-center" style={{ zIndex: 1 }}>
-        <div className="absolute inset-0 bg-[url('/hero-background.jpg')] bg-cover bg-center" style={{ zIndex: 1 }}></div>
-        <div className="absolute inset-0 bg-black/40" style={{ zIndex: 1 }}></div>
+      <section className="relative text-white min-h-[600px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
+        {/* 强制样式 - 确保背景图片显示 */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            section:first-of-type {
+              background-color: transparent !important;
+            }
+            .hero-bg-image {
+              position: absolute !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              background-image: url('/hero-background.jpg') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+              z-index: 0 !important;
+              opacity: 1 !important;
+              visibility: visible !important;
+              display: block !important;
+              pointer-events: none !important;
+            }
+          `
+        }} />
+        {/* 背景图片层 - 使用内联样式 + CSS 类双重保障 */}
+        <div 
+          className="hero-bg-image absolute inset-0"
+          style={{
+            zIndex: 0,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: '100%',
+            backgroundImage: "url('/hero-background.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 1,
+            visibility: 'visible',
+            display: 'block',
+            pointerEvents: 'none'
+          }}
+        />
+        {/* 半透明遮罩层 - 降低透明度让图片更明显 */}
+        <div className="absolute inset-0" style={{ zIndex: 1, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}></div>
         <div className="container-page relative z-10 py-20" style={{ zIndex: 2 }}>
           <h1 className="text-display sm:text-[64px] font-bold mb-8 tracking-tight max-w-2xl">
             发现与分享<br />篮球与足球好场地
@@ -63,7 +111,7 @@ export default async function HomePage() {
               <Link href="/map?sport=football" className="btn-secondary text-white border-white hover:bg-white hover:text-black">
                 足球
               </Link>
-              <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]">
+              <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]" style={{ borderRadius: '2px' }}>
                 ➕ 添加场地
               </Link>
             </div>
@@ -141,7 +189,8 @@ export default async function HomePage() {
       <div className="fixed bottom-6 right-6 z-50 lg:hidden">
         <Link 
           href="/admin/add-venue" 
-          className="bg-black text-white px-6 py-4 rounded-full shadow-lg hover:bg-gray-900 transition-colors duration-200 flex items-center gap-2 font-bold text-sm uppercase tracking-wider"
+          className="bg-black text-white px-6 py-4 shadow-lg hover:bg-gray-900 transition-colors duration-200 flex items-center gap-2 font-bold text-sm uppercase tracking-wider"
+          style={{ borderRadius: '2px' }}
         >
           <span className="text-xl">➕</span>
           <span>添加场地</span>

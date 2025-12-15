@@ -65,7 +65,16 @@ export class VenuesController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@Param('id', ParseIntPipe) id: number, @UploadedFile() file: Express.Multer.File, @CurrentUser() user: any) {
     if (!file) return { error: { code: 'BadRequest', message: 'No file uploaded' } }
-    return this.venuesService.processAndUploadImage(file.buffer, id, file.originalname, user.id)
+    try {
+      return await this.venuesService.processAndUploadImage(file.buffer, id, file.originalname, user.id)
+    } catch (error) {
+      return { 
+        error: { 
+          code: 'InternalServerError', 
+          message: error instanceof Error ? error.message : '图片上传失败' 
+        } 
+      }
+    }
   }
 
   @Public()

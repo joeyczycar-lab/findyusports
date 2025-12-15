@@ -36,6 +36,28 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               opacity: 1 !important;
               pointer-events: auto !important;
             }
+            /* Hero 背景图片 - 强制显示（生产环境） */
+            section:first-of-type {
+              background-color: transparent !important;
+            }
+            .hero-bg-image {
+              position: absolute !important;
+              top: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              bottom: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              background-image: url('/hero-background.jpg') !important;
+              background-size: cover !important;
+              background-position: center !important;
+              background-repeat: no-repeat !important;
+              z-index: 0 !important;
+              opacity: 1 !important;
+              visibility: visible !important;
+              display: block !important;
+              pointer-events: none !important;
+            }
           `
         }} />
         <script

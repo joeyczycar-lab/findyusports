@@ -1,3 +1,3 @@
-cd F:\网站\Web\webapp
+cd F:\Findyu\Web\webapp
 npm install
 npm run dev

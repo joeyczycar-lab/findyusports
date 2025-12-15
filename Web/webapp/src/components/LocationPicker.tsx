@@ -103,7 +103,7 @@ export default function LocationPicker({ className, onLocationSelect, initialPos
   if (error) {
     const isMissingKey = error.includes('NEXT_PUBLIC_AMAP_KEY')
     return (
-      <div className="flex flex-col items-center justify-center text-center text-red-600 border border-border rounded-card p-6">
+      <div className="flex flex-col items-center justify-center text-center text-red-600 border border-border p-6" style={{ borderRadius: '2px' }}>
         <div className="font-semibold mb-2">地图加载失败</div>
         {isMissingKey ? (
           <div className="text-sm text-gray-600">
@@ -129,7 +129,7 @@ export default function LocationPicker({ className, onLocationSelect, initialPos
 
   return (
     <div className={`relative ${className || ''}`}>
-      <div ref={containerRef} className="absolute inset-0 rounded-card overflow-hidden" />
+      <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '2px' }} />
       {selectedPosition && (
         <div className="absolute top-2 left-2 bg-white px-3 py-2 rounded shadow-md text-sm z-10">
           <div className="font-semibold">已选择位置</div>

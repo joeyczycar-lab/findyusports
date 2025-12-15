@@ -68,7 +68,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
+      <div className="bg-white w-full max-w-md" style={{ borderRadius: '2px' }}>
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
             {isLogin ? '登录' : '注册'}
@@ -114,7 +114,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="请输入密码"
-                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 pr-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ borderRadius: '2px' }}
                 required
               />
               <button
@@ -138,7 +139,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                 value={formData.nickname}
                 onChange={handleInputChange}
                 placeholder="请输入昵称"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ borderRadius: '2px' }}
               />
             </div>
           )}
@@ -146,7 +148,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 text-white py-2 px-4 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ borderRadius: '2px' }}
           >
             {loading ? '处理中...' : (isLogin ? '登录' : '注册')}
           </button>

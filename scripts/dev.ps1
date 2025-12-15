@@ -10,14 +10,34 @@ $webDir = Join-Path $root "Web/webapp"
 
 Write-Host "[dev] Project root: $root"
 
-# 1) Start DB (docker compose)
+# 1) Start DB (docker compose) - 可选，如果 Docker 未安装可以跳过
 Push-Location $apiDir
 try {
   Write-Host "[dev] Starting Postgres/PostGIS via docker compose..."
-  docker compose up -d 2>$null
+  # 检查 Docker 是否可用
+  $dockerAvailable = $false
+  try {
+    $null = docker --version 2>&1
+    $dockerAvailable = $true
+  } catch {
+    $dockerAvailable = $false
+  }
+  
+  if ($dockerAvailable) {
+    # 尝试使用 docker compose (新版本)
+    docker compose up -d 2>$null
+    if ($LASTEXITCODE -eq 0) {
+      Write-Host "[dev] Database started successfully"
+    } else {
+      throw "docker compose failed"
+    }
+  } else {
+    Write-Host "[dev] Docker not found. Skipping database startup."
+    Write-Host "[dev] To start database manually: cd $apiDir && docker compose up -d"
+  }
 } catch {
-  Write-Host "[dev] 'docker compose' failed, trying 'docker-compose'"
-  docker-compose up -d
+  Write-Host "[dev] Warning: Could not start Docker. Database will not be available."
+  Write-Host "[dev] To start database manually: cd $apiDir && docker compose up -d"
 }
 Pop-Location
 

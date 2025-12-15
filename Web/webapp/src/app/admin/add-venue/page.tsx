@@ -145,11 +145,12 @@ export default function AddVenuePage() {
 
         {message && (
           <div
-            className={`mb-6 p-4 rounded-none border ${
+            className={`mb-6 p-4 border ${
               message.type === 'success'
                 ? 'bg-gray-100 border-gray-900 text-gray-900'
                 : 'bg-red-50 border-red-500 text-red-900'
             }`}
+            style={{ borderRadius: '2px' }}
           >
             {message.text}
           </div>
@@ -166,7 +167,8 @@ export default function AddVenuePage() {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
               placeholder="例如：朝阳体育中心篮球场"
             />
           </div>
@@ -180,7 +182,8 @@ export default function AddVenuePage() {
               required
               value={formData.sportType}
               onChange={(e) => setFormData({ ...formData, sportType: e.target.value as 'basketball' | 'football' })}
-              className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
             >
               <option value="basketball">篮球</option>
               <option value="football">足球</option>
@@ -196,7 +199,8 @@ export default function AddVenuePage() {
               required
               value={formData.cityCode}
               onChange={(e) => setFormData({ ...formData, cityCode: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
             >
               {cityOptions.map((city) => (
                 <option key={city.value} value={city.value}>
@@ -215,7 +219,8 @@ export default function AddVenuePage() {
               id="address"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
               placeholder="例如：北京市朝阳区朝阳路1号"
             />
           </div>
@@ -224,7 +229,7 @@ export default function AddVenuePage() {
             <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
               地图定位 <span className="text-red-500">*</span>
             </label>
-            <div className="h-96 w-full border border-gray-900 rounded-none overflow-hidden">
+            <div className="h-96 w-full border border-gray-900 overflow-hidden" style={{ borderRadius: '2px' }}>
               <LocationPicker
                 className="w-full h-full"
                 onLocationSelect={(lng, lat) => {
@@ -254,7 +259,8 @@ export default function AddVenuePage() {
                 min="0"
                 value={formData.priceMin}
                 onChange={(e) => setFormData({ ...formData, priceMin: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
                 placeholder="例如：50"
               />
             </div>
@@ -268,7 +274,8 @@ export default function AddVenuePage() {
                 min="0"
                 value={formData.priceMax}
                 onChange={(e) => setFormData({ ...formData, priceMax: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-900 rounded-none bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '2px' }}
                 placeholder="例如：100"
               />
             </div>
@@ -280,7 +287,8 @@ export default function AddVenuePage() {
                 type="checkbox"
                 checked={formData.indoor}
                 onChange={(e) => setFormData({ ...formData, indoor: e.target.checked })}
-                className="w-5 h-5 border-gray-900 rounded-none text-gray-900 focus:ring-2 focus:ring-gray-900"
+                className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                style={{ borderRadius: '2px' }}
               />
               <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
             </label>
@@ -328,7 +336,8 @@ export default function AddVenuePage() {
                   }
                   fileInputRef.current?.click()
                 }}
-                className="w-full h-14 px-4 rounded-none border-2 border-gray-900 hover:bg-gray-900 hover:text-white bg-white text-black font-bold transition-colors flex items-center justify-center gap-3 text-base"
+                className="w-full h-14 px-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white bg-white text-black font-bold transition-colors flex items-center justify-center gap-3 text-base"
+                style={{ borderRadius: '2px' }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

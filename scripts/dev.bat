@@ -6,7 +6,15 @@ set WEB=%ROOT%\Web\webapp
 
 echo [dev] Starting Postgres/PostGIS via docker compose
 pushd "%API%"
-docker compose up -d
+docker compose up -d 2>nul
+if errorlevel 1 (
+  echo [dev] docker compose failed, trying docker-compose...
+  docker-compose up -d
+  if errorlevel 1 (
+    echo [dev] Warning: Could not start Docker. Please ensure Docker Desktop is running.
+    echo [dev] You can start the database manually with: cd %API% ^&^& docker compose up -d
+  )
+)
 popd
 
 echo [dev] Ensure ts-node-dev for API

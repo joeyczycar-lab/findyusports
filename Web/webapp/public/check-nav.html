@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>导航栏检查工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .result {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      margin: 5px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #333;
+    }
+    pre {
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>导航栏诊断工具</h1>
+  <p>这个页面可以帮助你检查导航栏是否正常显示。</p>
+  
+  <div id="results"></div>
+  
+  <div style="margin-top: 20px;">
+    <button onclick="checkNav()">检查导航栏</button>
+    <button onclick="forceShow()">强制显示（红色）</button>
+    <button onclick="showDetails()">显示详细信息</button>
+  </div>
+  
+  <div id="details" style="margin-top: 20px; display: none;">
+    <h2>详细信息</h2>
+    <pre id="detailsContent"></pre>
+  </div>
+
+  <script>
+    function checkNav() {
+      const results = document.getElementById('results');
+      results.innerHTML = '';
+      
+      const header = document.querySelector('#main-nav-header') || document.querySelector('header');
+      
+      if (!header) {
+        results.innerHTML += '<div class="result error">❌ 找不到导航栏元素</div>';
+        return;
+      }
+      
+      const styles = window.getComputedStyle(header);
+      const rect = header.getBoundingClientRect();
+      
+      let html = '<div class="result success">✅ 找到导航栏元素</div>';
+      
+      // 检查关键样式
+      const checks = [
+        { name: 'position', value: styles.position, expected: 'fixed' },
+        { name: 'display', value: styles.display, expected: 'flex' },
+        { name: 'visibility', value: styles.visibility, expected: 'visible' },
+        { name: 'opacity', value: styles.opacity, expected: '1' },
+        { name: 'z-index', value: styles.zIndex, expected: '99999' },
+        { name: 'top', value: styles.top, expected: '0px' },
+        { name: 'height', value: styles.height, expected: '64px' },
+      ];
+      
+      checks.forEach(check => {
+        const passed = check.value === check.expected || 
+                      (check.name === 'z-index' && parseInt(check.value) >= 99999);
+        html += `<div class="result ${passed ? 'success' : 'error'}">
+          ${passed ? '✅' : '❌'} ${check.name}: ${check.value} (期望: ${check.expected})
+        </div>`;
+      });
+      
+      // 检查位置
+      html += `<div class="result info">
+        位置信息: top=${rect.top}, left=${rect.left}, width=${rect.width}, height=${rect.height}
+      </div>`;
+      
+      // 检查按钮
+      const button = document.querySelector('a[href="/admin/add-venue"]');
+      if (button) {
+        const btnStyles = window.getComputedStyle(button);
+        html += `<div class="result success">✅ 找到"添加场地"按钮</div>`;
+        html += `<div class="result info">
+          按钮样式: display=${btnStyles.display}, visibility=${btnStyles.visibility}, opacity=${btnStyles.opacity}
+        </div>`;
+      } else {
+        html += `<div class="result error">❌ 找不到"添加场地"按钮</div>`;
+      }
+      
+      results.innerHTML = html;
+    }
+    
+    function forceShow() {
+      const header = document.querySelector('#main-nav-header') || document.querySelector('header');
+      if (header && header instanceof HTMLElement) {
+        header.style.cssText = 'position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:64px!important;background-color:red!important;z-index:99999!important;display:flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;border-bottom:2px solid #000000!important;padding:0 1rem!important;';
+        alert('导航栏已强制设置为红色！请查看页面顶部。');
+        checkNav();
+      } else {
+        alert('找不到导航栏元素！');
+      }
+    }
+    
+    function showDetails() {
+      const details = document.getElementById('details');
+      const content = document.getElementById('detailsContent');
+      
+      const header = document.querySelector('#main-nav-header') || document.querySelector('header');
+      if (!header) {
+        content.textContent = '找不到导航栏元素';
+        details.style.display = 'block';
+        return;
+      }
+      
+      const styles = window.getComputedStyle(header);
+      const rect = header.getBoundingClientRect();
+      
+      const info = {
+        element: {
+          id: header.id,
+          className: header.className,
+          tagName: header.tagName
+        },
+        computedStyles: {
+          position: styles.position,
+          display: styles.display,
+          visibility: styles.visibility,
+          opacity: styles.opacity,
+          zIndex: styles.zIndex,
+          top: styles.top,
+          left: styles.left,
+          right: styles.right,
+          width: styles.width,
+          height: styles.height,
+          backgroundColor: styles.backgroundColor,
+          borderBottom: styles.borderBottom
+        },
+        boundingRect: {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+          bottom: rect.bottom,
+          right: rect.right
+        },
+        inViewport: rect.top >= 0 && rect.top < window.innerHeight
+      };
+      
+      content.textContent = JSON.stringify(info, null, 2);
+      details.style.display = 'block';
+    }
+    
+    // 页面加载后自动检查
+    window.addEventListener('load', () => {
+      setTimeout(checkNav, 500);
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
