@@ -80,7 +80,7 @@ export default function FiltersBar({ value, onChange }: Props) {
         /> 
         室内
       </label>
-      <button className="btn-secondary h-12 px-6" onClick={emit} style={{ borderRadius: '2px' }}>应用</button>
+      <button className="btn-secondary h-12 px-6" onClick={emit} style={{ borderRadius: '4px' }}>应用</button>
     </div>
   )
 }

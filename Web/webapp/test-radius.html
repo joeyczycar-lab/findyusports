@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>测试圆角</title>
+  <style>
+    button { border-radius: 2px !important; }
+  </style>
+</head>
+<body>
+  <button style="border-radius: 0;">测试按钮</button>
+  <script>
+    const btn = document.querySelector('button')
+    const style = window.getComputedStyle(btn)
+    console.log('border-radius:', style.borderRadius)
+  </script>
+</body>
+</html>

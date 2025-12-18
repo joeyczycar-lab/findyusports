@@ -41,7 +41,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border z-20" style={{ borderRadius: '2px' }}>
+          <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border z-20" style={{ borderRadius: '4px' }}>
             <div className="p-3 border-b">
               <div className="text-sm font-medium text-gray-900">
                 {user.nickname || '用户'}

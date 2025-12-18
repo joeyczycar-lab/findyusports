@@ -72,7 +72,19 @@ export default function Nav() {
               button.style.setProperty('text-decoration', 'none', 'important')
               button.style.setProperty('padding', '8px 16px', 'important')
               button.style.setProperty('font-weight', 'bold', 'important')
-              button.style.setProperty('border-radius', '2px', 'important')
+              button.style.setProperty('border-radius', '4px', 'important')
+              button.style.setProperty('-webkit-border-radius', '4px', 'important')
+              button.style.setProperty('-moz-border-radius', '4px', 'important')
+            }
+          })
+          
+          // 强制设置所有链接和按钮的圆角
+          const allLinks = header.querySelectorAll('a, button')
+          allLinks.forEach(el => {
+            if (el instanceof HTMLElement) {
+              el.style.setProperty('border-radius', '4px', 'important')
+              el.style.setProperty('-webkit-border-radius', '4px', 'important')
+              el.style.setProperty('-moz-border-radius', '4px', 'important')
             }
           })
         }
@@ -167,19 +179,28 @@ export default function Nav() {
             text-decoration: none !important;
             padding: 8px 16px !important;
             font-weight: bold !important;
-            border-radius: 2px !important;
-            -webkit-border-radius: 2px !important;
-            -moz-border-radius: 2px !important;
+            border-radius: 4px !important;
+            -webkit-border-radius: 4px !important;
+            -moz-border-radius: 4px !important;
           }
           header#main-nav-header a,
           header#main-nav-header a:link,
           header#main-nav-header a:visited,
-          header#main-nav-header button {
+          header#main-nav-header a:hover,
+          header#main-nav-header a:focus,
+          header#main-nav-header a:active,
+          header#main-nav-header button,
+          header#main-nav-header button:hover,
+          header#main-nav-header button:focus,
+          header#main-nav-header button:active,
+          header#main-nav-header .link-nike,
+          header#main-nav-header .link-nike:hover,
+          header#main-nav-header .link-nike:focus {
             visibility: visible !important;
             opacity: 1 !important;
-            border-radius: 2px !important;
-            -webkit-border-radius: 2px !important;
-            -moz-border-radius: 2px !important;
+            border-radius: 4px !important;
+            -webkit-border-radius: 4px !important;
+            -moz-border-radius: 4px !important;
           }
         `
       }} />
@@ -227,7 +248,7 @@ export default function Nav() {
                 padding: '8px 16px',
                 fontWeight: 'bold',
                 fontSize: '14px',
-                borderRadius: '2px',
+                borderRadius: '4px',
                 border: 'none',
                 outline: 'none',
                 minWidth: '120px',
@@ -240,7 +261,7 @@ export default function Nav() {
             </Link>
 
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/map" className="link-nike">地图探索</Link>
+              <Link href="/map" className="link-nike" style={{ borderRadius: '4px' }}>地图探索</Link>
               
               {authState.isAuthenticated ? (
                 <UserMenu user={authState.user!} onLogout={handleLogout} />
@@ -248,6 +269,7 @@ export default function Nav() {
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
                   className="link-nike"
+                  style={{ borderRadius: '4px' }}
                 >
                   登录
                 </button>

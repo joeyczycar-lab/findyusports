@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 覆盖 Tailwind 默认的按钮 border-radius: 0 - 最高优先级 */
+@layer base {
+  button, 
+  [type='button'], 
+  [type='reset'], 
+  [type='submit'] {
+    border-radius: 4px !important;
+    -webkit-border-radius: 4px !important;
+    -moz-border-radius: 4px !important;
+  }
+}
+
+/* 在 components 层强制设置 */
+@layer components {
+  .btn-primary,
+  .btn-secondary {
+    border-radius: 4px !important;
+    -webkit-border-radius: 4px !important;
+    -moz-border-radius: 4px !important;
+  }
+}
+
+/* 在 utilities 层再次强制设置，确保优先级最高 */
+@layer utilities {
+  .btn-primary,
+  .btn-secondary,
+  button:not(.rounded-full),
+  a.btn-primary,
+  a.btn-secondary,
+  a[href="/map"],
+  a[href*="/map"],
+  a[href="/admin/add-venue"] {
+    border-radius: 4px !important;
+    -webkit-border-radius: 4px !important;
+    -moz-border-radius: 4px !important;
+  }
+}
+
 :root {
   color-scheme: light;
 }
@@ -21,11 +59,11 @@ button.btn-primary,
 button.btn-secondary,
 button:not(.rounded-full),
 a[class*="btn"]:not(.rounded-full) {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
   /* 使用 CSS 变量确保覆盖 */
-  --tw-border-radius: 2px !important;
+  --tw-border-radius: 4px !important;
 }
 
 html {
@@ -104,9 +142,9 @@ header#main-nav-header button {
   opacity: 1 !important;
   display: inline-flex !important;
   color: inherit !important;
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 /* 确保添加场地按钮可见 - 强制圆角 */
@@ -124,9 +162,9 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
   text-decoration: none !important;
   padding: 8px 16px !important;
   font-weight: bold !important;
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 .container-page {
@@ -139,22 +177,22 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
 .btn-primary:focus,
 .btn-primary:active,
 .btn-primary:visited {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 .btn-primary {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
   @apply bg-black text-white px-8 py-3 text-sm font-medium uppercase tracking-wider;
   @apply hover:bg-gray-900 transition-colors duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
   /* 再次强制设置，确保 @apply 不会覆盖 */
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 .btn-secondary,
@@ -162,22 +200,22 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
 .btn-secondary:focus,
 .btn-secondary:active,
 .btn-secondary:visited {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 .btn-secondary {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
   @apply bg-white text-black border-2 border-black px-8 py-3 text-sm font-medium uppercase tracking-wider;
   @apply hover:bg-black hover:text-white transition-all duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
   /* 再次强制设置，确保 @apply 不会覆盖 */
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 .btn-text {
@@ -189,13 +227,16 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
 .card-nike {
   @apply bg-white border border-border;
   @apply hover:shadow-md transition-shadow duration-200;
-  border-radius: 2px !important;
+  border-radius: 4px !important;
 }
 
 /* Nike 风格链接 */
 .link-nike {
   @apply text-black font-medium uppercase tracking-wider text-sm;
   @apply hover:underline transition-all duration-200;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 /* Nike 风格输入框和表单元素 - 小圆角 */
@@ -208,7 +249,7 @@ input[type="tel"],
 input[type="url"],
 textarea,
 select {
-  border-radius: 2px !important;
+  border-radius: 4px !important;
 }
 
 /* Nike 风格按钮 - 全局小圆角（参考耐克中文官网：2px）- 最高优先级 - 所有状态 */
@@ -231,9 +272,9 @@ a.btn-secondary:hover,
 a.btn-secondary:focus,
 a[class*="btn"]:not(.rounded-full),
 a[class*="btn"]:not(.rounded-full):hover {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 /* 覆盖所有 Tailwind rounded 类（除了 rounded-full）- 强制应用耐克风格 2px 圆角 */
@@ -247,7 +288,7 @@ a[class*="btn"]:not(.rounded-full):hover {
 button.rounded,
 a.rounded,
 input.rounded {
-  border-radius: 2px !important;
+  border-radius: 4px !important;
 }
 
 /* 保留 rounded-full 用于圆形元素（头像、图标等） */
@@ -259,7 +300,7 @@ input.rounded {
 .card,
 .card-nike,
 [class*="border"]:not(.rounded-full) {
-  border-radius: 2px !important;
+  border-radius: 4px !important;
 }
 
 /* 强制所有按钮和链接按钮使用 2px 圆角 - 最高优先级 */
@@ -271,12 +312,16 @@ a[href="/admin/add-venue"],
 button:not(.rounded-full),
 input[type="button"]:not(.rounded-full),
 input[type="submit"]:not(.rounded-full) {
-  border-radius: 2px !important;
-  -webkit-border-radius: 2px !important;
-  -moz-border-radius: 2px !important;
+  border-radius: 4px !important;
+  -webkit-border-radius: 4px !important;
+  -moz-border-radius: 4px !important;
 }
 
 /* Hero 背景图片 - 强制显示 */
+section:first-of-type {
+  background-color: transparent !important;
+}
+
 .hero-bg-image {
   position: absolute !important;
   top: 0 !important;

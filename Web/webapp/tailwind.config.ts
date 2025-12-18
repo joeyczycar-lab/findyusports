@@ -51,17 +51,17 @@ const config: Config = {
       },
       borderRadius: {
         none: '0',
-        sm: '2px', // 覆盖默认的 0.125rem，统一为 2px（耐克风格）
-        DEFAULT: '2px', // 默认圆角为 2px
-        md: '2px', // 覆盖默认的 0.375rem，统一为 2px
-        lg: '2px', // 覆盖默认的 0.5rem，统一为 2px
-        xl: '2px', // 覆盖默认的 0.75rem，统一为 2px
-        '2xl': '2px', // 覆盖默认的 1rem，统一为 2px
-        '3xl': '2px', // 覆盖默认的 1.5rem，统一为 2px
+        sm: '4px', // 覆盖默认的 0.125rem，统一为 4px（耐克风格）
+        DEFAULT: '4px', // 默认圆角为 4px
+        md: '4px', // 覆盖默认的 0.375rem，统一为 4px
+        lg: '4px', // 覆盖默认的 0.5rem，统一为 4px
+        xl: '4px', // 覆盖默认的 0.75rem，统一为 4px
+        '2xl': '4px', // 覆盖默认的 1rem，统一为 4px
+        '3xl': '4px', // 覆盖默认的 1.5rem，统一为 4px
         full: '9999px', // 保留 full 用于圆形元素（头像等）
-        card: '2px', // Nike 风格：小圆角（参考耐克中文官网）
-        modal: '2px',
-        btn: '2px', // 按钮圆角统一为 2px
+        card: '4px', // Nike 风格：小圆角（参考耐克中文官网）
+        modal: '4px',
+        btn: '4px', // 按钮圆角统一为 4px
       },
       spacing: {
         '18': '4.5rem',

@@ -69,7 +69,7 @@ export default function MapPreview({ className, position, name, zoom = 15 }: Pro
   if (error) {
     const isMissingKey = error.includes('NEXT_PUBLIC_AMAP_KEY')
     return (
-      <div className={`flex flex-col items-center justify-center text-center text-red-600 border border-border p-4 ${className || ''}`} style={{ borderRadius: '2px' }}>
+      <div className={`flex flex-col items-center justify-center text-center text-red-600 border border-border p-4 ${className || ''}`} style={{ borderRadius: '4px' }}>
         <div className="text-sm font-semibold mb-1">地图加载失败</div>
         {isMissingKey ? (
           <div className="text-xs text-gray-600">
@@ -84,7 +84,7 @@ export default function MapPreview({ className, position, name, zoom = 15 }: Pro
 
   return (
     <div className={`relative ${className || ''}`}>
-      <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '2px' }} />
+      <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '4px' }} />
     </div>
   )
 }

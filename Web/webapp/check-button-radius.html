@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>检查按钮圆角</title>
+  <style>
+    body { padding: 20px; font-family: Arial, sans-serif; }
+    .test-btn { margin: 10px; padding: 12px 24px; background: #000; color: #fff; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>按钮圆角测试</h1>
+  <button class="test-btn" style="border-radius: 2px;">测试按钮 (2px)</button>
+  <button class="test-btn" style="border-radius: 0;">测试按钮 (0px)</button>
+  <button class="test-btn" style="border-radius: 8px;">测试按钮 (8px)</button>
+  
+  <script>
+    document.querySelectorAll('.test-btn').forEach(btn => {
+      const style = window.getComputedStyle(btn)
+      console.log(btn.textContent, 'border-radius:', style.borderRadius)
+    })
+  </script>
+</body>
+</html>

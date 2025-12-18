@@ -117,7 +117,7 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
   if (error) {
     const isMissingKey = error.includes('NEXT_PUBLIC_AMAP_KEY')
     return (
-      <div className="flex flex-col items-center justify-center text-center text-red-600 border border-border p-6" style={{ borderRadius: '2px' }}>
+      <div className="flex flex-col items-center justify-center text-center text-red-600 border border-border p-6" style={{ borderRadius: '4px' }}>
         <div className="font-semibold mb-2">地图加载失败</div>
         {isMissingKey ? (
           <div className="text-sm text-gray-600">
@@ -149,13 +149,13 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
 
   return (
     <div className={`relative ${className || ''}`}>
-      <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '2px' }} />
+      <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '4px' }} />
       {showSearchHere && (
         <div className="pointer-events-none absolute left-0 right-0 bottom-4 flex justify-center">
           <button
             onClick={handleSearchHere}
             className="pointer-events-auto px-4 h-10 bg-white shadow-md border border-border text-sm"
-            style={{ borderRadius: '2px' }}
+            style={{ borderRadius: '4px' }}
           >
             在此区域搜索
           </button>

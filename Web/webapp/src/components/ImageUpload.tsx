@@ -120,7 +120,7 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
             display: 'block',
             visibility: 'visible',
             opacity: uploading ? 0.5 : 1,
-            borderRadius: '2px'
+            borderRadius: '4px'
           }}
         >
           {uploading ? '上传中...' : (authState.isAuthenticated ? '+ 添加图片' : '请先登录')}
