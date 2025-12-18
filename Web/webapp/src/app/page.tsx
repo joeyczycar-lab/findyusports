@@ -100,15 +100,15 @@ export default async function HomePage() {
                 className="flex-1 bg-white text-black px-6 py-4 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white" 
                 placeholder="搜索城市、关键词…" 
               />
-              <Link href="/map" className="btn-primary whitespace-nowrap">
+              <Link href="/map" className="btn-primary whitespace-nowrap" style={{ borderRadius: '2px' }}>
                 开始探索
               </Link>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/map?sport=basketball" className="btn-secondary text-white border-white hover:bg-white hover:text-black">
+              <Link href="/map?sport=basketball" className="btn-secondary text-white border-white hover:bg-white hover:text-black" style={{ borderRadius: '2px' }}>
                 篮球
               </Link>
-              <Link href="/map?sport=football" className="btn-secondary text-white border-white hover:bg-white hover:text-black">
+              <Link href="/map?sport=football" className="btn-secondary text-white border-white hover:bg-white hover:text-black" style={{ borderRadius: '2px' }}>
                 足球
               </Link>
               <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]" style={{ borderRadius: '2px' }}>
@@ -124,7 +124,7 @@ export default async function HomePage() {
         <div className="flex items-center justify-between mb-12 flex-wrap gap-4">
           <h2 className="text-heading font-bold tracking-tight">精选场地</h2>
           <div className="flex items-center gap-4">
-            <Link href="/admin/add-venue" className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors !inline-flex items-center justify-center shadow-lg">
+            <Link href="/admin/add-venue" className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors !inline-flex items-center justify-center shadow-lg" style={{ borderRadius: '2px' }}>
               ➕ 添加场地
             </Link>
             <Link href="/map" className="link-nike">查看全部 →</Link>

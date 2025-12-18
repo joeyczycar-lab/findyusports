@@ -10,6 +10,24 @@
   @apply antialiased;
 }
 
+/* 强制所有按钮和链接按钮在正常状态下也显示圆角 - 最高优先级 */
+a.btn-primary,
+a.btn-primary:link,
+a.btn-primary:visited,
+a.btn-secondary,
+a.btn-secondary:link,
+a.btn-secondary:visited,
+button.btn-primary,
+button.btn-secondary,
+button:not(.rounded-full),
+a[class*="btn"]:not(.rounded-full) {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
+  /* 使用 CSS 变量确保覆盖 */
+  --tw-border-radius: 2px !important;
+}
+
 html {
   margin: 0;
   padding: 0;
@@ -86,35 +104,80 @@ header#main-nav-header button {
   opacity: 1 !important;
   display: inline-flex !important;
   color: inherit !important;
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
 }
 
-/* 确保添加场地按钮可见 */
-header#main-nav-header a[href="/admin/add-venue"] {
+/* 确保添加场地按钮可见 - 强制圆角 */
+header#main-nav-header a[href="/admin/add-venue"],
+header#main-nav-header a[href="/admin/add-venue"]:link,
+header#main-nav-header a[href="/admin/add-venue"]:visited,
+header#main-nav-header a[href="/admin/add-venue"]:hover,
+header#main-nav-header a[href="/admin/add-venue"]:focus,
+header#main-nav-header a[href="/admin/add-venue"]:active {
   background-color: #000000 !important;
   color: #ffffff !important;
   display: inline-flex !important;
   visibility: visible !important;
   opacity: 1 !important;
   text-decoration: none !important;
+  padding: 8px 16px !important;
+  font-weight: bold !important;
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
 }
 
 .container-page {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
 
-/* Nike 风格按钮 - 小圆角 */
+/* Nike 风格按钮 - 小圆角（参考耐克中文官网：2px）- 强制所有状态 */
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:visited {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
+}
+
 .btn-primary {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
   @apply bg-black text-white px-8 py-3 text-sm font-medium uppercase tracking-wider;
   @apply hover:bg-gray-900 transition-colors duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
+  /* 再次强制设置，确保 @apply 不会覆盖 */
   border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
+}
+
+.btn-secondary,
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active,
+.btn-secondary:visited {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
 }
 
 .btn-secondary {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
   @apply bg-white text-black border-2 border-black px-8 py-3 text-sm font-medium uppercase tracking-wider;
   @apply hover:bg-black hover:text-white transition-all duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
+  /* 再次强制设置，确保 @apply 不会覆盖 */
   border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
 }
 
 .btn-text {
@@ -148,21 +211,69 @@ select {
   border-radius: 2px !important;
 }
 
-/* Nike 风格按钮 - 全局小圆角 */
-button,
-a[role="button"],
-input[type="button"],
-input[type="submit"],
-input[type="reset"] {
+/* Nike 风格按钮 - 全局小圆角（参考耐克中文官网：2px）- 最高优先级 - 所有状态 */
+button:not(.rounded-full),
+button:not(.rounded-full):hover,
+button:not(.rounded-full):focus,
+button:not(.rounded-full):active,
+a[role="button"]:not(.rounded-full),
+a[role="button"]:not(.rounded-full):hover,
+input[type="button"]:not(.rounded-full),
+input[type="button"]:not(.rounded-full):hover,
+input[type="submit"]:not(.rounded-full),
+input[type="submit"]:not(.rounded-full):hover,
+input[type="reset"]:not(.rounded-full),
+a.btn-primary,
+a.btn-primary:hover,
+a.btn-primary:focus,
+a.btn-secondary,
+a.btn-secondary:hover,
+a.btn-secondary:focus,
+a[class*="btn"]:not(.rounded-full),
+a[class*="btn"]:not(.rounded-full):hover {
   border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
+}
+
+/* 覆盖所有 Tailwind rounded 类（除了 rounded-full）- 强制应用耐克风格 2px 圆角 */
+.rounded:not(.rounded-full),
+.rounded-sm:not(.rounded-full),
+.rounded-md:not(.rounded-full),
+.rounded-lg:not(.rounded-full),
+.rounded-xl:not(.rounded-full),
+.rounded-2xl:not(.rounded-full),
+.rounded-3xl:not(.rounded-full),
+button.rounded,
+a.rounded,
+input.rounded {
+  border-radius: 2px !important;
+}
+
+/* 保留 rounded-full 用于圆形元素（头像、图标等） */
+.rounded-full {
+  border-radius: 9999px !important;
 }
 
 /* Nike 风格卡片和容器 - 小圆角 */
 .card,
 .card-nike,
-[class*="rounded"],
-[class*="border"] {
+[class*="border"]:not(.rounded-full) {
   border-radius: 2px !important;
+}
+
+/* 强制所有按钮和链接按钮使用 2px 圆角 - 最高优先级 */
+a.btn-primary,
+a.btn-secondary,
+a[href="/map"],
+a[href*="/map"],
+a[href="/admin/add-venue"],
+button:not(.rounded-full),
+input[type="button"]:not(.rounded-full),
+input[type="submit"]:not(.rounded-full) {
+  border-radius: 2px !important;
+  -webkit-border-radius: 2px !important;
+  -moz-border-radius: 2px !important;
 }
 
 /* Hero 背景图片 - 强制显示 */

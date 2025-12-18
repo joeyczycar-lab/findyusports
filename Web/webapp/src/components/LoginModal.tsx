@@ -83,7 +83,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3" style={{ borderRadius: '2px' }}>
               {error}
             </div>
           )}
@@ -98,7 +98,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
               value={formData.phone}
               onChange={handleInputChange}
               placeholder="请输入手机号"
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ borderRadius: '2px' }}
               required
             />
           </div>

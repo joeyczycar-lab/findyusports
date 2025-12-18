@@ -153,7 +153,12 @@ export default function Nav() {
             visibility: visible !important;
             opacity: 1 !important;
           }
-          header#main-nav-header a[href="/admin/add-venue"] {
+          header#main-nav-header a[href="/admin/add-venue"],
+          header#main-nav-header a[href="/admin/add-venue"]:link,
+          header#main-nav-header a[href="/admin/add-venue"]:visited,
+          header#main-nav-header a[href="/admin/add-venue"]:hover,
+          header#main-nav-header a[href="/admin/add-venue"]:focus,
+          header#main-nav-header a[href="/admin/add-venue"]:active {
             background-color: #000000 !important;
             color: #ffffff !important;
             display: inline-flex !important;
@@ -163,11 +168,18 @@ export default function Nav() {
             padding: 8px 16px !important;
             font-weight: bold !important;
             border-radius: 2px !important;
+            -webkit-border-radius: 2px !important;
+            -moz-border-radius: 2px !important;
           }
           header#main-nav-header a,
+          header#main-nav-header a:link,
+          header#main-nav-header a:visited,
           header#main-nav-header button {
             visibility: visible !important;
             opacity: 1 !important;
+            border-radius: 2px !important;
+            -webkit-border-radius: 2px !important;
+            -moz-border-radius: 2px !important;
           }
         `
       }} />
@@ -203,7 +215,7 @@ export default function Nav() {
             {/* 添加场地按钮 - 所有屏幕都显示 */}
             <Link 
               href="/admin/add-venue" 
-              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors rounded-sm inline-flex items-center"
+              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-flex items-center"
               style={{
                 backgroundColor: '#000000',
                 color: '#ffffff',
@@ -267,7 +279,7 @@ export default function Nav() {
               </Link>
               <Link
                 href="/admin/add-venue"
-                className="block bg-black text-white px-4 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors rounded-sm text-center"
+                className="block bg-black text-white px-4 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors text-center"
                 onClick={() => setIsMenuOpen(false)}
               >
                 ➕ 添加场地

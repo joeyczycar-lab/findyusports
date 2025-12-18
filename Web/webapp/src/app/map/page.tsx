@@ -239,7 +239,7 @@ function MapPageContent() {
           onSearchHere={(payload) => { setLastQuery(payload); fetchVenuesByBounds(payload.bounds); setDrawerOpen(true); }}
         />
         <div className="mt-4 text-caption text-textSecondary uppercase tracking-wide">最近查询：{lastQuery ? `${lastQuery.center[0].toFixed(4)}, ${lastQuery.center[1].toFixed(4)} (z${lastQuery.zoom})` : '无'}</div>
-        <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)}>打开列表</button>
+        <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)} style={{ borderRadius: '2px' }}>打开列表</button>
       </div>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
