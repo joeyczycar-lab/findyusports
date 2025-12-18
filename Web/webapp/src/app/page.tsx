@@ -20,12 +20,20 @@ async function getFeaturedVenues() {
       headers: {
         'Content-Type': 'application/json',
       },
+      // 添加超时和错误处理
+      signal: AbortSignal.timeout(5000), // 5秒超时
     })
     if (!res.ok) throw new Error(`Request failed: ${res.status}`)
     const data = await res.json()
     return data?.items || []
   } catch (error) {
-    console.error('Failed to fetch venues:', error)
+    // 静默处理网络错误，不影响构建
+    if (error instanceof Error) {
+      // 只在开发环境输出错误
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch venues:', error.message)
+      }
+    }
     return []
   }
 }
