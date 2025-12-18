@@ -337,8 +337,8 @@ export default function AddVenuePage() {
                   fileInputRef.current?.click()
                 }}
                 className="w-full h-14 px-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white bg-white text-black font-bold transition-colors flex items-center justify-center gap-3 text-base"
-                style={{ borderRadius: '4px' }}
                 style={{
+                  borderRadius: '4px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
