@@ -27,8 +27,10 @@ async function bootstrap() {
     // eslint-disable-next-line no-console
     console.log(`✅ API running on http://0.0.0.0:${port}`)
     console.log(`✅ Health check available at http://0.0.0.0:${port}/health`)
+    console.log(`✅ Health check also available at http://0.0.0.0:${port}/`)
     console.log(`✅ All routes mapped successfully`)
     console.log(`✅ Service is ready to accept connections`)
+    console.log(`✅ Waiting for health checks from Railway...`)
     
     // Keep the process alive and handle graceful shutdown
     process.on('SIGTERM', () => {
