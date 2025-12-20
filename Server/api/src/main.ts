@@ -28,11 +28,29 @@ async function bootstrap() {
     console.log(`✅ API running on http://0.0.0.0:${port}`)
     console.log(`✅ Health check available at http://0.0.0.0:${port}/health`)
     console.log(`✅ All routes mapped successfully`)
+    console.log(`✅ Service is ready to accept connections`)
     
-    // Keep the process alive and log periodic health status
+    // Keep the process alive and handle graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('⚠️  SIGTERM received, shutting down gracefully...')
+      app.close().then(() => {
+        console.log('✅ Application closed gracefully')
+        process.exit(0)
+      })
+    })
+    
+    process.on('SIGINT', () => {
+      console.log('⚠️  SIGINT received, shutting down gracefully...')
+      app.close().then(() => {
+        console.log('✅ Application closed gracefully')
+        process.exit(0)
+      })
+    })
+    
+    // Log periodic health status (less frequent to reduce log noise)
     setInterval(() => {
       console.log(`💓 Health check: Service is running on port ${port}`)
-    }, 30000) // Every 30 seconds
+    }, 60000) // Every 60 seconds (reduced from 30)
   } catch (error) {
     console.error('❌ Failed to start application:', error)
     if (error instanceof Error) {
