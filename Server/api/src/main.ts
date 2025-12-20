@@ -27,6 +27,12 @@ async function bootstrap() {
     // eslint-disable-next-line no-console
     console.log(`✅ API running on http://0.0.0.0:${port}`)
     console.log(`✅ Health check available at http://0.0.0.0:${port}/health`)
+    console.log(`✅ All routes mapped successfully`)
+    
+    // Keep the process alive and log periodic health status
+    setInterval(() => {
+      console.log(`💓 Health check: Service is running on port ${port}`)
+    }, 30000) // Every 30 seconds
   } catch (error) {
     console.error('❌ Failed to start application:', error)
     if (error instanceof Error) {
