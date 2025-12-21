@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
+import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './modules/app.module'
 import * as dotenv from 'dotenv'
 
@@ -16,6 +17,18 @@ async function bootstrap() {
 
     const app = await NestFactory.create(AppModule, { cors: true })
     const port = process.env.PORT ? Number(process.env.PORT) : 4000
+    
+    // 启用全局验证管道，用于处理 DTO 验证错误
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true, // 自动过滤掉未定义的属性
+        forbidNonWhitelisted: false, // 不禁止未定义的属性，只过滤
+        transform: true, // 自动转换类型
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      })
+    )
     
     console.log(`🌐 Configuring CORS...`)
     app.enableCors({ origin: true, credentials: true })
