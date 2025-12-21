@@ -2,6 +2,7 @@ import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
 import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './modules/app.module'
+import { HttpExceptionFilter } from './filters/http-exception.filter'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
@@ -13,10 +14,14 @@ async function bootstrap() {
       PORT: process.env.PORT,
       NODE_ENV: process.env.NODE_ENV,
       DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
     })
 
     const app = await NestFactory.create(AppModule, { cors: true })
     const port = process.env.PORT ? Number(process.env.PORT) : 4000
+    
+    // 启用全局异常过滤器，统一处理错误响应格式
+    app.useGlobalFilters(new HttpExceptionFilter())
     
     // 启用全局验证管道，用于处理 DTO 验证错误
     app.useGlobalPipes(
@@ -26,6 +31,18 @@ async function bootstrap() {
         transform: true, // 自动转换类型
         transformOptions: {
           enableImplicitConversion: true,
+        },
+        exceptionFactory: (errors) => {
+          // 自定义验证错误格式
+          const messages = errors.map(error => {
+            const constraints = error.constraints || {}
+            return Object.values(constraints)[0] || '验证失败'
+          })
+          return new (require('@nestjs/common').BadRequestException)({
+            message: messages,
+            error: 'Validation Failed',
+            statusCode: 400,
+          })
         },
       })
     )
