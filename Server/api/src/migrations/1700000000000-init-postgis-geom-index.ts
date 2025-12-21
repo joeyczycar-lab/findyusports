@@ -7,22 +7,40 @@ export class InitPostgisGeomIndex1700000000000 implements MigrationInterface {
         // Always wrap PostGIS operations in try-catch to prevent migration failure
         // Railway PostgreSQL may not have PostGIS installed, so we gracefully skip it
         
-        // Try to create PostGIS extension - if it fails, skip all PostGIS operations
+        // First, check if PostGIS extension is already installed
+        let postgisInstalled = false
         try {
-            await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS postgis`)
-            console.log('✅ PostGIS extension created successfully')
+            const checkResult = await queryRunner.query(`
+                SELECT EXISTS(
+                    SELECT 1 FROM pg_extension WHERE extname = 'postgis'
+                ) as installed
+            `)
+            postgisInstalled = checkResult[0]?.installed === true
         } catch (error: any) {
-            // PostGIS is not available or cannot be created
-            // This is OK - the app will use fallback lng/lat queries
-            console.warn('⚠️  PostGIS extension not available, skipping PostGIS setup.')
-            console.warn('   Error:', error.message)
-            console.warn('   The app will use fallback lng/lat queries (which work fine).')
-            console.warn('   To enable PostGIS on Railway:')
-            console.warn('   1. Go to Railway Dashboard → Your Database → Extensions')
-            console.warn('   2. Add "postgis" extension')
-            console.warn('   3. Then run: npm run migration:run')
-            // Return early - migration completes successfully without PostGIS
-            return
+            // If check fails, assume not installed
+            postgisInstalled = false
+        }
+        
+        // If not installed, try to create it (but catch errors gracefully)
+        if (!postgisInstalled) {
+            try {
+                await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS postgis`)
+                console.log('✅ PostGIS extension created successfully')
+            } catch (error: any) {
+                // PostGIS is not available or cannot be created
+                // This is OK - the app will use fallback lng/lat queries
+                // Note: PostgreSQL will still log an error, but migration succeeds
+                console.warn('⚠️  PostGIS extension not available, skipping PostGIS setup.')
+                console.warn('   The app will use fallback lng/lat queries (which work fine).')
+                console.warn('   To enable PostGIS on Railway:')
+                console.warn('   1. Go to Railway Dashboard → Your Database → Extensions')
+                console.warn('   2. Add "postgis" extension')
+                console.warn('   3. Then run: npm run migration:run')
+                // Return early - migration completes successfully without PostGIS
+                return
+            }
+        } else {
+            console.log('✅ PostGIS extension already installed')
         }
         
         // If we get here, PostGIS was created successfully
