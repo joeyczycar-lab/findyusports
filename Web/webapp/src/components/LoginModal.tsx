@@ -83,7 +83,9 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     } catch (err: any) {
       // 网络错误处理
       if (err instanceof TypeError && err.message.includes('fetch')) {
-        setError('无法连接到后端服务，请检查网络连接或后端服务是否正常运行')
+        setError('无法连接到后端服务。请检查：\n1. 后端服务是否正常运行\n2. API 地址是否正确\n3. 网络连接是否正常')
+      } else if (err.message && err.message.includes('502')) {
+        setError('后端服务未响应 (502)。请检查 Railway 服务状态和日志')
       } else {
         setError(err.message || '网络错误，请检查后端服务是否正常运行')
       }
