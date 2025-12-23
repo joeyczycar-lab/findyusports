@@ -137,10 +137,10 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/map?sport=basketball" className="btn-sport-no-border !border-0 bg-transparent text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
+              <Link href="/map?sport=basketball" className="btn-sport-no-border !border-0 bg-white/90 text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
                 篮球
               </Link>
-              <Link href="/map?sport=football" className="btn-sport-no-border !border-0 bg-transparent text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
+              <Link href="/map?sport=football" className="btn-sport-no-border !border-0 bg-white/90 text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
                 足球
               </Link>
               <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]" style={{ borderRadius: '4px' }}>
