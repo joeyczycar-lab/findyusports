@@ -218,6 +218,38 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
   -moz-border-radius: 4px !important;
 }
 
+/* 首页 Hero 区域的篮球和足球按钮 - 无边框 - 最高优先级 */
+.btn-sport-no-border,
+a[href="/map?sport=basketball"],
+a[href="/map?sport=football"],
+a[href="/map?sport=basketball"]:hover,
+a[href="/map?sport=football"]:hover,
+a[href="/map?sport=basketball"]:focus,
+a[href="/map?sport=football"]:focus,
+a[href="/map?sport=basketball"]:active,
+a[href="/map?sport=football"]:active,
+a[href="/map?sport=basketball"]:visited,
+a[href="/map?sport=football"]:visited,
+a.btn-secondary[href="/map?sport=basketball"],
+a.btn-secondary[href="/map?sport=football"],
+a.btn-secondary[href="/map?sport=basketball"]:hover,
+a.btn-secondary[href="/map?sport=football"]:hover,
+a.btn-secondary[href="/map?sport=basketball"]:focus,
+a.btn-secondary[href="/map?sport=football"]:focus,
+a.btn-secondary[href="/map?sport=basketball"]:active,
+a.btn-secondary[href="/map?sport=football"]:active {
+  border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-border-width: 0 !important;
+}
+
 .btn-text {
   @apply text-black text-sm font-medium uppercase tracking-wider;
   @apply hover:underline transition-all duration-200;
@@ -339,6 +371,40 @@ section:first-of-type {
   visibility: visible !important;
   display: block !important;
   pointer-events: none !important;
+}
+
+/* 强制移除篮球和足球按钮的所有边框 - 最高优先级规则 */
+section:first-of-type a[href="/map?sport=basketball"],
+section:first-of-type a[href="/map?sport=football"],
+section:first-of-type a[href="/map?sport=basketball"]:hover,
+section:first-of-type a[href="/map?sport=football"]:hover,
+section:first-of-type a[href="/map?sport=basketball"]:focus,
+section:first-of-type a[href="/map?sport=football"]:focus,
+section:first-of-type a[href="/map?sport=basketball"]:active,
+section:first-of-type a[href="/map?sport=football"]:active,
+section:first-of-type a[href="/map?sport=basketball"]:visited,
+section:first-of-type a[href="/map?sport=football"]:visited,
+section:first-of-type a.btn-secondary[href="/map?sport=basketball"],
+section:first-of-type a.btn-secondary[href="/map?sport=football"],
+section:first-of-type a.btn-secondary[href="/map?sport=basketball"]:hover,
+section:first-of-type a.btn-secondary[href="/map?sport=football"]:hover,
+section:first-of-type a.btn-secondary[href="/map?sport=basketball"]:focus,
+section:first-of-type a.btn-secondary[href="/map?sport=football"]:focus,
+section:first-of-type a.btn-secondary[href="/map?sport=basketball"]:active,
+section:first-of-type a.btn-secondary[href="/map?sport=football"]:active {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  outline: 0 !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+  --tw-border-width: 0 !important;
+  --tw-border-opacity: 0 !important;
 }
 
 

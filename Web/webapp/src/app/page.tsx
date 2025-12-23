@@ -72,6 +72,30 @@ export default async function HomePage() {
               display: block !important;
               pointer-events: none !important;
             }
+            a[href="/map?sport=basketball"],
+            a[href="/map?sport=football"],
+            a[href="/map?sport=basketball"]:hover,
+            a[href="/map?sport=football"]:hover,
+            a[href="/map?sport=basketball"]:focus,
+            a[href="/map?sport=football"]:focus,
+            a[href="/map?sport=basketball"]:active,
+            a[href="/map?sport=football"]:active,
+            a[href="/map?sport=basketball"]:visited,
+            a[href="/map?sport=football"]:visited,
+            a.btn-secondary[href="/map?sport=basketball"],
+            a.btn-secondary[href="/map?sport=football"],
+            a.btn-secondary[href="/map?sport=basketball"]:hover,
+            a.btn-secondary[href="/map?sport=football"]:hover {
+              border: 0 !important;
+              border-width: 0 !important;
+              border-style: none !important;
+              border-top: 0 !important;
+              border-right: 0 !important;
+              border-bottom: 0 !important;
+              border-left: 0 !important;
+              outline: 0 !important;
+              box-shadow: none !important;
+            }
           `
         }} />
         {/* 背景图片层 - 使用内联样式 + CSS 类双重保障 */}
@@ -113,10 +137,10 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/map?sport=basketball" className="btn-secondary text-white border-0 hover:bg-white hover:text-black" style={{ borderRadius: '4px' }}>
+              <Link href="/map?sport=basketball" className="btn-sport-no-border !border-0 bg-transparent text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
                 篮球
               </Link>
-              <Link href="/map?sport=football" className="btn-secondary text-white border-0 hover:bg-white hover:text-black" style={{ borderRadius: '4px' }}>
+              <Link href="/map?sport=football" className="btn-sport-no-border !border-0 bg-transparent text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-white hover:text-black transition-colors duration-200" style={{ borderRadius: '4px' }}>
                 足球
               </Link>
               <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]" style={{ borderRadius: '4px' }}>
