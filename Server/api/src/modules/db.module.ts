@@ -36,16 +36,23 @@ function buildTypeOrmOptions(): DataSourceOptions {
         return {
           ...baseOptions,
           autoLoadEntities: true,
-          // 添加连接选项，避免阻塞应用启动
+          // 延迟连接，避免阻塞应用启动
           // 这样健康检查端点可以立即响应
+          // TypeORM 会在第一次查询时自动连接
+          // 但不会阻塞应用启动
           extra: {
             ...(baseOptions.extra || {}),
             // PostgreSQL 连接选项
             connectionTimeoutMillis: 10000, // 10秒连接超时
             statement_timeout: 30000, // 30秒语句超时
+            // 不立即连接，延迟到第一次查询
+            max: 10, // 最大连接数
+            idleTimeoutMillis: 30000, // 空闲超时
           },
         }
       },
+      // 不等待连接完成，允许应用立即启动
+      // 连接会在第一次数据库操作时建立
     }),
   ],
 })

@@ -17,7 +17,13 @@ async function bootstrap() {
       JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
     })
 
-    const app = await NestFactory.create(AppModule, { cors: true })
+    // 创建应用，但不等待数据库连接
+    // 这样应用可以立即启动，数据库连接会在需要时建立
+    const app = await NestFactory.create(AppModule, { 
+      cors: true,
+      // 不等待数据库连接完成，允许应用立即启动
+      // 数据库连接会在第一次查询时自动建立
+    })
     const port = process.env.PORT ? Number(process.env.PORT) : 4000
     
     // 启用全局异常过滤器，统一处理错误响应格式
