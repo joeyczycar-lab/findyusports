@@ -31,10 +31,18 @@ function buildTypeOrmOptions(): DataSourceOptions {
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        ...buildTypeOrmOptions(),
-        autoLoadEntities: true,
-      }),
+      useFactory: () => {
+        const options = {
+          ...buildTypeOrmOptions(),
+          autoLoadEntities: true,
+          // 延迟连接，避免阻塞应用启动
+          // 这样健康检查端点可以立即响应
+          connectTimeoutMS: 10000, // 10秒连接超时
+          retryAttempts: 3,
+          retryDelay: 3000,
+        }
+        return options
+      },
     }),
   ],
 })

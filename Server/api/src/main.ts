@@ -61,12 +61,13 @@ async function bootstrap() {
     console.log(`✅ All routes mapped successfully`)
     console.log(`✅ Service is ready to accept connections`)
     console.log(`✅ Application fully initialized and ready`)
-    console.log(`✅ Waiting for health checks from Railway...`)
     
-    // Give Railway a moment to recognize the service is up
-    // This helps prevent premature health check failures
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log(`✅ Service is now fully ready and stable`)
+    // Immediately log that service is ready for health checks
+    // This is critical for Railway's health check to pass
+    console.log(`✅ Service is now fully ready and stable - Health checks can proceed`)
+    
+    // Log a heartbeat immediately to confirm service is alive
+    console.log(`💓 Service heartbeat: Ready and responding on port ${port}`)
     
     // Keep the process alive and handle graceful shutdown
     process.on('SIGTERM', () => {
