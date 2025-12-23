@@ -75,20 +75,6 @@ async function bootstrap() {
     // Log a heartbeat immediately to confirm service is alive
     console.log(`💓 Service heartbeat: Ready and responding on port ${port}`)
     
-    // Send a test health check request to ourselves to ensure endpoint is working
-    // This helps Railway detect that the service is ready
-    try {
-      const testUrl = `http://localhost:${port}/health`
-      const testResponse = await fetch(testUrl)
-      if (testResponse.ok) {
-        console.log(`✅ Health check endpoint verified: ${testUrl} is responding`)
-      } else {
-        console.warn(`⚠️  Health check endpoint returned status: ${testResponse.status}`)
-      }
-    } catch (error) {
-      console.warn(`⚠️  Could not verify health check endpoint:`, error)
-    }
-    
     // Keep the process alive and handle graceful shutdown
     process.on('SIGTERM', () => {
       console.log('⚠️  SIGTERM received, shutting down gracefully...')
