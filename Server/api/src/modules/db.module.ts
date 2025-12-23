@@ -32,16 +32,19 @@ function buildTypeOrmOptions(): DataSourceOptions {
   imports: [
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        const options = {
-          ...buildTypeOrmOptions(),
+        const baseOptions = buildTypeOrmOptions()
+        return {
+          ...baseOptions,
           autoLoadEntities: true,
-          // 延迟连接，避免阻塞应用启动
+          // 添加连接选项，避免阻塞应用启动
           // 这样健康检查端点可以立即响应
-          connectTimeoutMS: 10000, // 10秒连接超时
-          retryAttempts: 3,
-          retryDelay: 3000,
+          extra: {
+            ...(baseOptions.extra || {}),
+            // PostgreSQL 连接选项
+            connectionTimeoutMillis: 10000, // 10秒连接超时
+            statement_timeout: 30000, // 30秒语句超时
+          },
         }
-        return options
       },
     }),
   ],
