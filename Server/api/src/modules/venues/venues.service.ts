@@ -52,40 +52,42 @@ export class VenuesService {
     if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
     
     // 检查数据库中是否实际存在 geom 列
+    // 默认不使用 PostGIS，除非明确检测到 geom 列存在
     let hasGeomColumn = false
     try {
       const tableName = this.repo.metadata.tableName
+      // 使用 schema-qualified 查询，更可靠
       const columnCheck = await this.repo.query(`
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = $1 AND column_name = 'geom'
+        LIMIT 1
       `, [tableName])
-      hasGeomColumn = columnCheck && columnCheck.length > 0
+      hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
+      if (hasGeomColumn) {
+        console.log('✅ PostGIS geom column found, will use spatial queries')
+      } else {
+        console.log('⚠️  PostGIS geom column not found, using lng/lat queries only')
+      }
     } catch (error) {
       console.warn('⚠️  Error checking geom column in search:', error instanceof Error ? error.message : String(error))
       hasGeomColumn = false
     }
     
     // 优先使用 PostGIS 空间查询（fallback 到经纬度范围）
-    // 注意：只有在确认 geom 列存在时才使用 PostGIS 查询
+    // 只有在确认 geom 列存在时才使用 PostGIS 查询
     if (hasGeomColumn) {
-      try {
-        // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
-        qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
-        qb.andWhere(`(
-          v.geom IS NOT NULL AND ST_Intersects(
-            v.geom,
-            ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
-          )
-        )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
-      } catch (postgisError) {
-        // 如果 PostGIS 查询失败，回退到经纬度查询
-        console.warn('⚠️  PostGIS query failed, falling back to lng/lat query:', postgisError instanceof Error ? postgisError.message : String(postgisError))
-        qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
-        qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
-      }
+      // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
+      qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
+      qb.andWhere(`(
+        v.geom IS NOT NULL AND ST_Intersects(
+          v.geom,
+          ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
+        )
+      )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
     } else {
       // 使用经纬度范围查询（不依赖 PostGIS）
+      // 这是默认方式，适用于没有 PostGIS 的数据库
       qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
       qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
     }
