@@ -67,15 +67,23 @@ export class VenuesService {
     }
     
     // 优先使用 PostGIS 空间查询（fallback 到经纬度范围）
+    // 注意：只有在确认 geom 列存在时才使用 PostGIS 查询
     if (hasGeomColumn) {
-      // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
-      qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
-      qb.andWhere(`(
-        v.geom IS NOT NULL AND ST_Intersects(
-          v.geom,
-          ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
-        )
-      )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
+      try {
+        // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
+        qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
+        qb.andWhere(`(
+          v.geom IS NOT NULL AND ST_Intersects(
+            v.geom,
+            ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
+          )
+        )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
+      } catch (postgisError) {
+        // 如果 PostGIS 查询失败，回退到经纬度查询
+        console.warn('⚠️  PostGIS query failed, falling back to lng/lat query:', postgisError instanceof Error ? postgisError.message : String(postgisError))
+        qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
+        qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
+      }
     } else {
       // 使用经纬度范围查询（不依赖 PostGIS）
       qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
