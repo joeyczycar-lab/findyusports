@@ -38,7 +38,11 @@ async function addVenue(venueData: VenueInput) {
   venue.priceMin = venueData.priceMin
   venue.priceMax = venueData.priceMax
   venue.indoor = venueData.indoor
-  venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+  // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
+  const hasGeomColumn = repo.metadata.columns.find(c => c.propertyName === 'geom')
+  if (hasGeomColumn) {
+    venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+  }
   
   const saved = await repo.save(venue)
   console.log(`✅ 场地已添加: ${saved.name} (ID: ${saved.id})`)
@@ -48,6 +52,9 @@ async function addVenue(venueData: VenueInput) {
 async function addVenuesFromArray(venues: VenueInput[]) {
   await ds.initialize()
   const repo = ds.getRepository(VenueEntity)
+  
+  // 检查是否存在 geom 列
+  const hasGeomColumn = repo.metadata.columns.find(c => c.propertyName === 'geom')
   
   const rows: VenueEntity[] = []
   for (const venueData of venues) {
@@ -61,7 +68,10 @@ async function addVenuesFromArray(venues: VenueInput[]) {
     venue.priceMin = venueData.priceMin
     venue.priceMax = venueData.priceMax
     venue.indoor = venueData.indoor
-    venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+    // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
+    if (hasGeomColumn) {
+      venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+    }
     rows.push(venue)
   }
   

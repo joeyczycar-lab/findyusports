@@ -1,8 +1,6 @@
 import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
-import { ValidationPipe } from '@nestjs/common'
 import { AppModule } from './modules/app.module'
-import { HttpExceptionFilter } from './filters/http-exception.filter'
 import * as dotenv from 'dotenv'
 
 dotenv.config()
@@ -14,44 +12,10 @@ async function bootstrap() {
       PORT: process.env.PORT,
       NODE_ENV: process.env.NODE_ENV,
       DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
-      JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
     })
 
-    // 创建应用，但不等待数据库连接
-    // 这样应用可以立即启动，数据库连接会在需要时建立
-    const app = await NestFactory.create(AppModule, { 
-      cors: true,
-      // 不等待数据库连接完成，允许应用立即启动
-      // 数据库连接会在第一次查询时自动建立
-    })
+    const app = await NestFactory.create(AppModule, { cors: true })
     const port = process.env.PORT ? Number(process.env.PORT) : 4000
-    
-    // 启用全局异常过滤器，统一处理错误响应格式
-    app.useGlobalFilters(new HttpExceptionFilter())
-    
-    // 启用全局验证管道，用于处理 DTO 验证错误
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true, // 自动过滤掉未定义的属性
-        forbidNonWhitelisted: false, // 不禁止未定义的属性，只过滤
-        transform: true, // 自动转换类型
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
-        exceptionFactory: (errors) => {
-          // 自定义验证错误格式
-          const messages = errors.map(error => {
-            const constraints = error.constraints || {}
-            return Object.values(constraints)[0] || '验证失败'
-          })
-          return new (require('@nestjs/common').BadRequestException)({
-            message: messages,
-            error: 'Validation Failed',
-            statusCode: 400,
-          })
-        },
-      })
-    )
     
     console.log(`🌐 Configuring CORS...`)
     app.enableCors({ origin: true, credentials: true })
@@ -66,14 +30,7 @@ async function bootstrap() {
     console.log(`✅ Health check also available at http://0.0.0.0:${port}/`)
     console.log(`✅ All routes mapped successfully`)
     console.log(`✅ Service is ready to accept connections`)
-    console.log(`✅ Application fully initialized and ready`)
-    
-    // Immediately log that service is ready for health checks
-    // This is critical for Railway's health check to pass
-    console.log(`✅ Service is now fully ready and stable - Health checks can proceed`)
-    
-    // Log a heartbeat immediately to confirm service is alive
-    console.log(`💓 Service heartbeat: Ready and responding on port ${port}`)
+    console.log(`✅ Waiting for health checks from Railway...`)
     
     // Keep the process alive and handle graceful shutdown
     process.on('SIGTERM', () => {

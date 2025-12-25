@@ -126,7 +126,11 @@ async function main() {
     venue.priceMin = priceMin
     venue.priceMax = priceMax
     venue.indoor = indoor
-    venue.geom = { type: 'Point', coordinates: [lng, lat] } as any
+    // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
+    const hasGeomColumn = repo.metadata.columns.find(c => c.propertyName === 'geom')
+    if (hasGeomColumn) {
+      venue.geom = { type: 'Point', coordinates: [lng, lat] } as any
+    }
 
     const saved = await repo.save(venue)
     console.log(`\n✅ 场地已成功添加！`)

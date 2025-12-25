@@ -105,8 +105,12 @@ export class VenuesService {
     venue.priceMin = dto.priceMin
     venue.priceMax = dto.priceMax
     venue.indoor = dto.indoor
-    // 创建 PostGIS geometry point
-    venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
+    // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
+    // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
+    const hasGeomColumn = this.repo.metadata.columns.find(c => c.propertyName === 'geom')
+    if (hasGeomColumn) {
+      venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
+    }
     
     const saved = await this.repo.save(venue)
     return {

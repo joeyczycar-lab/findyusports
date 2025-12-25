@@ -36,40 +36,10 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         body: JSON.stringify(formData)
       })
 
-      // 检查响应状态
-      if (!response.ok) {
-        // 尝试解析错误响应
-        let errorMessage = '操作失败'
-        try {
-          const errorData = await response.json()
-          // 处理验证错误数组
-          if (Array.isArray(errorData.errors)) {
-            errorMessage = errorData.errors.join('；')
-          } else if (errorData.message) {
-            errorMessage = Array.isArray(errorData.message) 
-              ? errorData.message.join('；')
-              : errorData.message
-          } else if (errorData.error?.message) {
-            errorMessage = errorData.error.message
-          }
-        } catch {
-          // 如果无法解析 JSON，使用状态文本
-          if (response.status === 502) {
-            errorMessage = '后端服务未响应，请检查服务是否正常运行'
-          } else if (response.status === 503) {
-            errorMessage = '服务暂时不可用，请稍后重试'
-          } else {
-            errorMessage = `请求失败 (${response.status})`
-          }
-        }
-        throw new Error(errorMessage)
-      }
-
       const data = await response.json()
 
-      // 检查响应数据格式
-      if (data.status === 'error') {
-        throw new Error(data.message || '操作失败')
+      if (!response.ok) {
+        throw new Error(data.message || data.error?.message || '操作失败')
       }
 
       // 保存认证信息到 localStorage
@@ -81,14 +51,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       onClose()
       setFormData({ phone: '', password: '', nickname: '' })
     } catch (err: any) {
-      // 网络错误处理
-      if (err instanceof TypeError && err.message.includes('fetch')) {
-        setError('无法连接到后端服务。请检查：\n1. 后端服务是否正常运行\n2. API 地址是否正确\n3. 网络连接是否正常')
-      } else if (err.message && err.message.includes('502')) {
-        setError('后端服务未响应 (502)。请检查 Railway 服务状态和日志')
-      } else {
-        setError(err.message || '网络错误，请检查后端服务是否正常运行')
-      }
+      setError(err.message || '网络错误，请检查后端服务是否正常运行')
     } finally {
       setLoading(false)
     }
