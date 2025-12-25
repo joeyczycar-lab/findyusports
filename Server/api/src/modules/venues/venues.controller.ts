@@ -20,7 +20,21 @@ export class VenuesController {
   @Public()
   @Post()
   async create(@Body() dto: CreateVenueDto) {
-    return this.venuesService.createVenue(dto)
+    try {
+      return await this.venuesService.createVenue(dto)
+    } catch (error) {
+      console.error('❌ Error creating venue:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '创建场地失败',
+        },
+      }
+    }
   }
 
   @Public()

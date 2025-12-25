@@ -95,34 +95,79 @@ export class VenuesService {
   }
 
   async createVenue(dto: CreateVenueDto) {
-    const venue = new VenueEntity()
-    venue.name = dto.name
-    venue.sportType = dto.sportType
-    venue.cityCode = dto.cityCode
-    venue.address = dto.address
-    venue.lng = dto.lng
-    venue.lat = dto.lat
-    venue.priceMin = dto.priceMin
-    venue.priceMax = dto.priceMax
-    venue.indoor = dto.indoor
-    // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
-    // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
-    const hasGeomColumn = this.repo.metadata.columns.find(c => c.propertyName === 'geom')
-    if (hasGeomColumn) {
-      venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
-    }
-    
-    const saved = await this.repo.save(venue)
-    return {
-      id: String(saved.id),
-      name: saved.name,
-      sportType: saved.sportType,
-      cityCode: saved.cityCode,
-      address: saved.address,
-      priceMin: saved.priceMin,
-      priceMax: saved.priceMax,
-      indoor: saved.indoor ?? false,
-      location: [saved.lng, saved.lat] as [number, number],
+    try {
+      console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode })
+      
+      const venue = new VenueEntity()
+      venue.name = dto.name
+      venue.sportType = dto.sportType
+      venue.cityCode = dto.cityCode
+      venue.address = dto.address
+      venue.lng = dto.lng
+      venue.lat = dto.lat
+      venue.priceMin = dto.priceMin
+      venue.priceMax = dto.priceMax
+      venue.indoor = dto.indoor
+      
+      // 检查数据库中是否存在 geom 列
+      // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
+      let hasGeomColumn = false
+      try {
+        // 检查实体元数据中是否有 geom 列定义
+        const geomColumn = this.repo.metadata.columns.find(c => c.propertyName === 'geom')
+        if (geomColumn) {
+          // 进一步检查数据库表中是否实际存在该列
+          // 通过查询表结构来确认
+          const tableName = this.repo.metadata.tableName
+          const columnCheck = await this.repo.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = $1 AND column_name = 'geom'
+          `, [tableName])
+          
+          hasGeomColumn = columnCheck && columnCheck.length > 0
+          
+          if (hasGeomColumn) {
+            console.log('✅ PostGIS geom column found in database, setting geometry point')
+            venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
+          } else {
+            console.log('⚠️  PostGIS geom column not found in database, skipping geometry field')
+            // 从实体中删除 geom 属性，避免 TypeORM 尝试插入它
+            delete (venue as any).geom
+          }
+        } else {
+          console.log('⚠️  PostGIS geom column not in entity metadata, skipping geometry field')
+          delete (venue as any).geom
+        }
+      } catch (geomError) {
+        console.warn('⚠️  Error checking geom column:', geomError instanceof Error ? geomError.message : String(geomError))
+        // 从实体中删除 geom 属性，确保不会尝试插入
+        delete (venue as any).geom
+      }
+      
+      console.log('💾 Saving venue to database...')
+      const saved = await this.repo.save(venue)
+      console.log('✅ Venue saved successfully:', saved.id)
+      
+      return {
+        id: String(saved.id),
+        name: saved.name,
+        sportType: saved.sportType,
+        cityCode: saved.cityCode,
+        address: saved.address,
+        priceMin: saved.priceMin,
+        priceMax: saved.priceMax,
+        indoor: saved.indoor ?? false,
+        location: [saved.lng, saved.lat] as [number, number],
+      }
+    } catch (error) {
+      console.error('❌ Error in createVenue:', error)
+      if (error instanceof Error) {
+        console.error('Error name:', error.name)
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw error // 重新抛出，让控制器处理
     }
   }
 
