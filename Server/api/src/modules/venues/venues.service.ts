@@ -113,40 +113,73 @@ export class VenuesService {
       // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
       let hasGeomColumn = false
       try {
-        // 检查实体元数据中是否有 geom 列定义
-        const geomColumn = this.repo.metadata.columns.find(c => c.propertyName === 'geom')
-        if (geomColumn) {
-          // 进一步检查数据库表中是否实际存在该列
-          // 通过查询表结构来确认
-          const tableName = this.repo.metadata.tableName
-          const columnCheck = await this.repo.query(`
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name = $1 AND column_name = 'geom'
-          `, [tableName])
-          
-          hasGeomColumn = columnCheck && columnCheck.length > 0
-          
-          if (hasGeomColumn) {
-            console.log('✅ PostGIS geom column found in database, setting geometry point')
-            venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
-          } else {
-            console.log('⚠️  PostGIS geom column not found in database, skipping geometry field')
-            // 从实体中删除 geom 属性，避免 TypeORM 尝试插入它
-            delete (venue as any).geom
-          }
+        // 检查数据库表中是否实际存在 geom 列
+        const tableName = this.repo.metadata.tableName
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 AND column_name = 'geom'
+        `, [tableName])
+        
+        hasGeomColumn = columnCheck && columnCheck.length > 0
+        
+        if (hasGeomColumn) {
+          console.log('✅ PostGIS geom column found in database, setting geometry point')
+          venue.geom = { type: 'Point', coordinates: [dto.lng, dto.lat] } as any
         } else {
-          console.log('⚠️  PostGIS geom column not in entity metadata, skipping geometry field')
-          delete (venue as any).geom
+          console.log('⚠️  PostGIS geom column not found in database, using QueryBuilder to exclude it')
         }
       } catch (geomError) {
         console.warn('⚠️  Error checking geom column:', geomError instanceof Error ? geomError.message : String(geomError))
-        // 从实体中删除 geom 属性，确保不会尝试插入
-        delete (venue as any).geom
+        hasGeomColumn = false
       }
       
       console.log('💾 Saving venue to database...')
-      const saved = await this.repo.save(venue)
+      
+      // 如果 geom 列不存在，使用原生 SQL INSERT 语句，明确指定要插入的列，排除 geom
+      let saved: VenueEntity
+      if (!hasGeomColumn) {
+        // 使用原生 SQL INSERT，完全控制要插入的列
+        const insertSql = `
+          INSERT INTO "venue" (name, "sportType", "cityCode", address, lng, lat, "priceMin", "priceMax", indoor)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          RETURNING *
+        `
+        const result = await this.repo.query(insertSql, [
+          venue.name,
+          venue.sportType,
+          venue.cityCode,
+          venue.address || null,
+          venue.lng,
+          venue.lat,
+          venue.priceMin || null,
+          venue.priceMax || null,
+          venue.indoor !== undefined ? venue.indoor : null,
+        ])
+        
+        if (!result || result.length === 0) {
+          throw new Error('Failed to insert venue')
+        }
+        
+        // 将结果转换为实体对象
+        const row = result[0]
+        saved = {
+          id: row.id,
+          name: row.name,
+          sportType: row.sportType,
+          cityCode: row.cityCode,
+          address: row.address,
+          lng: row.lng,
+          lat: row.lat,
+          priceMin: row.priceMin,
+          priceMax: row.priceMax,
+          indoor: row.indoor,
+        } as VenueEntity
+      } else {
+        // geom 列存在，使用正常的 save 方法
+        saved = await this.repo.save(venue)
+      }
+      
       console.log('✅ Venue saved successfully:', saved.id)
       
       return {
