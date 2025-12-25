@@ -12,7 +12,9 @@
     "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/AutoMigration",
     "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "git:push": "cd ../.. && ./git-push.sh",
+    "git:push:auto": "cd ../.. && ./git-push.sh \"Update: $(date +'%Y-%m-%d %H:%M:%S')\""
   },
   "dependencies": {
     "@nestjs/common": "10.3.7",
@@ -48,5 +50,3 @@
     "@types/bcrypt": "5.0.2"
   }
 }
-
-
