@@ -45,18 +45,10 @@ export class VenuesService {
       const swLng = swPair?.[0] ?? 116.30
       const swLat = swPair?.[1] ?? 39.84
 
-      const qb = this.repo.createQueryBuilder('v')
-    if (sport) qb.andWhere('v.sportType = :sport', { sport })
-    if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
-    if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
-    if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
-    
-    // 检查数据库中是否实际存在 geom 列
-    // 默认不使用 PostGIS，除非明确检测到 geom 列存在
+      // 先检查数据库中是否实际存在 geom 列（在构建查询之前）
     let hasGeomColumn = false
     try {
       const tableName = this.repo.metadata.tableName
-      // 使用 schema-qualified 查询，更可靠
       const columnCheck = await this.repo.query(`
         SELECT column_name 
         FROM information_schema.columns 
@@ -64,15 +56,35 @@ export class VenuesService {
         LIMIT 1
       `, [tableName])
       hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
-      if (hasGeomColumn) {
-        console.log('✅ PostGIS geom column found, will use spatial queries')
-      } else {
-        console.log('⚠️  PostGIS geom column not found, using lng/lat queries only')
-      }
+      console.log(`🔍 Geom column check: ${hasGeomColumn ? 'found' : 'not found'}`)
     } catch (error) {
-      console.warn('⚠️  Error checking geom column in search:', error instanceof Error ? error.message : String(error))
+      console.warn('⚠️  Error checking geom column:', error instanceof Error ? error.message : String(error))
       hasGeomColumn = false
     }
+    
+    const qb = this.repo.createQueryBuilder('v')
+    
+    // 明确指定要选择的列，排除 geom（如果不存在）
+    if (!hasGeomColumn) {
+      // 如果 geom 列不存在，明确指定要查询的列
+      qb.select([
+        'v.id',
+        'v.name',
+        'v.sportType',
+        'v.cityCode',
+        'v.address',
+        'v.lng',
+        'v.lat',
+        'v.priceMin',
+        'v.priceMax',
+        'v.indoor',
+      ])
+    }
+    
+    if (sport) qb.andWhere('v.sportType = :sport', { sport })
+    if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
+    if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
+    if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
     
     // 优先使用 PostGIS 空间查询（fallback 到经纬度范围）
     // 只有在确认 geom 列存在时才使用 PostGIS 查询
