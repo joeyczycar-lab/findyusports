@@ -31,9 +31,12 @@ export class VenuesService {
   ) {}
 
   async search(query: QueryVenuesDto) {
-    const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize = 20 } = query
+    const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit } = query
+    
+    // 支持 limit 参数（兼容前端调用）
+    const actualPageSize = limit || pageSize || 20
 
-    // mock 数据（后续可接 DB + 空间索引）
+    // 解析边界参数
     const nePair = ne?.split(',').map(Number)
     const swPair = sw?.split(',').map(Number)
     const neLng = nePair?.[0] ?? 116.55
@@ -41,15 +44,29 @@ export class VenuesService {
     const swLng = swPair?.[0] ?? 116.30
     const swLat = swPair?.[1] ?? 39.84
 
-    const randomIn = (min: number, max: number) => Math.random() * (max - min) + min
-
     const qb = this.repo.createQueryBuilder('v')
     if (sport) qb.andWhere('v.sportType = :sport', { sport })
     if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
     if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
     if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
+    
+    // 检查数据库中是否实际存在 geom 列
+    let hasGeomColumn = false
+    try {
+      const tableName = this.repo.metadata.tableName
+      const columnCheck = await this.repo.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = $1 AND column_name = 'geom'
+      `, [tableName])
+      hasGeomColumn = columnCheck && columnCheck.length > 0
+    } catch (error) {
+      console.warn('⚠️  Error checking geom column in search:', error instanceof Error ? error.message : String(error))
+      hasGeomColumn = false
+    }
+    
     // 优先使用 PostGIS 空间查询（fallback 到经纬度范围）
-    if (this.repo.metadata.columns.find(c => c.propertyName === 'geom')) {
+    if (hasGeomColumn) {
       // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
       qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
       qb.andWhere(`(
@@ -59,11 +76,12 @@ export class VenuesService {
         )
       )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
     } else {
+      // 使用经纬度范围查询（不依赖 PostGIS）
       qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
       qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
     }
 
-    qb.take(pageSize).skip((page - 1) * pageSize)
+    qb.take(actualPageSize).skip((page - 1) * actualPageSize)
 
     const [rows, total] = await qb.getManyAndCount()
     const items = rows.map((r) => ({
@@ -75,7 +93,7 @@ export class VenuesService {
       location: [r.lng, r.lat] as LngLat,
       distanceKm: 0,
     }))
-    return { items, page, pageSize, total }
+    return { items, page, pageSize: actualPageSize, total }
   }
 
   async detail(id: number) {
