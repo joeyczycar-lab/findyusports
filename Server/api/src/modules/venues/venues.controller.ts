@@ -14,7 +14,25 @@ export class VenuesController {
   @Public()
   @Get()
   async list(@Query() query: QueryVenuesDto) {
-    return this.venuesService.search(query)
+    try {
+      return await this.venuesService.search(query)
+    } catch (error) {
+      console.error('❌ Error listing venues:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '获取场地列表失败',
+        },
+        items: [],
+        page: 1,
+        pageSize: 20,
+        total: 0,
+      }
+    }
   }
 
   @Public()
@@ -40,7 +58,21 @@ export class VenuesController {
   @Public()
   @Get(':id')
   async detail(@Param('id', ParseIntPipe) id: number) {
-    return this.venuesService.detail(id)
+    try {
+      return await this.venuesService.detail(id)
+    } catch (error) {
+      console.error('❌ Error getting venue detail:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '获取场地详情失败',
+        },
+      }
+    }
   }
 
   @Public()

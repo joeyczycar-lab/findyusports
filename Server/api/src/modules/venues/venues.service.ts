@@ -31,20 +31,21 @@ export class VenuesService {
   ) {}
 
   async search(query: QueryVenuesDto) {
-    const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit } = query
-    
-    // 支持 limit 参数（兼容前端调用）
-    const actualPageSize = limit || pageSize || 20
+    try {
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit } = query
+      
+      // 支持 limit 参数（兼容前端调用）
+      const actualPageSize = limit || pageSize || 20
 
-    // 解析边界参数
-    const nePair = ne?.split(',').map(Number)
-    const swPair = sw?.split(',').map(Number)
-    const neLng = nePair?.[0] ?? 116.55
-    const neLat = nePair?.[1] ?? 39.98
-    const swLng = swPair?.[0] ?? 116.30
-    const swLat = swPair?.[1] ?? 39.84
+      // 解析边界参数
+      const nePair = ne?.split(',').map(Number)
+      const swPair = sw?.split(',').map(Number)
+      const neLng = nePair?.[0] ?? 116.55
+      const neLat = nePair?.[1] ?? 39.98
+      const swLng = swPair?.[0] ?? 116.30
+      const swLat = swPair?.[1] ?? 39.84
 
-    const qb = this.repo.createQueryBuilder('v')
+      const qb = this.repo.createQueryBuilder('v')
     if (sport) qb.andWhere('v.sportType = :sport', { sport })
     if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
     if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
@@ -94,21 +95,40 @@ export class VenuesService {
       distanceKm: 0,
     }))
     return { items, page, pageSize: actualPageSize, total }
+    } catch (error) {
+      console.error('❌ Error in search:', error)
+      if (error instanceof Error) {
+        console.error('Error name:', error.name)
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw error // 重新抛出，让控制器处理
+    }
   }
 
   async detail(id: number) {
-    const v = await this.repo.findOne({ where: { id } })
-    if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
-    return {
-      id: String(v.id),
-      name: v.name,
-      sportType: v.sportType,
-      cityCode: v.cityCode,
-      address: v.address,
-      priceMin: v.priceMin,
-      priceMax: v.priceMax,
-      indoor: v.indoor ?? false,
-      location: [v.lng, v.lat] as [number, number],
+    try {
+      const v = await this.repo.findOne({ where: { id } })
+      if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
+      return {
+        id: String(v.id),
+        name: v.name,
+        sportType: v.sportType,
+        cityCode: v.cityCode,
+        address: v.address,
+        priceMin: v.priceMin,
+        priceMax: v.priceMax,
+        indoor: v.indoor ?? false,
+        location: [v.lng, v.lat] as [number, number],
+      }
+    } catch (error) {
+      console.error('❌ Error in detail:', error)
+      if (error instanceof Error) {
+        console.error('Error name:', error.name)
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw error // 重新抛出，让控制器处理
     }
   }
 
