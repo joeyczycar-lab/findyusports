@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import LocationPicker from '@/components/LocationPicker'
 import { fetchJson } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
@@ -102,16 +103,16 @@ export default function AddVenuePage() {
               })
               
               await Promise.all(uploadPromises)
-              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。` })
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
               setSelectedImages([])
             }
           } catch (error: any) {
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}` })
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看所有场地。` })
           } finally {
             setUploadingImages(false)
           }
         } else {
-          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。` })
+          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
         }
         
         // 清空表单（保留地图位置）
@@ -152,7 +153,25 @@ export default function AddVenuePage() {
             }`}
             style={{ borderRadius: '4px' }}
           >
-            {message.text}
+            <div className="whitespace-pre-line mb-3">{message.text}</div>
+            {message.type === 'success' && (
+              <div className="flex gap-3 mt-4">
+                <Link
+                  href="/admin/venues"
+                  className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
+                  style={{ borderRadius: '4px' }}
+                >
+                  📋 查看所有场地
+                </Link>
+                <Link
+                  href="/map"
+                  className="bg-gray-200 text-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors inline-block"
+                  style={{ borderRadius: '4px' }}
+                >
+                  🗺️ 在地图上查看
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
