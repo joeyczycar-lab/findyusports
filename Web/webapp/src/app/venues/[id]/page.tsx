@@ -17,17 +17,17 @@ export default async function VenueDetailPage({ params }: { params: { id: string
       fetchJson(`/venues/${params.id}/reviews`).catch(() => ({ items: [] })),
     ])
   } catch (error) {
-    console.error('Failed to fetch venue data:', error)
-    // 继续渲染，使用默认值
+    // 静默处理错误，继续渲染
+    // console.error('Failed to fetch venue data:', error)
   }
   
   const v = detail?.id ? detail : null
   // 使用带防盗链保护的URL
   const urls: string[] = images?.items?.map((x: any) => x.protectedUrl || x.url) ?? []
   
-  // 计算平均评分
+  // 计算平均评分（确保格式一致）
   const avgRating = reviews?.items?.length > 0
-    ? (reviews.items.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.items.length).toFixed(1)
+    ? Number((reviews.items.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.items.length).toFixed(1))
     : null
 
   return (
@@ -47,7 +47,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             {v ? (
               <>
                 {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {v.priceMin ? `¥${v.priceMin}` : '免费'}
-                {avgRating && <span className="ml-2">· {avgRating} 评分</span>}
+                {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
               </>
             ) : '加载中…'}
           </div>
