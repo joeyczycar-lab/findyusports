@@ -163,12 +163,15 @@ export default function VenuesListPage() {
                       className="w-full h-full object-cover"
                       loading="lazy"
                       onError={(e) => {
-                        // 图片加载失败时显示默认图标
+                        // 图片加载失败时隐藏图片，显示默认图标
                         const target = e.target as HTMLImageElement
                         target.style.display = 'none'
                         const parent = target.parentElement
-                        if (parent) {
-                          parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-textMuted text-4xl">${venue.sportType === 'basketball' ? '🏀' : '⚽'}</div>`
+                        if (parent && !parent.querySelector('.fallback-icon')) {
+                          const fallback = document.createElement('div')
+                          fallback.className = 'fallback-icon w-full h-full flex items-center justify-center text-textMuted text-4xl absolute inset-0'
+                          fallback.textContent = venue.sportType === 'basketball' ? '🏀' : '⚽'
+                          parent.appendChild(fallback)
                         }
                       }}
                     />
