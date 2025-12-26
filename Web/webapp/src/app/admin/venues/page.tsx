@@ -12,7 +12,12 @@ export default function VenuesListPage() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [isClient, setIsClient] = useState(false)
   const pageSize = 20
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     loadVenues()
@@ -81,9 +86,9 @@ export default function VenuesListPage() {
         </div>
       </div>
 
-      {/* 调试信息 - 开发环境显示 */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-3 bg-gray-100 text-xs rounded font-mono">
+      {/* 调试信息 - 开发环境显示（仅在客户端渲染） */}
+      {isClient && process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-gray-100 text-xs rounded font-mono" suppressHydrationWarning>
           <div>🔍 调试信息:</div>
           <div>loading: {loading ? 'true' : 'false'}</div>
           <div>error: {error || 'null'}</div>
