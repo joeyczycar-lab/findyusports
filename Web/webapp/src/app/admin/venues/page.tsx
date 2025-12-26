@@ -81,6 +81,18 @@ export default function VenuesListPage() {
         </div>
       </div>
 
+      {/* 调试信息 - 开发环境显示 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-gray-100 text-xs rounded font-mono">
+          <div>🔍 调试信息:</div>
+          <div>loading: {loading ? 'true' : 'false'}</div>
+          <div>error: {error || 'null'}</div>
+          <div>venues.length: {venues.length}</div>
+          <div>total: {total}</div>
+          <div>page: {page}</div>
+        </div>
+      )}
+
       {loading && (
         <div className="text-center py-16 text-textSecondary">
           加载中...
@@ -90,10 +102,18 @@ export default function VenuesListPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           ❌ {error}
+          <div className="mt-2 text-sm">
+            请检查：
+            <ul className="list-disc list-inside mt-1">
+              <li>后端服务是否运行在 http://localhost:4000</li>
+              <li>打开浏览器控制台（F12）查看详细错误</li>
+              <li>检查 Network 标签页中的 API 请求</li>
+            </ul>
+          </div>
         </div>
       )}
 
-      {!loading && !error && venues.length === 0 && (
+      {!loading && !error && venues.length === 0 && total === 0 && (
         <div className="text-center py-16 text-textSecondary">
           <div className="text-4xl mb-4">📭</div>
           <div className="text-body mb-4">还没有添加任何场地</div>
@@ -104,6 +124,19 @@ export default function VenuesListPage() {
           >
             ➕ 添加第一个场地
           </Link>
+        </div>
+      )}
+
+      {!loading && !error && venues.length === 0 && total > 0 && (
+        <div className="text-center py-16 text-textSecondary">
+          <div className="text-body mb-4">当前页没有场地数据（共 {total} 个场地）</div>
+          <button
+            onClick={() => setPage(1)}
+            className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
+            style={{ borderRadius: '4px' }}
+          >
+            返回第一页
+          </button>
         </div>
       )}
 
