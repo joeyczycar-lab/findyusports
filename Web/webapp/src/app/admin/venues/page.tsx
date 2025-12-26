@@ -32,8 +32,6 @@ export default function VenuesListPage() {
       // 中国大致范围：经度 73-135，纬度 18-54
       const data = await fetchJson(`/venues?ne=135,54&sw=73,18&page=${page}&pageSize=${pageSize}`)
       
-      console.log('📊 API返回数据:', data)
-      
       // 检查是否有错误
       if (data.error) {
         throw new Error(data.error.message || '获取场地列表失败')
@@ -47,7 +45,6 @@ export default function VenuesListPage() {
       setVenues(items)
       setTotal(total)
     } catch (err: any) {
-      console.error('❌ 加载场地失败:', err)
       setError(err.message || '加载场地失败')
       // 即使出错也设置空数组，避免显示"没有场地"
       setVenues([])
@@ -151,9 +148,7 @@ export default function VenuesListPage() {
             显示 {venues.length} 个场地（共 {total} 个）
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {venues.map((venue) => {
-              console.log('渲染场地:', venue)
-              return (
+            {venues.map((venue) => (
               <Link
                 key={venue.id}
                 href={`/venues/${venue.id}`}
@@ -234,8 +229,7 @@ export default function VenuesListPage() {
                   </div>
                 </div>
               </Link>
-            )
-            })}
+            ))}
           </div>
 
           {/* 分页 */}
