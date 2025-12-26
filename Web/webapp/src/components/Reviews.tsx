@@ -29,7 +29,7 @@ export default function Reviews({ items }: { items: Array<{ id: number|string; r
             {r.createdAt && !mounted && (
               <span className="text-textSecondary text-body-sm font-normal ml-3 uppercase tracking-wide">
                 加载中...
-            </span>
+              </span>
             )}
           </div>
           <div className="text-body text-textSecondary leading-relaxed">{r.content}</div>
