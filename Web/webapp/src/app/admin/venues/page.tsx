@@ -12,11 +12,11 @@ export default function VenuesListPage() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const [isClient, setIsClient] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const pageSize = 20
 
   useEffect(() => {
-    setIsClient(true)
+    setMounted(true)
   }, [])
 
   useEffect(() => {
@@ -54,12 +54,29 @@ export default function VenuesListPage() {
 
   const totalPages = Math.ceil(total / pageSize) || 1
 
+  // 在客户端挂载之前，返回一个简单的加载状态，避免 hydration 错误
+  if (!mounted) {
+    return (
+      <div className="container-page py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-heading font-bold mb-2">场地管理</h1>
+            <p className="text-body text-textSecondary">加载中...</p>
+          </div>
+        </div>
+        <div className="text-center py-16 text-textSecondary">
+          加载中...
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container-page py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-heading font-bold mb-2">场地管理</h1>
-          <p className="text-body text-textSecondary" suppressHydrationWarning>
+          <p className="text-body text-textSecondary">
             共 {total} 个场地 · 第 {page} / {totalPages} 页
           </p>
         </div>
@@ -82,8 +99,8 @@ export default function VenuesListPage() {
       </div>
 
       {/* 调试信息 - 开发环境显示（仅在客户端渲染） */}
-      {isClient && process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-3 bg-gray-100 text-xs rounded font-mono" suppressHydrationWarning>
+      {mounted && process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-3 bg-gray-100 text-xs rounded font-mono">
           <div>🔍 调试信息:</div>
           <div>loading: {loading ? 'true' : 'false'}</div>
           <div>error: {error || 'null'}</div>
@@ -142,7 +159,7 @@ export default function VenuesListPage() {
 
       {!loading && !error && venues.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-textSecondary" suppressHydrationWarning>
+          <div className="mb-4 text-sm text-textSecondary">
             显示 {venues.length} 个场地（共 {total} 个）
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -204,7 +221,7 @@ export default function VenuesListPage() {
                     {venue.location && Array.isArray(venue.location) && venue.location.length >= 2 && (
                       <div className="flex items-center gap-2">
                         <span>📍</span>
-                        <span className="text-xs" suppressHydrationWarning>
+                        <span className="text-xs">
                           {typeof venue.location[0] === 'number' ? venue.location[0].toFixed(4) : venue.location[0]}, {typeof venue.location[1] === 'number' ? venue.location[1].toFixed(4) : venue.location[1]}
                         </span>
                       </div>
@@ -244,7 +261,7 @@ export default function VenuesListPage() {
                 上一页
               </button>
               
-              <span className="text-body text-textSecondary" suppressHydrationWarning>
+              <span className="text-body text-textSecondary">
                 第 {page} / {totalPages} 页
               </span>
               
