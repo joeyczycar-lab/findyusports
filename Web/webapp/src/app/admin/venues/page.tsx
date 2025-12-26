@@ -27,6 +27,11 @@ export default function VenuesListPage() {
       // 中国大致范围：经度 73-135，纬度 18-54
       const data = await fetchJson(`/venues?ne=135,54&sw=73,18&page=${page}&pageSize=${pageSize}`)
       
+      // 检查是否有错误
+      if (data.error) {
+        throw new Error(data.error.message || '获取场地列表失败')
+      }
+      
       setVenues(data.items || [])
       setTotal(data.total || 0)
     } catch (err: any) {

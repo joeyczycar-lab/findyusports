@@ -19,6 +19,12 @@ export default function DataViewPage() {
       
       // 获取所有场地数据
       const venuesData = await fetchJson('/venues?ne=135,54&sw=73,18&pageSize=1000')
+      
+      // 检查是否有错误
+      if (venuesData.error) {
+        throw new Error(venuesData.error.message || '获取场地数据失败')
+      }
+      
       const venues = venuesData.items || []
       
       // 统计信息
@@ -36,7 +42,12 @@ export default function DataViewPage() {
       setStats(stats)
     } catch (err: any) {
       console.error('加载数据失败:', err)
-      setError(err.message || '加载数据失败')
+      const errorMessage = err.message || '加载数据失败'
+      setError(errorMessage)
+      console.error('详细错误:', {
+        message: errorMessage,
+        error: err,
+      })
     } finally {
       setLoading(false)
     }
