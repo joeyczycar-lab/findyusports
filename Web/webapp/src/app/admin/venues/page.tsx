@@ -40,8 +40,6 @@ export default function VenuesListPage() {
       const items = data.items || []
       const total = data.total || 0
       
-      console.log(`✅ 加载到 ${items.length} 个场地，总共 ${total} 个`)
-      
       setVenues(items)
       setTotal(total)
     } catch (err: any) {
@@ -54,14 +52,14 @@ export default function VenuesListPage() {
     }
   }
 
-  const totalPages = Math.ceil(total / pageSize)
+  const totalPages = Math.ceil(total / pageSize) || 1
 
   return (
     <div className="container-page py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-heading font-bold mb-2">场地管理</h1>
-          <p className="text-body text-textSecondary">
+          <p className="text-body text-textSecondary" suppressHydrationWarning>
             共 {total} 个场地 · 第 {page} / {totalPages} 页
           </p>
         </div>
@@ -144,7 +142,7 @@ export default function VenuesListPage() {
 
       {!loading && !error && venues.length > 0 && (
         <>
-          <div className="mb-4 text-sm text-textSecondary">
+          <div className="mb-4 text-sm text-textSecondary" suppressHydrationWarning>
             显示 {venues.length} 个场地（共 {total} 个）
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -203,11 +201,11 @@ export default function VenuesListPage() {
                   </div>
                   
                   <div className="text-body-sm text-textSecondary space-y-1">
-                    {venue.location && (
+                    {venue.location && Array.isArray(venue.location) && venue.location.length >= 2 && (
                       <div className="flex items-center gap-2">
                         <span>📍</span>
-                        <span className="text-xs">
-                          {venue.location[0].toFixed(4)}, {venue.location[1].toFixed(4)}
+                        <span className="text-xs" suppressHydrationWarning>
+                          {typeof venue.location[0] === 'number' ? venue.location[0].toFixed(4) : venue.location[0]}, {typeof venue.location[1] === 'number' ? venue.location[1].toFixed(4) : venue.location[1]}
                         </span>
                       </div>
                     )}
@@ -246,7 +244,7 @@ export default function VenuesListPage() {
                 上一页
               </button>
               
-              <span className="text-body text-textSecondary">
+              <span className="text-body text-textSecondary" suppressHydrationWarning>
                 第 {page} / {totalPages} 页
               </span>
               
