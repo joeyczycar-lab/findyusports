@@ -107,6 +107,37 @@ export class VenuesService {
     qb.take(actualPageSize).skip((page - 1) * actualPageSize)
 
     const [rows, total] = await qb.getManyAndCount()
+    
+    // 批量查询每个场地的第一张图片
+    const venueIds = rows.map(r => r.id)
+    let firstImagesMap: Record<number, string | null> = {}
+    
+    if (venueIds.length > 0) {
+      try {
+        // 查询每个场地的第一张图片（按sort排序，取第一个）
+        const firstImages = await this.imageRepo
+          .createQueryBuilder('img')
+          .select(['img.venueId', 'img.url'])
+          .where('img.venueId IN (:...venueIds)', { venueIds })
+          .orderBy('img.sort', 'ASC')
+          .addOrderBy('img.id', 'ASC')
+          .getRawMany()
+        
+        // 为每个venueId只保留第一张图片
+        const seenVenues = new Set<number>()
+        firstImages.forEach((img: any) => {
+          const venueId = img.img_venueId
+          if (!seenVenues.has(venueId)) {
+            firstImagesMap[venueId] = img.img_url
+            seenVenues.add(venueId)
+          }
+        })
+      } catch (imageError) {
+        console.warn('⚠️  Error loading venue images:', imageError instanceof Error ? imageError.message : String(imageError))
+        // 继续执行，只是没有图片
+      }
+    }
+    
     const items = rows.map((r) => ({
       id: String(r.id),
       name: r.name,
@@ -115,6 +146,7 @@ export class VenuesService {
       indoor: r.indoor ?? false,
       location: [r.lng, r.lat] as LngLat,
       distanceKm: 0,
+      firstImage: firstImagesMap[r.id] || null, // 添加第一张图片URL
     }))
     return { items, page, pageSize: actualPageSize, total }
     } catch (error) {

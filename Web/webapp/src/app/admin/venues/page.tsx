@@ -152,52 +152,80 @@ export default function VenuesListPage() {
               <Link
                 key={venue.id}
                 href={`/venues/${venue.id}`}
-                className="card-nike p-6 hover:shadow-lg transition-shadow"
+                className="card-nike hover:shadow-lg transition-shadow overflow-hidden"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-heading-sm mb-2 line-clamp-2">
-                      {venue.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
-                        {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
-                      </span>
-                      {venue.indoor && (
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          室内
-                        </span>
-                      )}
+                {/* 图片区域 */}
+                <div className="h-48 bg-gray-100 relative overflow-hidden">
+                  {venue.firstImage ? (
+                    <img 
+                      src={venue.firstImage} 
+                      alt={venue.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        // 图片加载失败时显示默认图标
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-textMuted text-4xl">${venue.sportType === 'basketball' ? '🏀' : '⚽'}</div>`
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
+                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
                     </div>
-                  </div>
+                  )}
                 </div>
                 
-                <div className="text-body-sm text-textSecondary space-y-1">
-                  {venue.location && (
-                    <div className="flex items-center gap-2">
-                      <span>📍</span>
-                      <span>
-                        {venue.location[0].toFixed(4)}, {venue.location[1].toFixed(4)}
-                      </span>
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-heading-sm mb-2 line-clamp-2">
+                        {venue.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
+                          {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
+                        </span>
+                        {venue.indoor && (
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            室内
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {venue.price !== undefined && venue.price > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span>💰</span>
-                      <span>¥{venue.price}/小时</span>
-                    </div>
-                  )}
-                  {venue.price === 0 && (
-                    <div className="flex items-center gap-2">
-                      <span>💰</span>
-                      <span>免费</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                  
+                  <div className="text-body-sm text-textSecondary space-y-1">
+                    {venue.location && (
+                      <div className="flex items-center gap-2">
+                        <span>📍</span>
+                        <span className="text-xs">
+                          {venue.location[0].toFixed(4)}, {venue.location[1].toFixed(4)}
+                        </span>
+                      </div>
+                    )}
+                    {venue.price !== undefined && venue.price > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span>💰</span>
+                        <span>¥{venue.price}/小时</span>
+                      </div>
+                    )}
+                    {venue.price === 0 && (
+                      <div className="flex items-center gap-2">
+                        <span>💰</span>
+                        <span>免费</span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="text-xs text-textSecondary uppercase tracking-wide">
-                    ID: {venue.id}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="text-xs text-textSecondary uppercase tracking-wide">
+                      ID: {venue.id}
+                    </div>
                   </div>
                 </div>
               </Link>
