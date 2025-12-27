@@ -162,8 +162,45 @@ export class VenuesService {
 
   async detail(id: number) {
     try {
-      const v = await this.repo.findOne({ where: { id } })
+      // 检查数据库中是否存在 geom 列
+      let hasGeomColumn = false
+      try {
+        const tableName = this.repo.metadata.tableName
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 AND column_name = 'geom'
+          LIMIT 1
+        `, [tableName])
+        hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
+      } catch (error) {
+        console.warn('⚠️  Error checking geom column in detail:', error instanceof Error ? error.message : String(error))
+        hasGeomColumn = false
+      }
+
+      // 使用 QueryBuilder 明确指定要选择的列
+      const qb = this.repo.createQueryBuilder('v').where('v.id = :id', { id })
+      
+      if (!hasGeomColumn) {
+        // 如果 geom 列不存在，明确指定要查询的列
+        qb.select([
+          'v.id',
+          'v.name',
+          'v.sportType',
+          'v.cityCode',
+          'v.address',
+          'v.lng',
+          'v.lat',
+          'v.priceMin',
+          'v.priceMax',
+          'v.indoor',
+        ])
+      }
+
+      const v = await qb.getOne()
+      
       if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
+      
       return {
         id: String(v.id),
         name: v.name,
