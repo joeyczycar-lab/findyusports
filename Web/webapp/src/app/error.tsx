@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 export default function Error({
   error,
   reset,
@@ -7,6 +9,11 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    // 记录错误到控制台
+    console.error('Error:', error)
+  }, [error])
+
   return (
     <div className="container-page py-12">
       <div className="text-center">
