@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { fetchJson } from '@/lib/api'
-import Gallery from '@/components/Gallery'
-import Reviews from '@/components/Reviews'
-import ReviewForm from '@/components/ReviewForm'
-import MapPreview from '@/components/MapPreview'
+
+// 使用动态导入延迟加载客户端组件，避免 SSR 问题
+const Gallery = dynamic(() => import('@/components/Gallery'), { ssr: true })
+const Reviews = dynamic(() => import('@/components/Reviews'), { ssr: true })
+const ReviewForm = dynamic(() => import('@/components/ReviewForm'), { ssr: false })
+const MapPreview = dynamic(() => import('@/components/MapPreview'), { ssr: false })
 
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
   const venueId = params.id
