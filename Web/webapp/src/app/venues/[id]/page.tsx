@@ -5,10 +5,8 @@ import Reviews from '@/components/Reviews'
 import ReviewForm from '@/components/ReviewForm'
 import MapPreview from '@/components/MapPreview'
 
-export default async function VenueDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
-  // 处理 Next.js 14+ 中 params 可能是 Promise 的情况
-  const resolvedParams = await (params instanceof Promise ? params : Promise.resolve(params))
-  const venueId = resolvedParams.id
+export default async function VenueDetailPage({ params }: { params: { id: string } }) {
+  const venueId = params.id
   
   let detail: any = null
   let images: any = { items: [] }
