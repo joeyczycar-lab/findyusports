@@ -5,16 +5,20 @@ import Reviews from '@/components/Reviews'
 import ReviewForm from '@/components/ReviewForm'
 import MapPreview from '@/components/MapPreview'
 
-export default async function VenueDetailPage({ params }: { params: { id: string } }) {
+export default async function VenueDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+  // 处理 Next.js 14+ 中 params 可能是 Promise 的情况
+  const resolvedParams = await (params instanceof Promise ? params : Promise.resolve(params))
+  const venueId = resolvedParams.id
+  
   let detail: any = null
   let images: any = { items: [] }
   let reviews: any = { items: [] }
   
   try {
     [detail, images, reviews] = await Promise.all([
-      fetchJson(`/venues/${params.id}`).catch(() => null),
-      fetchJson(`/venues/${params.id}/images`).catch(() => ({ items: [] })),
-      fetchJson(`/venues/${params.id}/reviews`).catch(() => ({ items: [] })),
+      fetchJson(`/venues/${venueId}`).catch(() => null),
+      fetchJson(`/venues/${venueId}/images`).catch(() => ({ items: [] })),
+      fetchJson(`/venues/${venueId}/reviews`).catch(() => ({ items: [] })),
     ])
   } catch (error) {
     // 静默处理错误，继续渲染
@@ -40,9 +44,9 @@ export default async function VenueDetailPage({ params }: { params: { id: string
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
         <div>
           <div className="mb-8">
-            <Gallery urls={urls} venueId={params.id} />
+            <Gallery urls={urls} venueId={venueId} />
           </div>
-          <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : `场地 #${params.id}`}</h1>
+          <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : `场地 #${venueId}`}</h1>
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
             {v ? (
               <>
@@ -81,7 +85,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
 
           <section className="border-t border-border pt-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">写点评</h2>
-            <ReviewForm venueId={params.id} />
+            <ReviewForm venueId={venueId} />
           </section>
         </div>
 
