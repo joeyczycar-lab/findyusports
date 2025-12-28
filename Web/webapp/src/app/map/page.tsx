@@ -102,7 +102,10 @@ function MapPageContent() {
   }
 
   useEffect(() => { fetchVenues() }, [])
-  useEffect(() => { fetchVenues() }, [sortBy, filters])
+  useEffect(() => { 
+    fetchVenues() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, filters])
   useEffect(() => {
     if (items.length > 0 && !activeId) setActiveId(items[0].id)
   }, [items, activeId])
