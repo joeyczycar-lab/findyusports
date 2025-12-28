@@ -13,6 +13,7 @@ export default function VenuesListPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [mounted, setMounted] = useState(false)
+  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
   const pageSize = 20
 
   useEffect(() => {
@@ -21,16 +22,21 @@ export default function VenuesListPage() {
 
   useEffect(() => {
     loadVenues()
-  }, [page])
+  }, [page, sortBy])
 
   async function loadVenues() {
     try {
       setLoading(true)
       setError(null)
       
-      // 使用一个较大的边界范围来获取所有场地
-      // 中国大致范围：经度 73-135，纬度 18-54
-      const data = await fetchJson(`/venues?ne=135,54&sw=73,18&page=${page}&pageSize=${pageSize}`)
+      // 不传坐标参数，获取所有场地，按地区和热度排序
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+        sortBy: sortBy,
+      })
+      
+      const data = await fetchJson(`/venues?${params.toString()}`)
       
       // 检查是否有错误
       if (data.error) {
@@ -75,25 +81,30 @@ export default function VenuesListPage() {
     <div className="container-page py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-heading font-bold mb-2">场地管理</h1>
+          <h1 className="text-heading font-bold mb-2">全部场地</h1>
           <p className="text-body text-textSecondary">
             共 {total} 个场地 · 第 {page} / {totalPages} 页
           </p>
         </div>
         <div className="flex gap-4">
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value as 'city' | 'popularity' | 'name')
+              setPage(1) // 重置到第一页
+            }}
+            className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
+          >
+            <option value="popularity">🔥 按热度</option>
+            <option value="city">📍 按地区</option>
+            <option value="name">🔤 按名称</option>
+          </select>
           <Link 
             href="/admin/add-venue" 
             className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors"
             style={{ borderRadius: '4px' }}
           >
             ➕ 添加场地
-          </Link>
-          <Link 
-            href="/map" 
-            className="bg-gray-100 text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors"
-            style={{ borderRadius: '4px' }}
-          >
-            🗺️ 查看地图
           </Link>
         </div>
       </div>
@@ -218,31 +229,31 @@ export default function VenuesListPage() {
                   </div>
                   
                   <div className="text-body-sm text-textSecondary space-y-1">
-                    {venue.location && Array.isArray(venue.location) && venue.location.length >= 2 && (
+                    {venue.address && (
                       <div className="flex items-center gap-2">
                         <span>📍</span>
-                        <span className="text-xs">
-                          {typeof venue.location[0] === 'number' ? venue.location[0].toFixed(4) : venue.location[0]}, {typeof venue.location[1] === 'number' ? venue.location[1].toFixed(4) : venue.location[1]}
-                        </span>
+                        <span className="text-xs line-clamp-1">{venue.address}</span>
                       </div>
                     )}
-                    {venue.price !== undefined && venue.price > 0 && (
-                      <div className="flex items-center gap-2">
-                        <span>💰</span>
-                        <span>¥{venue.price}/小时</span>
-                      </div>
-                    )}
-                    {venue.price === 0 && (
-                      <div className="flex items-center gap-2">
-                        <span>💰</span>
-                        <span>免费</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="text-xs text-textSecondary uppercase tracking-wide">
-                      ID: {venue.id}
+                    <div className="flex items-center gap-4">
+                      {venue.price !== undefined && venue.price > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>💰</span>
+                          <span className="text-xs">¥{venue.price}/小时</span>
+                        </div>
+                      )}
+                      {venue.price === 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>💰</span>
+                          <span className="text-xs">免费</span>
+                        </div>
+                      )}
+                      {venue.reviewCount > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>⭐</span>
+                          <span className="text-xs">{venue.avgRating.toFixed(1)} ({venue.reviewCount})</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

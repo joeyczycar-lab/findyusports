@@ -61,6 +61,14 @@ export class QueryVenuesDto {
   @Min(1)
   @Max(100)
   limit?: number
+
+  @IsOptional()
+  @IsString()
+  cityCode?: string // 城市代码，用于按地区筛选
+
+  @IsOptional()
+  @IsString()
+  sortBy?: 'city' | 'popularity' | 'name' // 排序方式：按地区、按热度、按名称
 }
 
 export class CreateReviewDto {

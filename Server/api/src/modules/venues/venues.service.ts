@@ -32,85 +32,101 @@ export class VenuesService {
 
   async search(query: QueryVenuesDto) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit } = query
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, sortBy } = query
       
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
 
-      // 解析边界参数
-      const nePair = ne?.split(',').map(Number)
-      const swPair = sw?.split(',').map(Number)
-      const neLng = nePair?.[0] ?? 116.55
-      const neLat = nePair?.[1] ?? 39.98
-      const swLng = swPair?.[0] ?? 116.30
-      const swLat = swPair?.[1] ?? 39.84
-
       // 先检查数据库中是否实际存在 geom 列（在构建查询之前）
-    let hasGeomColumn = false
-    try {
-      const tableName = this.repo.metadata.tableName
-      const columnCheck = await this.repo.query(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = $1 AND column_name = 'geom'
-        LIMIT 1
-      `, [tableName])
-      hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
-      console.log(`🔍 Geom column check: ${hasGeomColumn ? 'found' : 'not found'}`)
-    } catch (error) {
-      console.warn('⚠️  Error checking geom column:', error instanceof Error ? error.message : String(error))
-      hasGeomColumn = false
-    }
+      let hasGeomColumn = false
+      try {
+        const tableName = this.repo.metadata.tableName
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 AND column_name = 'geom'
+          LIMIT 1
+        `, [tableName])
+        hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
+      } catch (error) {
+        console.warn('⚠️  Error checking geom column:', error instanceof Error ? error.message : String(error))
+        hasGeomColumn = false
+      }
     
-    const qb = this.repo.createQueryBuilder('v')
+      const qb = this.repo.createQueryBuilder('v')
     
-    // 明确指定要选择的列，排除 geom（如果不存在）
-    if (!hasGeomColumn) {
-      // 如果 geom 列不存在，明确指定要查询的列
-      qb.select([
-        'v.id',
-        'v.name',
-        'v.sportType',
-        'v.cityCode',
-        'v.address',
-        'v.lng',
-        'v.lat',
-        'v.priceMin',
-        'v.priceMax',
-        'v.indoor',
-      ])
-    }
+      // 明确指定要选择的列，排除 geom（如果不存在）
+      if (!hasGeomColumn) {
+        qb.select([
+          'v.id',
+          'v.name',
+          'v.sportType',
+          'v.cityCode',
+          'v.address',
+          'v.lng',
+          'v.lat',
+          'v.priceMin',
+          'v.priceMax',
+          'v.indoor',
+        ])
+      }
     
-    if (sport) qb.andWhere('v.sportType = :sport', { sport })
-    if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
-    if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
-    if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
-    
-    // 优先使用 PostGIS 空间查询（fallback 到经纬度范围）
-    // 只有在确认 geom 列存在时才使用 PostGIS 查询
-    if (hasGeomColumn) {
-      // 先做 bbox 粗过滤以充分利用索引，再走 ST_Intersects 精确判定
-      qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
-      qb.andWhere(`(
-        v.geom IS NOT NULL AND ST_Intersects(
-          v.geom,
-          ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
-        )
-      )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
-    } else {
-      // 使用经纬度范围查询（不依赖 PostGIS）
-      // 这是默认方式，适用于没有 PostGIS 的数据库
-      qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
-      qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
-    }
+      // 筛选条件
+      if (sport) qb.andWhere('v.sportType = :sport', { sport })
+      if (cityCode) qb.andWhere('v.cityCode = :cityCode', { cityCode })
+      if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
+      if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
+      if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
+      
+      // 只有在提供了坐标范围时才进行坐标筛选（否则获取所有场地）
+      if (ne && sw) {
+        const nePair = ne.split(',').map(Number)
+        const swPair = sw.split(',').map(Number)
+        const neLng = nePair[0]
+        const neLat = nePair[1]
+        const swLng = swPair[0]
+        const swLat = swPair[1]
+        
+        if (hasGeomColumn) {
+          qb.andWhere('(v.lng BETWEEN :swLng AND :neLng) AND (v.lat BETWEEN :swLat AND :neLat)', { swLng, neLat, neLng, swLat })
+          qb.andWhere(`(
+            v.geom IS NOT NULL AND ST_Intersects(
+              v.geom,
+              ST_SetSRID(ST_MakeEnvelope(:swLng2, :swLat2, :neLng2, :neLat2), 4326)
+            )
+          )`, { swLng2: swLng, swLat2: swLat, neLng2: neLng, neLat2: neLat })
+        } else {
+          qb.andWhere('v.lng BETWEEN :swLng AND :neLng', { swLng, neLng })
+          qb.andWhere('v.lat BETWEEN :swLat AND :neLat', { swLat, neLat })
+        }
+      }
 
-    qb.take(actualPageSize).skip((page - 1) * actualPageSize)
+      // 排序逻辑
+      if (sortBy === 'city') {
+        // 按城市代码排序
+        qb.orderBy('v.cityCode', 'ASC')
+        qb.addOrderBy('v.name', 'ASC')
+      } else if (sortBy === 'popularity') {
+        // 按热度排序：先按名称排序，后续在前端根据评价数据重新排序
+        qb.orderBy('v.name', 'ASC')
+      } else {
+        // 默认按名称排序
+        qb.orderBy('v.name', 'ASC')
+      }
 
-    const [rows, total] = await qb.getManyAndCount()
+      // 获取总数（在应用分页之前）
+      const total = await qb.getCount()
+      
+      // 应用分页
+      qb.take(actualPageSize).skip((page - 1) * actualPageSize)
+
+      // 执行查询获取数据
+      const rows = await qb.getMany()
     
-    // 批量查询每个场地的第一张图片
+    // 批量查询每个场地的第一张图片和评价统计
     const venueIds = rows.map(r => r.id)
     let firstImagesMap: Record<number, string | null> = {}
+    let reviewStatsMap: Record<number, { count: number; avgRating: number }> = {}
     
     if (venueIds.length > 0) {
       try {
@@ -134,19 +150,57 @@ export class VenuesService {
         })
       } catch (imageError) {
         console.warn('⚠️  Error loading venue images:', imageError instanceof Error ? imageError.message : String(imageError))
-        // 继续执行，只是没有图片
+      }
+      
+      // 查询评价统计（用于热度排序）
+      try {
+        const reviewStats = await this.reviewRepo
+          .createQueryBuilder('r')
+          .select('r.venueId', 'venueId')
+          .addSelect('COUNT(r.id)', 'count')
+          .addSelect('COALESCE(AVG(r.rating), 0)', 'avgRating')
+          .where('r.venueId IN (:...venueIds)', { venueIds })
+          .groupBy('r.venueId')
+          .getRawMany()
+        
+        reviewStats.forEach((stat: any) => {
+          reviewStatsMap[stat.venueId] = {
+            count: parseInt(stat.count) || 0,
+            avgRating: parseFloat(stat.avgRating) || 0,
+          }
+        })
+      } catch (reviewError) {
+        console.warn('⚠️  Error loading review stats:', reviewError instanceof Error ? reviewError.message : String(reviewError))
       }
     }
     
-    const items = rows.map((r) => ({
+    // 如果按热度排序，需要在前端重新排序（因为聚合查询的复杂性）
+    let sortedRows = rows
+    if (sortBy === 'popularity') {
+      sortedRows = [...rows].sort((a, b) => {
+        const aStats = reviewStatsMap[a.id] || { count: 0, avgRating: 0 }
+        const bStats = reviewStatsMap[b.id] || { count: 0, avgRating: 0 }
+        // 先按评价数量，再按平均评分
+        if (aStats.count !== bStats.count) {
+          return bStats.count - aStats.count
+        }
+        return bStats.avgRating - aStats.avgRating
+      })
+    }
+    
+    const items = sortedRows.map((r) => ({
       id: String(r.id),
       name: r.name,
       sportType: r.sportType,
+      cityCode: r.cityCode,
+      address: r.address,
       price: r.priceMin ?? 0,
       indoor: r.indoor ?? false,
       location: [r.lng, r.lat] as LngLat,
       distanceKm: 0,
-      firstImage: firstImagesMap[r.id] || null, // 添加第一张图片URL
+      firstImage: firstImagesMap[r.id] || null,
+      reviewCount: reviewStatsMap[r.id]?.count || 0,
+      avgRating: reviewStatsMap[r.id]?.avgRating || 0,
     }))
     return { items, page, pageSize: actualPageSize, total }
     } catch (error) {
