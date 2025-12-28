@@ -3,8 +3,10 @@ import dynamic from 'next/dynamic'
 import { fetchJson } from '@/lib/api'
 
 // 使用动态导入延迟加载客户端组件，避免 SSR 问题
-const Gallery = dynamic(() => import('@/components/Gallery'), { ssr: true })
-const Reviews = dynamic(() => import('@/components/Reviews'), { ssr: true })
+// Gallery 是客户端组件（使用 useState），禁用 SSR 以避免 hydration 错误
+const Gallery = dynamic(() => import('@/components/Gallery'), { ssr: false })
+// Reviews 是客户端组件（使用 useState 和日期格式化），禁用 SSR
+const Reviews = dynamic(() => import('@/components/Reviews'), { ssr: false })
 const ReviewForm = dynamic(() => import('@/components/ReviewForm'), { ssr: false })
 const MapPreview = dynamic(() => import('@/components/MapPreview'), { ssr: false })
 

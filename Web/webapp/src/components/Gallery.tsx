@@ -1,6 +1,6 @@
 "use client"
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ImageUpload from './ImageUpload'
 import ResponsiveImage from './ResponsiveImage'
 
@@ -12,6 +12,22 @@ type Props = {
 
 export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   const [active, setActive] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 在客户端挂载之前，返回一个简单的占位符，避免 hydration 错误
+  if (!mounted) {
+    return (
+      <div className="space-y-4">
+        <div className="h-64 bg-gray-100 flex items-center justify-center text-textMuted" style={{ borderRadius: '4px' }}>
+          加载中...
+        </div>
+      </div>
+    )
+  }
   
   if (!urls || urls.length === 0) {
     return (
