@@ -132,7 +132,6 @@ export default function AddVenuePage() {
           priceMax: '',
           indoor: false,
         })
-        }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
