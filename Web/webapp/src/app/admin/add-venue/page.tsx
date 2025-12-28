@@ -74,12 +74,18 @@ export default function AddVenuePage() {
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
 
-      const data = await fetchJson('/venues', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      try {
+        const data = await fetchJson('/venues', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
 
-      if (!data.error) {
+        if (data.error) {
+          const errorMsg = data.error.message || data.error.code || '添加失败，请检查输入'
+          setMessage({ type: 'error', text: `❌ ${errorMsg}` })
+          setLoading(false)
+          return
+        }
         const venueId = data.id
         
         // 如果有选中的图片，自动上传
@@ -126,16 +132,13 @@ export default function AddVenuePage() {
           priceMax: '',
           indoor: false,
         })
-      } else {
-        const errorMsg = data.error?.message || data.message || '添加失败，请检查输入'
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
-      setMessage({ type: 'error', text: `❌ ${errorMsg}` })
-    } finally {
-      setLoading(false)
-    }
   }
 
   return (
