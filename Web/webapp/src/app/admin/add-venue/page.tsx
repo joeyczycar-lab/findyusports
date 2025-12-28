@@ -66,15 +66,10 @@ export default function AddVenuePage() {
       }
 
       payload.address = formData.address
-      // 如果没有坐标，使用默认坐标（后续可以通过地址解析获取）
-      if (!formData.lng || !formData.lat || formData.lng === 0 || formData.lat === 0) {
-        // 使用北京的默认坐标作为占位符
-        payload.lng = 116.397428
-        payload.lat = 39.90923
-      } else {
-        payload.lng = formData.lng
-        payload.lat = formData.lat
-      }
+      // 使用默认坐标（后续可以通过地址解析获取）
+      // 注意：后端API要求必须有 lng 和 lat，所以使用默认值
+      payload.lng = 116.397428  // 北京天安门默认坐标
+      payload.lat = 39.90923
       if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
