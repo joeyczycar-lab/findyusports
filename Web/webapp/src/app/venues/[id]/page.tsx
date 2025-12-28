@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { fetchJson } from '@/lib/api'
+import NavigationMenu from '@/components/NavigationMenu'
 
 // 使用动态导入延迟加载客户端组件，避免 SSR 问题
 // Gallery 是客户端组件（使用 useState），禁用 SSR 以避免 hydration 错误
@@ -8,7 +9,6 @@ const Gallery = dynamic(() => import('@/components/Gallery'), { ssr: false })
 // Reviews 是客户端组件（使用 useState 和日期格式化），禁用 SSR
 const Reviews = dynamic(() => import('@/components/Reviews'), { ssr: false })
 const ReviewForm = dynamic(() => import('@/components/ReviewForm'), { ssr: false })
-const MapPreview = dynamic(() => import('@/components/MapPreview'), { ssr: false })
 
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
   const venueId = params.id
@@ -68,7 +68,17 @@ export default async function VenueDetailPage({ params }: { params: { id: string
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
-                <div className="font-medium">{v?.address ?? '-'}</div>
+                <div className="font-medium">
+                  {v && v.location ? (
+                    <NavigationMenu
+                      address={v.address || '地址未填写'}
+                      location={v.location}
+                      name={v.name}
+                    />
+                  ) : (
+                    <span>{v?.address ?? '-'}</span>
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">价格</div>
@@ -93,25 +103,27 @@ export default async function VenueDetailPage({ params }: { params: { id: string
         </div>
 
         <aside className="space-y-6">
-          {v && (
-            <MapPreview 
-              className="h-80" 
-              position={v.location} 
-              name={v.name}
-              zoom={16}
-            />
+          {v && v.location && (
+            <div className="border border-border p-6" style={{ borderRadius: '4px' }}>
+              <h3 className="text-heading-sm font-bold mb-4">位置信息</h3>
+              <div className="space-y-3 text-body-sm">
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
+                  <NavigationMenu
+                    address={v.address || '地址未填写'}
+                    location={v.location}
+                    name={v.name}
+                  />
+                </div>
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">坐标</div>
+                  <div className="font-mono text-xs text-textSecondary">
+                    {v.location[0].toFixed(6)}, {v.location[1].toFixed(6)}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-          {!v && (
-            <div className="h-80 border border-border bg-bgMuted flex items-center justify-center text-textMuted">加载中...</div>
-          )}
-          <a 
-            className="btn-primary w-full text-center block" 
-            href={v ? `https://uri.amap.com/marker?position=${v.location[0]},${v.location[1]}&name=${encodeURIComponent(v.name)}` : '#'} 
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            导航到这里
-          </a>
           <button className="btn-secondary w-full">收藏</button>
         </aside>
       </div>
