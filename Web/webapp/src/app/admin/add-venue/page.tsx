@@ -50,9 +50,9 @@ export default function AddVenuePage() {
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
 
-      // 验证经纬度
-      if (!formData.lng || !formData.lat || formData.lng === 0 || formData.lat === 0) {
-        setMessage({ type: 'error', text: '❌ 请在地图上点击选择场地位置' })
+      // 验证地址
+      if (!formData.address || formData.address.trim() === '') {
+        setMessage({ type: 'error', text: '❌ 请输入详细地址' })
         setLoading(false)
         return
       }
@@ -65,7 +65,16 @@ export default function AddVenuePage() {
         lat: formData.lat,
       }
 
-      if (formData.address) payload.address = formData.address
+      payload.address = formData.address
+      // 如果没有坐标，使用默认坐标（后续可以通过地址解析获取）
+      if (!formData.lng || !formData.lat || formData.lng === 0 || formData.lat === 0) {
+        // 使用北京的默认坐标作为占位符
+        payload.lng = 116.397428
+        payload.lat = 39.90923
+      } else {
+        payload.lng = formData.lng
+        payload.lat = formData.lat
+      }
       if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
@@ -115,14 +124,14 @@ export default function AddVenuePage() {
           setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
         }
         
-        // 清空表单（保留地图位置）
+        // 清空表单
         setFormData({
           name: '',
           sportType: 'basketball',
           cityCode: '110000',
           address: '',
-          lng: formData.lng, // 保留地图位置
-          lat: formData.lat, // 保留地图位置
+          lng: 0,
+          lat: 0,
           priceMin: '',
           priceMax: '',
           indoor: false,
@@ -231,87 +240,21 @@ export default function AddVenuePage() {
 
           <div>
             <label htmlFor="address" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-              详细地址
+              详细地址 <span className="text-red-500">*</span>
             </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                className="flex-1 px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                style={{ borderRadius: '4px' }}
-                placeholder="例如：北京市朝阳区朝阳路1号"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-              位置坐标 <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="lng" className="block text-xs text-textSecondary mb-1 uppercase tracking-wide">
-                  经度 (lng)
-                </label>
-                <input
-                  type="number"
-                  id="lng"
-                  step="any"
-                  required
-                  value={formData.lng || ''}
-                  onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  style={{ borderRadius: '4px' }}
-                  placeholder="例如：116.380863"
-                />
-              </div>
-              <div>
-                <label htmlFor="lat" className="block text-xs text-textSecondary mb-1 uppercase tracking-wide">
-                  纬度 (lat)
-                </label>
-                <input
-                  type="number"
-                  id="lat"
-                  step="any"
-                  required
-                  value={formData.lat || ''}
-                  onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-                  style={{ borderRadius: '4px' }}
-                  placeholder="例如：39.900051"
-                />
-              </div>
-            </div>
+            <input
+              type="text"
+              id="address"
+              required
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+              placeholder="例如：北京市朝阳区朝阳路1号"
+            />
             <p className="text-xs text-gray-600 mt-2">
-              💡 提示：请输入场地的经纬度坐标。可以通过高德地图坐标拾取工具获取：
-              <a 
-                href="https://lbs.amap.com/tools/picker" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-brandBlue underline ml-1"
-              >
-                点击打开坐标拾取工具
-              </a>
+              💡 提示：请输入场地的详细地址，系统会自动获取坐标信息
             </p>
-            {formData.lng !== 0 && formData.lat !== 0 && (
-              <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded" style={{ borderRadius: '4px' }}>
-                <p className="text-xs text-green-600 mb-2">
-                  ✅ 已设置位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
-                </p>
-                {formData.address && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-textSecondary">导航：</span>
-                    <NavigationMenu
-                      address={formData.address}
-                      location={[formData.lng, formData.lat]}
-                      name={formData.name || '场地位置'}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
