@@ -48,8 +48,6 @@ export default function AddVenuePage() {
     setMessage(null)
 
     try {
-      const apiBase = getApiBase()
-
       // 验证地址
       if (!formData.address || formData.address.trim() === '') {
         setMessage({ type: 'error', text: '❌ 请输入详细地址' })
@@ -74,70 +72,70 @@ export default function AddVenuePage() {
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
 
-      try {
-        const data = await fetchJson('/venues', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        })
+      const data = await fetchJson('/venues', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
 
-        if (data.error) {
-          const errorMsg = data.error.message || data.error.code || '添加失败，请检查输入'
-          setMessage({ type: 'error', text: `❌ ${errorMsg}` })
-          setLoading(false)
-          return
-        }
-        const venueId = data.id
-        
-        // 如果有选中的图片，自动上传
-        if (selectedImages.length > 0) {
-          setUploadingImages(true)
-          try {
-            const authState = getAuthState()
-            if (!authState.isAuthenticated) {
-              setIsLoginModalOpen(true)
-              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
-            } else {
-              // 上传所有选中的图片
-              const uploadPromises = selectedImages.map(async (file) => {
-                const formData = new FormData()
-                formData.append('file', file)
-                return fetchJson(`/venues/${venueId}/upload`, {
-                  method: 'POST',
-                  body: formData
-                })
-              })
-              
-              await Promise.all(uploadPromises)
-              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
-              setSelectedImages([])
-            }
-          } catch (error: any) {
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看所有场地。` })
-          } finally {
-            setUploadingImages(false)
-          }
-        } else {
-          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
-        }
-        
-        // 清空表单
-        setFormData({
-          name: '',
-          sportType: 'basketball',
-          cityCode: '110000',
-          address: '',
-          lng: 0,
-          lat: 0,
-          priceMin: '',
-          priceMax: '',
-          indoor: false,
-        })
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
+      if (data.error) {
+        const errorMsg = data.error.message || data.error.code || '添加失败，请检查输入'
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
-      } finally {
         setLoading(false)
+        return
       }
+      
+      const venueId = data.id
+      
+      // 如果有选中的图片，自动上传
+      if (selectedImages.length > 0) {
+        setUploadingImages(true)
+        try {
+          const authState = getAuthState()
+          if (!authState.isAuthenticated) {
+            setIsLoginModalOpen(true)
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
+          } else {
+            // 上传所有选中的图片
+            const uploadPromises = selectedImages.map(async (file) => {
+              const formData = new FormData()
+              formData.append('file', file)
+              return fetchJson(`/venues/${venueId}/upload`, {
+                method: 'POST',
+                body: formData
+              })
+            })
+            
+            await Promise.all(uploadPromises)
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
+            setSelectedImages([])
+          }
+        } catch (error: any) {
+          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看所有场地。` })
+        } finally {
+          setUploadingImages(false)
+        }
+      } else {
+        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
+      }
+      
+      // 清空表单
+      setFormData({
+        name: '',
+        sportType: 'basketball',
+        cityCode: '110000',
+        address: '',
+        lng: 0,
+        lat: 0,
+        priceMin: '',
+        priceMax: '',
+        indoor: false,
+      })
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
+      setMessage({ type: 'error', text: `❌ ${errorMsg}` })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
