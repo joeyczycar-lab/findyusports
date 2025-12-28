@@ -16,6 +16,7 @@ function MapPageContent() {
   const [items, setItems] = useState<Array<any>>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({})
+  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
   const debouncedActiveId = useDebouncedValue(activeId, 120)
   const desktopItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const mobileItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -85,24 +86,23 @@ function MapPageContent() {
     if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
     if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
     if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
+    // 添加排序参数，不传坐标参数
+    p.set('sortBy', sortBy)
     return p
   }
 
-  async function fetchVenuesByBounds(bounds?: { northeast: [number, number]; southwest: [number, number] }) {
+  async function fetchVenues() {
     const p = toQuery(filters)
-    if (bounds) {
-      p.set('ne', bounds.northeast.join(','))
-      p.set('sw', bounds.southwest.join(','))
-    }
     const qs = p.toString()
     const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
-    setItems(json.items)
+    setItems(json.items || [])
     if (json.items && json.items.length > 0) {
       setActiveId(json.items[0].id)
     }
   }
 
-  useEffect(() => { fetchVenuesByBounds() }, [])
+  useEffect(() => { fetchVenues() }, [])
+  useEffect(() => { fetchVenues() }, [sortBy, filters])
   useEffect(() => {
     if (items.length > 0 && !activeId) setActiveId(items[0].id)
   }, [items, activeId])
@@ -141,8 +141,19 @@ function MapPageContent() {
   }
   return (
     <main className="container-page py-12 bg-white">
-      <h1 className="text-heading font-bold mb-8 tracking-tight">地图探索</h1>
-      <FiltersBar value={filters} onChange={(f)=>{ setFilters(f); if (lastQuery?.bounds) fetchVenuesByBounds(lastQuery.bounds) }} />
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-heading font-bold tracking-tight">地图探索</h1>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as 'city' | 'popularity' | 'name')}
+          className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
+        >
+          <option value="popularity">🔥 按热度</option>
+          <option value="city">📍 按地区</option>
+          <option value="name">🔤 按名称</option>
+        </select>
+      </div>
+      <FiltersBar value={filters} onChange={(f) => setFilters(f)} />
       <div className="flex items-center justify-between mb-6 gap-3">
         <div className="flex items-center gap-6 text-caption text-textSecondary uppercase tracking-wide">
           <div className="flex items-center gap-2">
@@ -186,7 +197,22 @@ function MapPageContent() {
               ref={(el) => { desktopItemRefs.current[it.id] = el }}
             >
               <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
-              <div className="text-body-sm text-textSecondary uppercase tracking-wide">评分 {it.rating} · {it.distanceKm}km</div>
+              <div className="text-body-sm text-textSecondary space-y-1">
+                {it.address && (
+                  <div className="text-xs">📍 {it.address}</div>
+                )}
+                <div className="flex items-center gap-3 text-xs">
+                  {it.price !== undefined && it.price > 0 && (
+                    <span>💰 ¥{it.price}/小时</span>
+                  )}
+                  {it.price === 0 && (
+                    <span>💰 免费</span>
+                  )}
+                  {it.reviewCount > 0 && (
+                    <span>⭐ {it.avgRating?.toFixed(1) || 0} ({it.reviewCount})</span>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -195,7 +221,7 @@ function MapPageContent() {
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => setActiveId(id)}
-          onSearchHere={(payload) => { setLastQuery(payload); fetchVenuesByBounds(payload.bounds) }}
+          onSearchHere={(payload) => { setLastQuery(payload); fetchVenues() }}
         />
       </div>
 
@@ -236,7 +262,7 @@ function MapPageContent() {
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => { setActiveId(id); setDrawerOpen(true) }}
-          onSearchHere={(payload) => { setLastQuery(payload); fetchVenuesByBounds(payload.bounds); setDrawerOpen(true); }}
+          onSearchHere={(payload) => { setLastQuery(payload); fetchVenues(); setDrawerOpen(true); }}
         />
         <div className="mt-4 text-caption text-textSecondary uppercase tracking-wide">最近查询：{lastQuery ? `${lastQuery.center[0].toFixed(4)}, ${lastQuery.center[1].toFixed(4)} (z${lastQuery.zoom})` : '无'}</div>
         <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)} style={{ borderRadius: '4px' }}>打开列表</button>
@@ -253,7 +279,22 @@ function MapPageContent() {
               ref={(el) => { mobileItemRefs.current[it.id] = el }}
             >
               <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
-              <div className="text-body-sm text-textSecondary uppercase tracking-wide">评分 {it.rating} · {it.distanceKm}km</div>
+              <div className="text-body-sm text-textSecondary space-y-1">
+                {it.address && (
+                  <div className="text-xs">📍 {it.address}</div>
+                )}
+                <div className="flex items-center gap-3 text-xs">
+                  {it.price !== undefined && it.price > 0 && (
+                    <span>💰 ¥{it.price}/小时</span>
+                  )}
+                  {it.price === 0 && (
+                    <span>💰 免费</span>
+                  )}
+                  {it.reviewCount > 0 && (
+                    <span>⭐ {it.avgRating?.toFixed(1) || 0} ({it.reviewCount})</span>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
