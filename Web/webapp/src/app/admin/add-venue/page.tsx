@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { fetchJson } from '@/lib/api'
+import { fetchJson, getApiBase } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
@@ -48,7 +48,7 @@ export default function AddVenuePage() {
     setMessage(null)
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
+      const apiBase = getApiBase()
 
       // 验证地址
       if (!formData.address || formData.address.trim() === '') {
@@ -79,17 +79,12 @@ export default function AddVenuePage() {
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
 
-      const response = await fetch(`${apiBase}/venues`, {
+      const data = await fetchJson('/venues', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       })
 
-      const data = await response.json()
-
-      if (response.ok && !data.error) {
+      if (!data.error) {
         const venueId = data.id
         
         // 如果有选中的图片，自动上传
