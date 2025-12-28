@@ -7,6 +7,7 @@ import LocationPicker from '@/components/LocationPicker'
 import { fetchJson } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
+import NavigationMenu from '@/components/NavigationMenu'
 
 export default function AddVenuePage() {
   const router = useRouter()
@@ -233,15 +234,32 @@ export default function AddVenuePage() {
             <label htmlFor="address" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
               详细地址
             </label>
-            <input
-              type="text"
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-              style={{ borderRadius: '4px' }}
-              placeholder="例如：北京市朝阳区朝阳路1号"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                className="flex-1 px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                style={{ borderRadius: '4px' }}
+                placeholder="例如：北京市朝阳区朝阳路1号"
+              />
+              {formData.lng !== 0 && formData.lat !== 0 && (
+                <div className="flex items-center">
+                  <NavigationMenu
+                    address={formData.address || '地址未填写'}
+                    location={[formData.lng, formData.lat]}
+                    name={formData.name || '场地位置'}
+                    className="h-full"
+                  />
+                </div>
+              )}
+            </div>
+            {formData.lng !== 0 && formData.lat !== 0 && (
+              <p className="text-xs text-gray-600 mt-2">
+                💡 提示：已选择位置，点击地址右侧的导航按钮可查看导航选项
+              </p>
+            )}
           </div>
 
           <div>
@@ -261,9 +279,19 @@ export default function AddVenuePage() {
               💡 提示：在地图上点击即可选择场地位置，选中的位置会显示标记。经纬度将自动获取。
             </p>
             {formData.lng !== 0 && formData.lat !== 0 && (
-              <p className="text-xs text-green-600 mt-1">
-                ✅ 已选择位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
-              </p>
+              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded" style={{ borderRadius: '4px' }}>
+                <p className="text-xs text-green-600 mb-2">
+                  ✅ 已选择位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-textSecondary">导航：</span>
+                  <NavigationMenu
+                    address={formData.address || '地址未填写'}
+                    location={[formData.lng, formData.lat]}
+                    name={formData.name || '场地位置'}
+                  />
+                </div>
+              </div>
             )}
           </div>
 
