@@ -393,14 +393,32 @@ export class VenuesService {
   }
 
   async listImages(venueId: number, userId?: string) {
-    const rows = await this.imageRepo.find({ where: { venue: { id: venueId } as any }, order: { sort: 'ASC' } })
-    return { 
-      items: rows.map(r => ({ 
-        id: r.id, 
-        url: r.url,
-        // 生成带防盗链保护的URL
-        protectedUrl: this.hotlinkProtection.generateTokenizedUrl(r.url, userId)
-      })) 
+    try {
+      // 使用 QueryBuilder 来确保正确查询关联的 venue
+      const rows = await this.imageRepo
+        .createQueryBuilder('img')
+        .where('img.venueId = :venueId', { venueId })
+        .orderBy('img.sort', 'ASC')
+        .addOrderBy('img.id', 'ASC')
+        .getMany()
+      
+      console.log(`📸 Found ${rows.length} images for venue ${venueId}`)
+      
+      return { 
+        items: rows.map(r => ({ 
+          id: r.id, 
+          url: r.url,
+          // 生成带防盗链保护的URL
+          protectedUrl: this.hotlinkProtection.generateTokenizedUrl(r.url, userId)
+        })) 
+      }
+    } catch (error) {
+      console.error('❌ Error listing images:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return { items: [] }
     }
   }
 
