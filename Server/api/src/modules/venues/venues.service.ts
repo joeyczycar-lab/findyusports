@@ -394,15 +394,44 @@ export class VenuesService {
 
   async listImages(venueId: number, userId?: string) {
     try {
-      // 使用 QueryBuilder 来确保正确查询关联的 venue
-      const rows = await this.imageRepo
-        .createQueryBuilder('img')
-        .where('img.venueId = :venueId', { venueId })
-        .orderBy('img.sort', 'ASC')
-        .addOrderBy('img.id', 'ASC')
-        .getMany()
+      // 先尝试使用关系查询
+      let rows = await this.imageRepo.find({ 
+        where: { venue: { id: venueId } as any }, 
+        order: { sort: 'ASC', id: 'ASC' } 
+      })
+      
+      // 如果关系查询失败或返回空，尝试使用 QueryBuilder 直接查询外键
+      if (rows.length === 0) {
+        try {
+          // TypeORM 会自动创建外键列，通常是 venueId
+          rows = await this.imageRepo
+            .createQueryBuilder('img')
+            .leftJoin('img.venue', 'venue')
+            .where('venue.id = :venueId OR img.venueId = :venueId', { venueId })
+            .orderBy('img.sort', 'ASC')
+            .addOrderBy('img.id', 'ASC')
+            .getMany()
+        } catch (qbError) {
+          console.warn('⚠️  QueryBuilder query failed, trying raw query:', qbError)
+          // 如果 QueryBuilder 也失败，尝试原生 SQL 查询
+          const rawRows = await this.imageRepo.query(
+            'SELECT * FROM venue_image WHERE "venueId" = $1 ORDER BY sort ASC, id ASC',
+            [venueId]
+          )
+          rows = rawRows.map((row: any) => ({
+            id: row.id,
+            venue: { id: row.venueId } as any,
+            userId: row.userId,
+            url: row.url,
+            sort: row.sort || 0,
+          })) as any[]
+        }
+      }
       
       console.log(`📸 Found ${rows.length} images for venue ${venueId}`)
+      if (rows.length > 0) {
+        console.log('📸 First image URL:', rows[0].url)
+      }
       
       return { 
         items: rows.map(r => ({ 
