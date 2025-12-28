@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import LocationPicker from '@/components/LocationPicker'
 import { fetchJson } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
@@ -244,53 +243,73 @@ export default function AddVenuePage() {
                 style={{ borderRadius: '4px' }}
                 placeholder="例如：北京市朝阳区朝阳路1号"
               />
-              {formData.lng !== 0 && formData.lat !== 0 && (
-                <div className="flex items-center">
-                  <NavigationMenu
-                    address={formData.address || '地址未填写'}
-                    location={[formData.lng, formData.lat]}
-                    name={formData.name || '场地位置'}
-                    className="h-full"
-                  />
-                </div>
-              )}
             </div>
-            {formData.lng !== 0 && formData.lat !== 0 && (
-              <p className="text-xs text-gray-600 mt-2">
-                💡 提示：已选择位置，点击地址右侧的导航按钮可查看导航选项
-              </p>
-            )}
           </div>
 
           <div>
             <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-              地图定位 <span className="text-red-500">*</span>
+              位置坐标 <span className="text-red-500">*</span>
             </label>
-            <div className="h-96 w-full border border-gray-900 overflow-hidden" style={{ borderRadius: '4px' }}>
-              <LocationPicker
-                className="w-full h-full"
-                onLocationSelect={(lng, lat) => {
-                  setFormData({ ...formData, lng, lat })
-                }}
-                initialPosition={formData.lng && formData.lat ? [formData.lng, formData.lat] : undefined}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="lng" className="block text-xs text-textSecondary mb-1 uppercase tracking-wide">
+                  经度 (lng)
+                </label>
+                <input
+                  type="number"
+                  id="lng"
+                  step="any"
+                  required
+                  value={formData.lng || ''}
+                  onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                  placeholder="例如：116.380863"
+                />
+              </div>
+              <div>
+                <label htmlFor="lat" className="block text-xs text-textSecondary mb-1 uppercase tracking-wide">
+                  纬度 (lat)
+                </label>
+                <input
+                  type="number"
+                  id="lat"
+                  step="any"
+                  required
+                  value={formData.lat || ''}
+                  onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                  placeholder="例如：39.900051"
+                />
+              </div>
             </div>
             <p className="text-xs text-gray-600 mt-2">
-              💡 提示：在地图上点击即可选择场地位置，选中的位置会显示标记。经纬度将自动获取。
+              💡 提示：请输入场地的经纬度坐标。可以通过高德地图坐标拾取工具获取：
+              <a 
+                href="https://lbs.amap.com/tools/picker" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-brandBlue underline ml-1"
+              >
+                点击打开坐标拾取工具
+              </a>
             </p>
             {formData.lng !== 0 && formData.lat !== 0 && (
-              <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded" style={{ borderRadius: '4px' }}>
+              <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded" style={{ borderRadius: '4px' }}>
                 <p className="text-xs text-green-600 mb-2">
-                  ✅ 已选择位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
+                  ✅ 已设置位置：经度 {formData.lng.toFixed(6)}，纬度 {formData.lat.toFixed(6)}
                 </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-textSecondary">导航：</span>
-                  <NavigationMenu
-                    address={formData.address || '地址未填写'}
-                    location={[formData.lng, formData.lat]}
-                    name={formData.name || '场地位置'}
-                  />
-                </div>
+                {formData.address && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-textSecondary">导航：</span>
+                    <NavigationMenu
+                      address={formData.address}
+                      location={[formData.lng, formData.lat]}
+                      name={formData.name || '场地位置'}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
