@@ -57,19 +57,19 @@ export default function AddVenuePage() {
         return
       }
 
+      // 使用默认坐标（后续可以通过地址解析获取）
+      // 注意：后端API要求必须有 lng 和 lat，所以使用默认值
+      const defaultLng = 116.397428  // 北京天安门默认坐标
+      const defaultLat = 39.90923
+
       const payload: any = {
         name: formData.name,
         sportType: formData.sportType,
         cityCode: formData.cityCode,
-        lng: formData.lng,
-        lat: formData.lat,
+        address: formData.address,
+        lng: defaultLng,
+        lat: defaultLat,
       }
-
-      payload.address = formData.address
-      // 使用默认坐标（后续可以通过地址解析获取）
-      // 注意：后端API要求必须有 lng 和 lat，所以使用默认值
-      payload.lng = 116.397428  // 北京天安门默认坐标
-      payload.lat = 39.90923
       if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
