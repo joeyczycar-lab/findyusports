@@ -22,7 +22,6 @@ type Props = {
 export default function MapView({ className, onSearchHere, markers, onMarkerClick, activeId }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [showSearchHere, setShowSearchHere] = useState(false)
   const mapRef = useRef<any>(null)
   const infoRef = useRef<any>(null)
   const clusterRef = useRef<any>(null)
@@ -46,17 +45,7 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
         toolbar = new AMap.ToolBar()
         map.addControl(toolbar)
 
-        geolocation = new AMap.Geolocation({
-          enableHighAccuracy: true,
-          timeout: 10000,
-          position: 'RB',
-        })
-        map.addControl(geolocation)
-        geolocation.getCurrentPosition()
-
-        const onMoved = () => setShowSearchHere(true)
-        map.on('moveend', onMoved)
-        map.on('zoomend', onMoved)
+        // 移除坐标搜索功能
       })
       .catch((e) => setError(e.message || String(e)))
 
@@ -130,37 +119,9 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
     )
   }
 
-  const handleSearchHere = () => {
-    const map = mapRef.current
-    if (!map) return
-    const center = map.getCenter()
-    const bounds = map.getBounds()
-    const zoom = map.getZoom()
-    setShowSearchHere(false)
-    onSearchHere?.({
-      center: [center.getLng(), center.getLat()],
-      bounds: {
-        northeast: [bounds.northeast.lng, bounds.northeast.lat],
-        southwest: [bounds.southwest.lng, bounds.southwest.lat],
-      },
-      zoom,
-    })
-  }
-
   return (
     <div className={`relative ${className || ''}`}>
       <div ref={containerRef} className="absolute inset-0 overflow-hidden" style={{ borderRadius: '4px' }} />
-      {showSearchHere && (
-        <div className="pointer-events-none absolute left-0 right-0 bottom-4 flex justify-center">
-          <button
-            onClick={handleSearchHere}
-            className="pointer-events-auto px-4 h-10 bg-white shadow-md border border-border text-sm"
-            style={{ borderRadius: '4px' }}
-          >
-            在此区域搜索
-          </button>
-        </div>
-      )}
     </div>
   )
 }

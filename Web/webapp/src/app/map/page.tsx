@@ -12,7 +12,6 @@ export const dynamic = 'force-dynamic'
 
 function MapPageContent() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [lastQuery, setLastQuery] = useState<any>(null)
   const [items, setItems] = useState<Array<any>>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({})
@@ -81,7 +80,8 @@ function MapPageContent() {
 
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
-    if (filters.city) p.set('city', filters.city)
+    // 城市筛选：如果选择了城市，使用 cityCode 参数
+    if (filters.city) p.set('cityCode', filters.city)
     if (filters.sport) p.set('sport', filters.sport)
     if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
     if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
@@ -224,7 +224,6 @@ function MapPageContent() {
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => setActiveId(id)}
-          onSearchHere={(payload) => { setLastQuery(payload); fetchVenues() }}
         />
       </div>
 
@@ -265,9 +264,7 @@ function MapPageContent() {
           markers={markers}
           activeId={debouncedActiveId}
           onMarkerClick={(id) => { setActiveId(id); setDrawerOpen(true) }}
-          onSearchHere={(payload) => { setLastQuery(payload); fetchVenues(); setDrawerOpen(true); }}
         />
-        <div className="mt-4 text-caption text-textSecondary uppercase tracking-wide">最近查询：{lastQuery ? `${lastQuery.center[0].toFixed(4)}, ${lastQuery.center[1].toFixed(4)} (z${lastQuery.zoom})` : '无'}</div>
         <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)} style={{ borderRadius: '4px' }}>打开列表</button>
       </div>
 

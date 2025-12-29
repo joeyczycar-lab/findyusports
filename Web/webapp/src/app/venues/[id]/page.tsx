@@ -115,12 +115,6 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     name={v.name}
                   />
                 </div>
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">坐标</div>
-                  <div className="font-mono text-xs text-textSecondary">
-                    {v.location[0].toFixed(6)}, {v.location[1].toFixed(6)}
-                  </div>
-                </div>
               </div>
             </div>
           )}

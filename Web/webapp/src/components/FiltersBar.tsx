@@ -14,6 +14,30 @@ type Props = {
   onChange: (next: Filters) => void
 }
 
+// 城市列表
+const CITIES = [
+  { value: '', label: '全部城市' },
+  { value: '110000', label: '北京' },
+  { value: '310000', label: '上海' },
+  { value: '440100', label: '广州' },
+  { value: '440300', label: '深圳' },
+  { value: '320100', label: '南京' },
+  { value: '330100', label: '杭州' },
+  { value: '510100', label: '成都' },
+  { value: '420100', label: '武汉' },
+  { value: '610100', label: '西安' },
+  { value: '500000', label: '重庆' },
+  { value: '120000', label: '天津' },
+  { value: '370100', label: '济南' },
+  { value: '350100', label: '福州' },
+  { value: '360100', label: '南昌' },
+  { value: '450100', label: '南宁' },
+  { value: '530100', label: '昆明' },
+  { value: '520100', label: '贵阳' },
+  { value: '430100', label: '长沙' },
+  { value: '410100', label: '郑州' },
+]
+
 export default function FiltersBar({ value, onChange }: Props) {
   const [city, setCity] = useState(value.city || '')
   const [sport, setSport] = useState<Filters['sport']>(value.sport ?? 'basketball')
@@ -40,13 +64,15 @@ export default function FiltersBar({ value, onChange }: Props) {
 
   return (
     <div className="flex flex-wrap gap-3 items-center mb-6">
-      <input 
+      <select 
         value={city} 
-        onChange={(e)=>setCity(e.target.value)} 
-        onBlur={emit} 
-        placeholder="城市代码(如110000)" 
-        className="h-12 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
-      />
+        onChange={(e) => { setCity(e.target.value); emit() }} 
+        className="h-12 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black"
+      >
+        {CITIES.map(c => (
+          <option key={c.value} value={c.value}>{c.label}</option>
+        ))}
+      </select>
       <select 
         value={sport || 'basketball'} 
         onChange={(e)=>{ setSport((e.target.value||undefined) as any); emit() }} 
