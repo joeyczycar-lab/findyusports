@@ -4,11 +4,6 @@ import { loadAMap } from '@/lib/amapLoader'
 
 type Props = {
   className?: string
-  onSearchHere?: (payload: {
-    center: [number, number]
-    bounds: { northeast: [number, number]; southwest: [number, number] }
-    zoom: number
-  }) => void
   markers?: Array<{
     id: string
     name: string
@@ -19,7 +14,7 @@ type Props = {
   activeId?: string | null
 }
 
-export default function MapView({ className, onSearchHere, markers, onMarkerClick, activeId }: Props) {
+export default function MapView({ className, markers, onMarkerClick, activeId }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [error, setError] = useState<string | null>(null)
   const mapRef = useRef<any>(null)
@@ -29,7 +24,6 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
   useEffect(() => {
     let map: any
     let toolbar: any
-    let geolocation: any
     let disposed = false
 
     loadAMap()
@@ -44,14 +38,11 @@ export default function MapView({ className, onSearchHere, markers, onMarkerClic
 
         toolbar = new AMap.ToolBar()
         map.addControl(toolbar)
-
-        // 移除坐标搜索功能
       })
       .catch((e) => setError(e.message || String(e)))
 
     return () => {
       disposed = true
-      try { geolocation && geolocation.destroy && geolocation.destroy() } catch {}
       try { toolbar && toolbar.destroy && toolbar.destroy() } catch {}
       try { map && map.destroy && map.destroy() } catch {}
       mapRef.current = null
