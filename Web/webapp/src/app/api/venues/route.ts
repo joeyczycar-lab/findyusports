@@ -12,14 +12,30 @@ export async function GET(req: NextRequest) {
     const queryString = searchParams.toString()
     const backendUrl = `${apiBase}/venues${queryString ? `?${queryString}` : ''}`
     
-    console.log('📡 Proxying request to:', backendUrl)
+    console.log('📡 [API Route] Proxying request to:', backendUrl)
     
-    const res = await fetch(backendUrl, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    // 添加超时和重试机制
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+    
+    let res: Response
+    try {
+      res = await fetch(backendUrl, {
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      clearTimeout(timeoutId)
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId)
+      if (fetchError.name === 'AbortError') {
+        console.error('❌ [API Route] Request timeout after 10 seconds')
+        throw new Error('请求超时：后端服务响应时间过长')
+      }
+      throw fetchError
+    }
     
     if (!res.ok) {
       const errorText = await res.text()
