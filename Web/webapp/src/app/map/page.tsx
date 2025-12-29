@@ -38,15 +38,19 @@ function MapPageContent() {
       setError(null)
       const p = toQuery(filters)
       const qs = p.toString()
+      console.log('🔍 [MapPage] Fetching venues with query:', qs)
       const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
+      console.log('✅ [MapPage] Received response:', { itemsCount: json.items?.length || 0, total: json.total || 0, hasError: !!json.error })
       
       if (json.error) {
+        console.error('❌ [MapPage] API returned error:', json.error)
         throw new Error(json.error.message || '获取场地列表失败')
       }
       
       setItems(json.items || [])
       setTotal(json.total || 0)
     } catch (err: any) {
+      console.error('❌ [MapPage] Error fetching venues:', err)
       setError(err.message || '加载场地失败')
       setItems([])
       setTotal(0)
