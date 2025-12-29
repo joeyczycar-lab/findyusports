@@ -142,8 +142,6 @@ export default function DataViewPage() {
                         {venue.sportType === 'basketball' ? '🏀' : '⚽'}
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
-                      <td className="py-3 text-body-sm text-textSecondary">
-                      </td>
                       <td className="py-3 text-body-sm">
                         {venue.price ? `¥${venue.price}` : '免费'}
                       </td>
