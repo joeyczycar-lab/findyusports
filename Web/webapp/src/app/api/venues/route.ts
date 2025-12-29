@@ -2,19 +2,20 @@ import { NextRequest } from 'next/server'
 
 function getApiBase(): string {
   // 在生产环境中，必须使用环境变量
-  // 如果没有配置，尝试使用默认的 Railway 后端地址
   const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
   if (base && base.length > 0) {
     return base
   }
   
-  // 如果未配置，尝试使用默认的 Railway 后端地址
-  // 注意：这应该通过环境变量配置，而不是硬编码
-  const defaultBackend = process.env.RAILWAY_PUBLIC_DOMAIN 
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : 'https://findyusports-production.up.railway.app'
+  // 如果未配置，使用默认的 Railway 后端地址
+  // 注意：在生产环境中，应该通过 Vercel 环境变量配置 NEXT_PUBLIC_API_BASE
+  const defaultBackend = 'https://findyusports-production.up.railway.app'
   
-  console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set, using default:', defaultBackend)
+  // 只在开发环境显示警告
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set, using default:', defaultBackend)
+  }
+  
   return defaultBackend
 }
 
