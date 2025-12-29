@@ -129,7 +129,6 @@ export default function DataViewPage() {
                     <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">名称</th>
                     <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">类型</th>
                     <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">城市</th>
-                    <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">坐标</th>
                     <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">价格</th>
                     <th className="pb-3 text-body-sm font-bold uppercase tracking-wide">室内</th>
                   </tr>
@@ -144,7 +143,6 @@ export default function DataViewPage() {
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
                       <td className="py-3 text-body-sm text-textSecondary">
-                        {venue.location ? `${venue.location[0].toFixed(4)}, ${venue.location[1].toFixed(4)}` : '-'}
                       </td>
                       <td className="py-3 text-body-sm">
                         {venue.price ? `¥${venue.price}` : '免费'}
