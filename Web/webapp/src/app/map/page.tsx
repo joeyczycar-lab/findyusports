@@ -57,14 +57,13 @@ function MapPageContent() {
 
   useEffect(() => { 
     setPage(1) // 筛选条件变化时重置到第一页
-    fetchVenues() 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, filters])
   
   useEffect(() => { 
     fetchVenues() 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page])
+  }, [page, sortBy, filters])
   
   const totalPages = Math.ceil(total / pageSize) || 1
 
