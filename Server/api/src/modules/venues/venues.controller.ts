@@ -15,13 +15,19 @@ export class VenuesController {
   @Get()
   async list(@Query() query: QueryVenuesDto) {
     try {
-      return await this.venuesService.search(query)
+      const result = await this.venuesService.search(query)
+      // 如果服务返回了错误，返回 200 但包含错误信息（前端会处理）
+      if (result && 'error' in result) {
+        return result
+      }
+      return result
     } catch (error) {
       console.error('❌ Error listing venues:', error)
       if (error instanceof Error) {
         console.error('Error message:', error.message)
         console.error('Error stack:', error.stack)
       }
+      // 返回 200 状态码，但包含错误信息（避免前端收到 500）
       return {
         error: {
           code: 'InternalServerError',
