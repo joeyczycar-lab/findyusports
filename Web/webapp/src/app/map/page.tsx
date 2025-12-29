@@ -1,6 +1,5 @@
 "use client"
 import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
@@ -17,8 +16,6 @@ function MapPageContent() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
-  const searchParams = useSearchParams()
-
 
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
@@ -70,13 +67,22 @@ function MapPageContent() {
   }, [page])
   
   const totalPages = Math.ceil(total / pageSize) || 1
+
   return (
     <main className="container-page py-12 bg-white">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-heading font-bold tracking-tight">地图探索</h1>
+        <div>
+          <h1 className="text-heading font-bold mb-2 tracking-tight">全部场地</h1>
+          <p className="text-body text-textSecondary">
+            共 {total} 个场地 · 第 {page} / {totalPages} 页
+          </p>
+        </div>
         <select
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as 'city' | 'popularity' | 'name')}
+          onChange={(e) => {
+            setSortBy(e.target.value as 'city' | 'popularity' | 'name')
+            setPage(1) // 重置到第一页
+          }}
           className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
         >
           <option value="popularity">🔥 按热度</option>
@@ -85,148 +91,151 @@ function MapPageContent() {
         </select>
       </div>
       <FiltersBar value={filters} onChange={(f) => setFilters(f)} />
-      <div className="flex items-center justify-between mb-6 gap-3">
-        <div className="flex items-center gap-6 text-caption text-textSecondary uppercase tracking-wide">
-          <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap">节流 {throttleMs}ms</span>
-            <input
-              type="range"
-              min={0}
-              max={2000}
-              step={50}
-              value={throttleMs}
-              onChange={(e)=>onChangeThrottle(Math.max(0, Math.min(2000, Number(e.target.value)||0)))}
-              className="w-44 accent-black"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="whitespace-nowrap">抑制 {suppressMs}ms</span>
-            <input
-              type="range"
-              min={0}
-              max={3000}
-              step={50}
-              value={suppressMs}
-              onChange={(e)=>onChangeSuppress(Math.max(0, Math.min(3000, Number(e.target.value)||0)))}
-              className="w-44 accent-black"
-            />
-          </div>
-        </div>
-        <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
-          <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} className="accent-black" /> 跟随滚动
-        </label>
-      </div>
 
-      <div className="hidden lg:grid grid-cols-[360px_1fr] gap-8">
-        <div ref={desktopContainerRef} onScroll={onDesktopScroll} className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
-          {items.map((it) => (
-            <div
-              key={it.id}
-              className={`card-nike p-4 cursor-pointer ${activeId===it.id? 'border-black border-2' : ''}`}
-              onClick={() => setActiveId(it.id)}
-              onMouseEnter={() => setActiveId(it.id)}
-              ref={(el) => { desktopItemRefs.current[it.id] = el }}
-            >
-              <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
-              <div className="text-body-sm text-textSecondary space-y-1">
-                {it.address && (
-                  <div className="text-xs">📍 {it.address}</div>
-                )}
-                <div className="flex items-center gap-3 text-xs">
-                  {it.price !== undefined && it.price > 0 && (
-                    <span>💰 ¥{it.price}/小时</span>
-                  )}
-                  {it.price === 0 && (
-                    <span>💰 免费</span>
-                  )}
-                  {it.reviewCount > 0 && (
-                    <span>⭐ {it.avgRating?.toFixed(1) || 0} ({it.reviewCount})</span>
+      {loading && (
+        <div className="text-center py-16 text-textSecondary">
+          加载中...
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          ❌ {error}
+        </div>
+      )}
+
+      {!loading && !error && items.length === 0 && (
+        <div className="text-center py-16 text-textSecondary">
+          <div className="text-4xl mb-4">📭</div>
+          <div className="text-body mb-4">没有找到场地</div>
+          <Link 
+            href="/admin/add-venue" 
+            className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
+            style={{ borderRadius: '4px' }}
+          >
+            ➕ 添加场地
+          </Link>
+        </div>
+      )}
+
+      {!loading && !error && items.length > 0 && (
+        <>
+          <div className="mb-4 text-sm text-textSecondary">
+            显示 {items.length} 个场地（共 {total} 个）
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {items.map((venue) => (
+              <Link
+                key={venue.id}
+                href={`/venues/${venue.id}`}
+                className="card-nike hover:shadow-lg transition-shadow overflow-hidden"
+              >
+                {/* 图片区域 */}
+                <div className="h-48 bg-gray-100 relative overflow-hidden">
+                  {venue.firstImage ? (
+                    <img 
+                      src={venue.firstImage} 
+                      alt={venue.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent && !parent.querySelector('.fallback-icon')) {
+                          const fallback = document.createElement('div')
+                          fallback.className = 'fallback-icon w-full h-full flex items-center justify-center text-textMuted text-4xl absolute inset-0'
+                          fallback.textContent = venue.sportType === 'basketball' ? '🏀' : '⚽'
+                          parent.appendChild(fallback)
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
+                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <MapView
-          className="h-[600px] w-full border border-border"
-          markers={markers}
-          activeId={debouncedActiveId}
-          onMarkerClick={(id) => setActiveId(id)}
-        />
-      </div>
-
-      <div className="lg:hidden">
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <div className="flex items-center gap-6 text-caption text-textSecondary uppercase tracking-wide w-full">
-            <div className="flex items-center gap-2 flex-1">
-              <span className="whitespace-nowrap">节流 {throttleMs}ms</span>
-              <input
-                type="range"
-                min={0}
-                max={2000}
-                step={50}
-                value={throttleMs}
-                onChange={(e)=>onChangeThrottle(Math.max(0, Math.min(2000, Number(e.target.value)||0)))}
-                className="w-full accent-black"
-              />
-            </div>
-            <div className="flex items-center gap-2 flex-1">
-              <span className="whitespace-nowrap">抑制 {suppressMs}ms</span>
-              <input
-                type="range"
-                min={0}
-                max={3000}
-                step={50}
-                value={suppressMs}
-                onChange={(e)=>onChangeSuppress(Math.max(0, Math.min(3000, Number(e.target.value)||0)))}
-                className="w-full accent-black"
-              />
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
-            <input type="checkbox" checked={followEnabled} onChange={(e)=>setFollowEnabled(e.target.checked)} className="accent-black" /> 跟随滚动
-          </label>
-        </div>
-        <MapView
-          className="h-[70vh] w-full border border-border"
-          markers={markers}
-          activeId={debouncedActiveId}
-          onMarkerClick={(id) => { setActiveId(id); setDrawerOpen(true) }}
-        />
-        <button className="btn-secondary w-full mt-4" onClick={() => setDrawerOpen(true)} style={{ borderRadius: '4px' }}>打开列表</button>
-      </div>
-
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <div ref={mobileContainerRef} onScroll={onMobileScroll} className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-          {items.map((it) => (
-            <div
-              key={it.id}
-              className={`card-nike p-4 cursor-pointer ${activeId===it.id? 'border-black border-2' : ''}`}
-              onClick={() => setActiveId(it.id)}
-              onMouseEnter={() => setActiveId(it.id)}
-              ref={(el) => { mobileItemRefs.current[it.id] = el }}
-            >
-              <a href={`/venues/${it.id}`} className="font-bold text-heading-sm mb-2 block hover:underline">{it.name}</a>
-              <div className="text-body-sm text-textSecondary space-y-1">
-                {it.address && (
-                  <div className="text-xs">📍 {it.address}</div>
-                )}
-                <div className="flex items-center gap-3 text-xs">
-                  {it.price !== undefined && it.price > 0 && (
-                    <span>💰 ¥{it.price}/小时</span>
-                  )}
-                  {it.price === 0 && (
-                    <span>💰 免费</span>
-                  )}
-                  {it.reviewCount > 0 && (
-                    <span>⭐ {it.avgRating?.toFixed(1) || 0} ({it.reviewCount})</span>
-                  )}
+                
+                {/* 内容区域 */}
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-heading-sm mb-2 line-clamp-2">
+                        {venue.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
+                          {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
+                        </span>
+                        {venue.indoor && (
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            室内
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-body-sm text-textSecondary space-y-1">
+                    {venue.address && (
+                      <div className="flex items-center gap-2">
+                        <span>📍</span>
+                        <span className="text-xs line-clamp-1">{venue.address}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4">
+                      {venue.price !== undefined && venue.price > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>💰</span>
+                          <span className="text-xs">¥{venue.price}/小时</span>
+                        </div>
+                      )}
+                      {venue.price === 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>💰</span>
+                          <span className="text-xs">免费</span>
+                        </div>
+                      )}
+                      {venue.reviewCount > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>⭐</span>
+                          <span className="text-xs">{venue.avgRating?.toFixed(1) || 0} ({venue.reviewCount})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* 分页 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              
+              <span className="text-body text-textSecondary">
+                第 {page} / {totalPages} 页
+              </span>
+              
+              <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
             </div>
-          ))}
-        </div>
-      </MobileDrawer>
+          )}
+        </>
+      )}
     </main>
   )
 }
