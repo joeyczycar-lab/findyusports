@@ -1,18 +1,15 @@
 import { getAuthHeader } from './auth'
 
 export function getApiBase(): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
-  // 如果未配置，使用 Next.js API 路由作为代理
+  // 在浏览器环境中，始终使用 Next.js API 路由作为代理
   // 这样可以避免 CORS 问题，并且可以更好地处理错误
-  if (base && base.length > 0) {
-    return base
-  }
-  // 在浏览器环境中，使用相对路径通过 Next.js API 路由
   if (typeof window !== 'undefined') {
     return '/api'
   }
-  // 在服务器端，直接调用后端
-  return 'http://localhost:4000'
+  
+  // 在服务器端（SSR），使用环境变量或默认值
+  const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
+  return base && base.length > 0 ? base : 'http://localhost:4000'
 }
 
 export async function fetchJson(path: string, options?: RequestInit) {
