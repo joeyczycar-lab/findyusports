@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="zh-CN">
       <head />
-      <body style={{ margin: 0, padding: 0, paddingTop: 0 }}>
+      <body style={{ margin: 0, padding: 0, paddingTop: '64px' }}>
         <ForceButtonRadius />
         <Nav />
         {children}
