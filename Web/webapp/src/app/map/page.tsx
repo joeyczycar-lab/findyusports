@@ -1,82 +1,24 @@
 "use client"
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import MapView from '@/components/MapView'
-import MobileDrawer from '@/components/MobileDrawer'
+import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
-import { useDebouncedValue } from '@/lib/hooks'
 
 // 强制动态渲染，避免静态生成问题
 export const dynamic = 'force-dynamic'
 
 function MapPageContent() {
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [items, setItems] = useState<Array<any>>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({})
   const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
-  const debouncedActiveId = useDebouncedValue(activeId, 120)
-  const desktopItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const mobileItemRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const desktopContainerRef = useRef<HTMLDivElement | null>(null)
-  const mobileContainerRef = useRef<HTMLDivElement | null>(null)
-  const userScrollDesktopRef = useRef(false)
-  const userScrollMobileRef = useRef(false)
-  const userScrollResetTimerRef = useRef<number | null>(null)
-  const lastAutoScrollAtRef = useRef<number>(0)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const pageSize = 20
   const searchParams = useSearchParams()
-  const throttleMsRef = useRef<number>(Number(process.env.NEXT_PUBLIC_SCROLL_THROTTLE_MS || 300))
-  const suppressMsRef = useRef<number>(Number(process.env.NEXT_PUBLIC_SCROLL_SUPPRESS_MS || 800))
-  const [throttleMs, setThrottleMs] = useState<number>(throttleMsRef.current)
-  const [suppressMs, setSuppressMs] = useState<number>(suppressMsRef.current)
-  const [followEnabled, setFollowEnabled] = useState(true)
 
-  // 初始化阈值与跟随开关（支持 URL 参数覆盖）
-  useEffect(() => {
-    const t = Number(searchParams.get('scrollThrottleMs') || '')
-    const s = Number(searchParams.get('userSuppressMs') || '')
-    const f = searchParams.get('follow')
-    // 本地存储
-    const lsFollow = typeof window !== 'undefined' ? window.localStorage.getItem('map_follow') : null
-    const lsT = typeof window !== 'undefined' ? window.localStorage.getItem('map_scrollThrottleMs') : null
-    const lsS = typeof window !== 'undefined' ? window.localStorage.getItem('map_scrollSuppressMs') : null
-    if (!Number.isNaN(t) && t > 0) throttleMsRef.current = t
-    else if (lsT && !Number.isNaN(Number(lsT))) throttleMsRef.current = Number(lsT)
-    if (!Number.isNaN(s) && s > 0) suppressMsRef.current = s
-    else if (lsS && !Number.isNaN(Number(lsS))) suppressMsRef.current = Number(lsS)
-    setThrottleMs(throttleMsRef.current)
-    setSuppressMs(suppressMsRef.current)
-    if (f === '0') setFollowEnabled(false)
-    else if (f === '1') setFollowEnabled(true)
-    else if (lsFollow !== null) setFollowEnabled(lsFollow === '1')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // 持久化跟随开关
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    try { window.localStorage.setItem('map_follow', followEnabled ? '1' : '0') } catch {}
-  }, [followEnabled])
-
-  function onChangeThrottle(next: number) {
-    throttleMsRef.current = next
-    setThrottleMs(next)
-    try { window.localStorage.setItem('map_scrollThrottleMs', String(next)) } catch {}
-  }
-
-  function onChangeSuppress(next: number) {
-    suppressMsRef.current = next
-    setSuppressMs(next)
-    try { window.localStorage.setItem('map_scrollSuppressMs', String(next)) } catch {}
-  }
-
-  const markers = useMemo(() => items.map((it) => ({
-    id: it.id,
-    name: it.name,
-    position: it.location as [number, number],
-    active: it.id === activeId,
-  })), [items, activeId])
 
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
@@ -86,62 +28,48 @@ function MapPageContent() {
     if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
     if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
     if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
-    // 添加排序参数，不传坐标参数
+    // 添加排序参数和分页参数，不传坐标参数
     p.set('sortBy', sortBy)
+    p.set('page', String(page))
+    p.set('pageSize', String(pageSize))
     return p
   }
 
   async function fetchVenues() {
-    const p = toQuery(filters)
-    const qs = p.toString()
-    const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
-    setItems(json.items || [])
-    if (json.items && json.items.length > 0) {
-      setActiveId(json.items[0].id)
+    try {
+      setLoading(true)
+      setError(null)
+      const p = toQuery(filters)
+      const qs = p.toString()
+      const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
+      
+      if (json.error) {
+        throw new Error(json.error.message || '获取场地列表失败')
+      }
+      
+      setItems(json.items || [])
+      setTotal(json.total || 0)
+    } catch (err: any) {
+      setError(err.message || '加载场地失败')
+      setItems([])
+      setTotal(0)
+    } finally {
+      setLoading(false)
     }
   }
 
-  useEffect(() => { fetchVenues() }, [])
   useEffect(() => { 
+    setPage(1) // 筛选条件变化时重置到第一页
     fetchVenues() 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, filters])
-  useEffect(() => {
-    if (items.length > 0 && !activeId) setActiveId(items[0].id)
-  }, [items, activeId])
-
-  // 当激活项变化时，将对应列表项滚动到可视区域（桌面与移动）
-  useEffect(() => {
-    if (!debouncedActiveId) return
-    if (!followEnabled) return
-    const now = Date.now()
-    if (now - lastAutoScrollAtRef.current < throttleMsRef.current) return
-    const elDesktop = desktopItemRefs.current[debouncedActiveId]
-    if (elDesktop && !userScrollDesktopRef.current) {
-      elDesktop.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    }
-    const elMobile = mobileItemRefs.current[debouncedActiveId]
-    if (elMobile && !userScrollMobileRef.current) {
-      elMobile.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-    }
-    lastAutoScrollAtRef.current = now
-  }, [debouncedActiveId, followEnabled])
-
-  function onDesktopScroll() {
-    userScrollDesktopRef.current = true
-    if (userScrollResetTimerRef.current) window.clearTimeout(userScrollResetTimerRef.current)
-    userScrollResetTimerRef.current = window.setTimeout(() => {
-      userScrollDesktopRef.current = false
-    }, suppressMsRef.current)
-  }
-
-  function onMobileScroll() {
-    userScrollMobileRef.current = true
-    if (userScrollResetTimerRef.current) window.clearTimeout(userScrollResetTimerRef.current)
-    userScrollResetTimerRef.current = window.setTimeout(() => {
-      userScrollMobileRef.current = false
-    }, suppressMsRef.current)
-  }
+  
+  useEffect(() => { 
+    fetchVenues() 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
+  
+  const totalPages = Math.ceil(total / pageSize) || 1
   return (
     <main className="container-page py-12 bg-white">
       <div className="flex items-center justify-between mb-8">
