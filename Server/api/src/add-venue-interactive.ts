@@ -129,7 +129,7 @@ async function main() {
     // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
     const hasGeomColumn = repo.metadata.columns.find(c => c.propertyName === 'geom')
     if (hasGeomColumn) {
-      venue.geom = { type: 'Point', coordinates: [lng, lat] } as any
+    venue.geom = { type: 'Point', coordinates: [lng, lat] } as any
     }
 
     const saved = await repo.save(venue)

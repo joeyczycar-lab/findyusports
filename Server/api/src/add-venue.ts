@@ -41,7 +41,7 @@ async function addVenue(venueData: VenueInput) {
   // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
   const hasGeomColumn = repo.metadata.columns.find(c => c.propertyName === 'geom')
   if (hasGeomColumn) {
-    venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+  venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
   }
   
   const saved = await repo.save(venue)
@@ -70,7 +70,7 @@ async function addVenuesFromArray(venues: VenueInput[]) {
     venue.indoor = venueData.indoor
     // 只有在数据库中存在 geom 列时才设置 PostGIS geometry point
     if (hasGeomColumn) {
-      venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
+    venue.geom = { type: 'Point', coordinates: [venueData.lng, venueData.lat] } as any
     }
     rows.push(venue)
   }
