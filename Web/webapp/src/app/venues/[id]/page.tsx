@@ -29,8 +29,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
   }
   
   const v = detail?.id ? detail : null
-  // 使用带防盗链保护的URL
-  const urls: string[] = images?.items?.map((x: any) => x.protectedUrl || x.url) ?? []
+  // 直接使用原始URL，因为OSS已经设置为公共读，不需要token验证
+  const urls: string[] = images?.items?.map((x: any) => x.url) ?? []
   
   // 计算平均评分（确保格式一致）
   const avgRating = reviews?.items?.length > 0

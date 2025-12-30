@@ -599,8 +599,8 @@ export class VenuesService {
         items: rows.map(r => ({ 
           id: r.id, 
           url: r.url,
-          // 生成带防盗链保护的URL
-          protectedUrl: this.hotlinkProtection.generateTokenizedUrl(r.url, userId)
+          // 暂时不使用防盗链保护，直接返回原始URL（OSS已设置为公共读）
+          // protectedUrl: this.hotlinkProtection.generateTokenizedUrl(r.url, userId)
         })) 
       }
     } catch (error) {
