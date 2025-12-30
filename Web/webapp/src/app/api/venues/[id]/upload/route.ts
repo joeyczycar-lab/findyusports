@@ -38,6 +38,10 @@ export async function POST(
     
     // 获取认证 token
     const authToken = req.headers.get('authorization')
+    console.log('🔐 [API Route] Auth token present:', !!authToken)
+    if (authToken) {
+      console.log('🔐 [API Route] Auth token (first 20 chars):', authToken.substring(0, 20) + '...')
+    }
     const headers: HeadersInit = {}
     if (authToken) {
       headers['Authorization'] = authToken

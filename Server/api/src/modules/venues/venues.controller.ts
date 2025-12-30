@@ -116,10 +116,36 @@ export class VenuesController {
   @Post(':id/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@Param('id', ParseIntPipe) id: number, @UploadedFile() file: Express.Multer.File, @CurrentUser() user: any) {
-    if (!file) return { error: { code: 'BadRequest', message: 'No file uploaded' } }
+    console.log('📤 [Upload] Received upload request for venue:', id)
+    console.log('📤 [Upload] User:', user ? { id: user.id, phone: user.phone, role: user.role } : 'null')
+    console.log('📤 [Upload] File:', file ? { originalname: file.originalname, size: file.size, mimetype: file.mimetype } : 'null')
+    
+    if (!file) {
+      console.error('❌ [Upload] No file uploaded')
+      return { error: { code: 'BadRequest', message: 'No file uploaded' } }
+    }
+    
+    if (!user) {
+      console.error('❌ [Upload] No user found (authentication failed)')
+      return { 
+        error: { 
+          code: 'Unauthorized', 
+          message: '请先登录后再上传图片' 
+        } 
+      }
+    }
+    
     try {
-      return await this.venuesService.processAndUploadImage(file.buffer, id, file.originalname, user.id)
+      console.log('📤 [Upload] Processing image upload...')
+      const result = await this.venuesService.processAndUploadImage(file.buffer, id, file.originalname, user.id)
+      console.log('✅ [Upload] Image uploaded successfully:', result.url || result.id)
+      return result
     } catch (error) {
+      console.error('❌ [Upload] Error processing image:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
       return { 
         error: { 
           code: 'InternalServerError', 
