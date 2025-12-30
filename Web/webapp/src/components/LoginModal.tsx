@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
-import { getApiBase } from '@/lib/api'
 import { setAuthState } from '@/lib/auth'
 
 interface LoginModalProps {
