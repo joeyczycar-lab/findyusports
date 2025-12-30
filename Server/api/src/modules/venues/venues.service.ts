@@ -641,9 +641,10 @@ export class VenuesService {
       const uploadPromises = Object.entries(processedImages).map(async ([size, imageBuffer]) => {
         const key = keys[size]
         console.log(`📤 [Upload] Generating presigned URL for ${size} size, key: ${key}`)
-        const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg')
+        // 使用正确的 key 生成预签名URL
+        const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg', key)
         
-        console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}`)
+        console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
         // 直传处理后的图片
         const response = await fetch(uploadUrl, {
           method: 'PUT',
@@ -658,7 +659,7 @@ export class VenuesService {
         }
         
         const finalUrl = publicUrl || `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
-        console.log(`✅ [Upload] Successfully uploaded ${size} size, URL: ${finalUrl}`)
+        console.log(`✅ [Upload] Successfully uploaded ${size} size, key: ${key}, URL: ${finalUrl}`)
         
         return {
           size,

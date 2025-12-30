@@ -18,7 +18,14 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
   // 如果是 OSS 图片，直接使用 img 标签避免 Next.js Image 优化问题
   const isOssImage = src?.includes('aliyuncs.com')
   
-  console.log('🖼️ [ResponsiveImage] Rendering:', { src, isOssImage, error, imgError, loaded })
+  console.log('🖼️ [ResponsiveImage] Rendering:', { 
+    src: src?.substring(0, 100), 
+    isOssImage, 
+    error, 
+    imgError, 
+    loaded,
+    className 
+  })
   
   if (error || imgError) {
     return (

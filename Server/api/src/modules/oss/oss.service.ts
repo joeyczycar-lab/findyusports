@@ -23,12 +23,13 @@ export class OssService {
     }
   }
 
-  async generatePresignedUrl(mime: string, ext: string) {
+  async generatePresignedUrl(mime: string, ext: string, key?: string) {
     if (!this.client) {
       throw new Error('OSS未配置，请设置 OSS_ACCESS_KEY_ID 和 OSS_ACCESS_KEY_SECRET')
     }
     
-    const key = `venues/${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`
+    // 如果提供了 key，使用提供的 key；否则生成新的
+    const finalKey = key || `venues/${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`
     const expires = 3600 // 1小时过期
     
     const bucket = process.env.OSS_BUCKET || 'venues-images'
@@ -39,20 +40,21 @@ export class OssService {
     
     try {
       // 生成预签名URL用于直传
-      const url = this.client.signatureUrl(key, {
+      const url = this.client.signatureUrl(finalKey, {
         expires,
         method: 'PUT',
         'Content-Type': mime,
       })
       
       // 构建公共访问URL
-      const publicUrl = `https://${bucket}.${region}.aliyuncs.com/${key}`
+      const publicUrl = `https://${bucket}.${region}.aliyuncs.com/${finalKey}`
+      console.log(`🔐 [OSS] Generated presigned URL for key: ${finalKey}`)
       console.log(`🔐 [OSS] Generated presigned URL: ${url.substring(0, 100)}...`)
       console.log(`🔐 [OSS] Public URL: ${publicUrl}`)
       
       return {
         uploadUrl: url,
-        key,
+        key: finalKey,
         expires: Date.now() + expires * 1000,
         publicUrl
       }
