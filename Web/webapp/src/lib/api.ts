@@ -63,10 +63,14 @@ export async function fetchJson(path: string, options?: RequestInit) {
     
     // 安全地解析 JSON
     try {
-      return JSON.parse(text)
+      const parsed = JSON.parse(text)
+      console.log('✅ [fetchJson] Successfully parsed JSON')
+      return parsed
     } catch (parseError) {
       console.error('❌ [fetchJson] JSON parse error:', parseError)
-      console.error('Response text:', text.substring(0, 500))
+      console.error('Response text length:', text.length)
+      console.error('Response text (first 500 chars):', text.substring(0, 500))
+      console.error('Response text (last 100 chars):', text.substring(Math.max(0, text.length - 100)))
       throw new Error(`JSON 解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
     }
   } catch (error) {
