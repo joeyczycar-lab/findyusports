@@ -28,9 +28,9 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     setError('')
 
     try {
-      const apiBase = getApiBase() || process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000'
-      const endpoint = isLogin ? '/auth/login' : '/auth/register'
-      const response = await fetch(`${apiBase}${endpoint}`, {
+      // 使用 Next.js API 路由作为代理
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
