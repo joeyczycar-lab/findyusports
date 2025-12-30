@@ -110,12 +110,42 @@ export class VenuesController {
 
   @Post(':id/images/:imageId/delete')
   async deleteImage(@Param('id', ParseIntPipe) id: number, @Param('imageId', ParseIntPipe) imageId: number, @CurrentUser() user: any) {
-    return this.venuesService.deleteImage(id, imageId, user.id)
+    try {
+      const result = await this.venuesService.deleteImage(id, imageId, user.id)
+      // 如果服务返回了错误，直接返回
+      if (result && 'error' in result) {
+        return result
+      }
+      return result
+    } catch (error) {
+      console.error('❌ Error deleting image:', error)
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '删除图片失败',
+        },
+      }
+    }
   }
 
   @Post(':id/delete')
   async deleteVenue(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
-    return this.venuesService.deleteVenue(id, user.id)
+    try {
+      const result = await this.venuesService.deleteVenue(id, user.id)
+      // 如果服务返回了错误，直接返回
+      if (result && 'error' in result) {
+        return result
+      }
+      return result
+    } catch (error) {
+      console.error('❌ Error deleting venue:', error)
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '删除场地失败',
+        },
+      }
+    }
   }
 
   @Post(':id/upload')

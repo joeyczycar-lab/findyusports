@@ -747,72 +747,140 @@ export class VenuesService {
   }
 
   async deleteImage(venueId: number, imageId: number, userId: number) {
-    const image = await this.imageRepo.findOne({ 
-      where: { id: imageId, venue: { id: venueId } as any },
-      relations: ['venue']
-    })
-    if (!image) return { error: { code: 'NotFound', message: 'Image not found' } }
-    
-    // 从OSS删除文件 - 从完整URL中提取key（venues/xxx.jpg格式）
     try {
-      const url = image.url
-      // URL格式: https://venues-images.oss-cn-hangzhou.aliyuncs.com/venues/xxx.jpg
-      // 提取 key: venues/xxx.jpg
-      const urlObj = new URL(url)
-      const key = urlObj.pathname.substring(1) // 去掉开头的 '/'
-      if (key) {
-        console.log(`🗑️ [Delete Image] Deleting OSS object: ${key}`)
-        await this.ossService.deleteObject(key)
+      console.log(`🗑️ [Delete Image] Starting deletion for image ${imageId} of venue ${venueId} by user ${userId}`)
+      
+      const image = await this.imageRepo.findOne({ 
+        where: { id: imageId, venue: { id: venueId } as any },
+        relations: ['venue']
+      })
+      if (!image) {
+        console.log(`❌ [Delete Image] Image ${imageId} not found for venue ${venueId}`)
+        return { error: { code: 'NotFound', message: 'Image not found' } }
       }
+      
+      // 从OSS删除文件 - 从完整URL中提取key（venues/xxx.jpg格式）
+      try {
+        const url = image.url
+        if (!url) {
+          console.warn(`⚠️ [Delete Image] Image ${imageId} has no URL, skipping OSS deletion`)
+        } else {
+          // URL格式: https://venues-images.oss-cn-hangzhou.aliyuncs.com/venues/xxx.jpg
+          // 提取 key: venues/xxx.jpg
+          const urlObj = new URL(url)
+          const key = urlObj.pathname.substring(1) // 去掉开头的 '/'
+          if (key) {
+            console.log(`🗑️ [Delete Image] Deleting OSS object: ${key}`)
+            await this.ossService.deleteObject(key)
+            console.log(`✅ [Delete Image] Successfully deleted OSS object: ${key}`)
+          }
+        }
+      } catch (error) {
+        console.error('❌ [Delete Image] Failed to delete from OSS:', error)
+        // 即使OSS删除失败，也继续删除数据库记录
+      }
+      
+      try {
+        await this.imageRepo.remove(image)
+        console.log(`✅ [Delete Image] Successfully deleted image ${imageId}`)
+      } catch (error) {
+        console.error(`❌ [Delete Image] Failed to remove image from database:`, error)
+        throw error
+      }
+      
+      return { success: true }
     } catch (error) {
-      console.error('❌ [Delete Image] Failed to delete from OSS:', error)
-      // 即使OSS删除失败，也继续删除数据库记录
+      console.error(`❌ [Delete Image] Unexpected error deleting image ${imageId}:`, error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return { 
+        error: { 
+          code: 'InternalServerError', 
+          message: error instanceof Error ? error.message : '删除图片时发生错误' 
+        } 
+      }
     }
-    
-    await this.imageRepo.remove(image)
-    return { success: true }
   }
 
   async deleteVenue(venueId: number, userId: number) {
-    const venue = await this.repo.findOne({ 
-      where: { id: venueId },
-      relations: ['images']
-    })
-    if (!venue) {
-      return { error: { code: 'NotFound', message: 'Venue not found' } }
-    }
+    try {
+      console.log(`🗑️ [Delete Venue] Starting deletion for venue ${venueId} by user ${userId}`)
+      
+      const venue = await this.repo.findOne({ 
+        where: { id: venueId },
+        relations: ['images']
+      })
+      if (!venue) {
+        console.log(`❌ [Delete Venue] Venue ${venueId} not found`)
+        return { error: { code: 'NotFound', message: 'Venue not found' } }
+      }
 
-    // 删除所有关联的图片（从OSS和数据库）
-    const images = await this.imageRepo.find({ 
-      where: { venue: { id: venueId } as any }
-    })
-    
-    console.log(`🗑️ [Delete Venue] Found ${images.length} images to delete for venue ${venueId}`)
-    
-    for (const image of images) {
-      try {
-        // 从OSS删除文件
-        const url = image.url
-        const urlObj = new URL(url)
-        const key = urlObj.pathname.substring(1)
-        if (key) {
-          console.log(`🗑️ [Delete Venue] Deleting OSS object: ${key}`)
-          await this.ossService.deleteObject(key)
+      // 删除所有关联的图片（从OSS和数据库）
+      const images = await this.imageRepo.find({ 
+        where: { venue: { id: venueId } as any }
+      })
+      
+      console.log(`🗑️ [Delete Venue] Found ${images.length} images to delete for venue ${venueId}`)
+      
+      // 尝试从OSS删除所有图片，但即使失败也继续
+      for (const image of images) {
+        try {
+          // 从OSS删除文件
+          const url = image.url
+          if (!url) {
+            console.warn(`⚠️ [Delete Venue] Image ${image.id} has no URL, skipping OSS deletion`)
+            continue
+          }
+          
+          const urlObj = new URL(url)
+          const key = urlObj.pathname.substring(1)
+          if (key) {
+            console.log(`🗑️ [Delete Venue] Deleting OSS object: ${key}`)
+            await this.ossService.deleteObject(key)
+            console.log(`✅ [Delete Venue] Successfully deleted OSS object: ${key}`)
+          }
+        } catch (error) {
+          console.error(`❌ [Delete Venue] Failed to delete image ${image.id} from OSS:`, error)
+          // 继续删除其他图片，即使OSS删除失败
         }
+      }
+
+      // 删除所有图片记录（由于设置了 CASCADE，可能不需要手动删除）
+      if (images.length > 0) {
+        try {
+          await this.imageRepo.remove(images)
+          console.log(`✅ [Delete Venue] Successfully removed ${images.length} image records from database`)
+        } catch (error) {
+          console.error(`❌ [Delete Venue] Failed to remove image records:`, error)
+          // 继续删除场地
+        }
+      }
+      
+      // 删除场地（CASCADE 会自动删除关联的 reviews 和 images）
+      try {
+        await this.repo.remove(venue)
+        console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`)
       } catch (error) {
-        console.error(`❌ [Delete Venue] Failed to delete image ${image.id} from OSS:`, error)
-        // 继续删除其他图片
+        console.error(`❌ [Delete Venue] Failed to remove venue from database:`, error)
+        throw error
+      }
+      
+      return { success: true }
+    } catch (error) {
+      console.error(`❌ [Delete Venue] Unexpected error deleting venue ${venueId}:`, error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      return { 
+        error: { 
+          code: 'InternalServerError', 
+          message: error instanceof Error ? error.message : '删除场地时发生错误' 
+        } 
       }
     }
-
-    // 删除所有图片记录（由于设置了 CASCADE，可能不需要手动删除）
-    await this.imageRepo.remove(images)
-    
-    // 删除场地（CASCADE 会自动删除关联的 reviews 和 images）
-    await this.repo.remove(venue)
-    
-    console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`)
-    return { success: true }
   }
 
   async verifyImageToken(token: string) {
