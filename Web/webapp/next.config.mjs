@@ -2,8 +2,11 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' }
-    ]
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: '*.aliyuncs.com' },
+      { protocol: 'https', hostname: 'venues-images.oss-cn-hangzhou.aliyuncs.com' }
+    ],
+    unoptimized: false, // 保持优化，但允许所有 HTTPS 域名
   },
   experimental: {
     optimizePackageImports: ['react']
