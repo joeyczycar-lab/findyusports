@@ -260,11 +260,13 @@ export default function Nav() {
               ➕ 添加场地
             </Link>
 
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden md:flex items-center space-x-8" style={{ position: 'relative', zIndex: 100000 }}>
               <Link href="/map" className="link-nike" style={{ borderRadius: '4px' }}>地图探索</Link>
               
               {authState.isAuthenticated ? (
-                <UserMenu user={authState.user!} onLogout={handleLogout} />
+                <div style={{ position: 'relative', zIndex: 100000 }}>
+                  <UserMenu user={authState.user!} onLogout={handleLogout} />
+                </div>
               ) : (
                 <button
                   onClick={() => setIsLoginModalOpen(true)}
