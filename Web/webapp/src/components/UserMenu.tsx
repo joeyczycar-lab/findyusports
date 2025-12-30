@@ -13,7 +13,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 100000 }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
@@ -38,10 +38,17 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-[999998]"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border z-20" style={{ borderRadius: '4px' }}>
+          <div 
+            className="absolute right-0 mt-2 w-48 bg-white shadow-lg border z-[999999]" 
+            style={{ 
+              borderRadius: '4px',
+              position: 'absolute',
+              zIndex: 999999
+            }}
+          >
             <div className="p-3 border-b">
               <div className="text-sm font-medium text-gray-900">
                 {user.nickname || '用户'}
