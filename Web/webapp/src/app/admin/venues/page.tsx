@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import { useRouter } from 'next/navigation'
+import { getAuthState } from '@/lib/auth'
 
 export default function VenuesListPage() {
   const router = useRouter()
@@ -14,7 +15,13 @@ export default function VenuesListPage() {
   const [total, setTotal] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
+  const [deletingVenueId, setDeletingVenueId] = useState<number | null>(null)
+  const [authState, setAuthState] = useState(getAuthState())
   const pageSize = 20
+
+  useEffect(() => {
+    setAuthState(getAuthState())
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -59,6 +66,37 @@ export default function VenuesListPage() {
   }
 
   const totalPages = Math.ceil(total / pageSize) || 1
+
+  // 处理删除场地
+  const handleDeleteVenue = async (venueId: number, venueName: string) => {
+    if (!confirm(`确定要删除场地"${venueName}"吗？\n\n此操作将删除：\n- 场地信息\n- 所有图片\n- 所有评论\n\n此操作不可撤销！`)) {
+      return
+    }
+
+    try {
+      setDeletingVenueId(venueId)
+      const result = await fetchJson(`/venues/${venueId}/delete`, {
+        method: 'POST',
+      })
+
+      if (result.error) {
+        throw new Error(result.error.message || '删除场地失败')
+      }
+
+      // 从列表中移除场地
+      setVenues(prev => prev.filter(v => v.id !== venueId))
+      setTotal(prev => Math.max(0, prev - 1))
+      
+      alert('场地已成功删除')
+    } catch (error: any) {
+      console.error('❌ [Admin] Failed to delete venue:', error)
+      alert(error.message || '删除场地失败，请稍后重试')
+    } finally {
+      setDeletingVenueId(null)
+    }
+  }
+
+  const isAdmin = authState.isAuthenticated && authState.user?.role === 'admin'
 
   // 在客户端挂载之前，返回一个简单的加载状态，避免 hydration 错误
   if (!mounted) {
@@ -175,10 +213,9 @@ export default function VenuesListPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {venues.map((venue) => (
-              <Link
+              <div
                 key={venue.id}
-                href={`/venues/${venue.id}`}
-                className="card-nike hover:shadow-lg transition-shadow overflow-hidden"
+                className="card-nike hover:shadow-lg transition-shadow overflow-hidden relative"
               >
                 {/* 图片区域 */}
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
@@ -208,13 +245,35 @@ export default function VenuesListPage() {
                   )}
                 </div>
                 
+                {/* 删除按钮 - 仅管理员可见 */}
+                {isAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleDeleteVenue(venue.id, venue.name)
+                    }}
+                    disabled={deletingVenueId === venue.id}
+                    className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 text-xs font-bold rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed z-10"
+                    style={{ zIndex: 10 }}
+                  >
+                    {deletingVenueId === venue.id ? '删除中...' : '🗑️ 删除'}
+                  </button>
+                )}
+
                 {/* 内容区域 */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-bold text-heading-sm mb-2 line-clamp-2">
-                        {venue.name}
-                      </h3>
+                      <Link
+                        href={`/venues/${venue.id}`}
+                        className="block"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <h3 className="font-bold text-heading-sm mb-2 line-clamp-2 hover:underline">
+                          {venue.name}
+                        </h3>
+                      </Link>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
                           {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
@@ -257,7 +316,7 @@ export default function VenuesListPage() {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

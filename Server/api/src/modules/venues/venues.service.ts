@@ -753,13 +753,65 @@ export class VenuesService {
     })
     if (!image) return { error: { code: 'NotFound', message: 'Image not found' } }
     
-    // 从OSS删除文件
-    const key = image.url.split('/').pop()
-    if (key) {
-      await this.ossService.deleteObject(key)
+    // 从OSS删除文件 - 从完整URL中提取key（venues/xxx.jpg格式）
+    try {
+      const url = image.url
+      // URL格式: https://venues-images.oss-cn-hangzhou.aliyuncs.com/venues/xxx.jpg
+      // 提取 key: venues/xxx.jpg
+      const urlObj = new URL(url)
+      const key = urlObj.pathname.substring(1) // 去掉开头的 '/'
+      if (key) {
+        console.log(`🗑️ [Delete Image] Deleting OSS object: ${key}`)
+        await this.ossService.deleteObject(key)
+      }
+    } catch (error) {
+      console.error('❌ [Delete Image] Failed to delete from OSS:', error)
+      // 即使OSS删除失败，也继续删除数据库记录
     }
     
     await this.imageRepo.remove(image)
+    return { success: true }
+  }
+
+  async deleteVenue(venueId: number, userId: number) {
+    const venue = await this.repo.findOne({ 
+      where: { id: venueId },
+      relations: ['images']
+    })
+    if (!venue) {
+      return { error: { code: 'NotFound', message: 'Venue not found' } }
+    }
+
+    // 删除所有关联的图片（从OSS和数据库）
+    const images = await this.imageRepo.find({ 
+      where: { venue: { id: venueId } as any }
+    })
+    
+    console.log(`🗑️ [Delete Venue] Found ${images.length} images to delete for venue ${venueId}`)
+    
+    for (const image of images) {
+      try {
+        // 从OSS删除文件
+        const url = image.url
+        const urlObj = new URL(url)
+        const key = urlObj.pathname.substring(1)
+        if (key) {
+          console.log(`🗑️ [Delete Venue] Deleting OSS object: ${key}`)
+          await this.ossService.deleteObject(key)
+        }
+      } catch (error) {
+        console.error(`❌ [Delete Venue] Failed to delete image ${image.id} from OSS:`, error)
+        // 继续删除其他图片
+      }
+    }
+
+    // 删除所有图片记录（由于设置了 CASCADE，可能不需要手动删除）
+    await this.imageRepo.remove(images)
+    
+    // 删除场地（CASCADE 会自动删除关联的 reviews 和 images）
+    await this.repo.remove(venue)
+    
+    console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`)
     return { success: true }
   }
 

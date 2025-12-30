@@ -113,6 +113,11 @@ export class VenuesController {
     return this.venuesService.deleteImage(id, imageId, user.id)
   }
 
+  @Post(':id/delete')
+  async deleteVenue(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.venuesService.deleteVenue(id, user.id)
+  }
+
   @Post(':id/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@Param('id', ParseIntPipe) id: number, @UploadedFile() file: Express.Multer.File, @CurrentUser() user: any) {

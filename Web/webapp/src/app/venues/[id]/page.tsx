@@ -29,8 +29,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
   }
   
   const v = detail?.id ? detail : null
-  // 直接使用原始URL，因为OSS已经设置为公共读，不需要token验证
-  const urls: string[] = images?.items?.map((x: any) => x.url) ?? []
+  // 传递图片对象（包含 id 和 url），以便 Gallery 组件可以删除图片
+  const imageItems = images?.items?.map((x: any) => ({ id: x.id, url: x.url })) ?? []
   
   // 计算平均评分（确保格式一致）
   const avgRating = reviews?.items?.length > 0
@@ -47,7 +47,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
         <div>
           <div className="mb-8">
-            <Gallery urls={urls} venueId={venueId} />
+            <Gallery urls={imageItems} venueId={venueId} />
           </div>
           <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : `场地 #${venueId}`}</h1>
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
