@@ -13,10 +13,28 @@ type Props = {
 export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   const [active, setActive] = useState(0)
   const [mounted, setMounted] = useState(false)
+  const [imageUrls, setImageUrls] = useState<string[]>(urls || [])
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // 当 urls prop 变化时，更新本地状态
+  useEffect(() => {
+    setImageUrls(urls || [])
+  }, [urls])
+
+  // 处理新图片添加
+  const handleImageAdded = (newUrl: string) => {
+    console.log('🖼️ [Gallery] New image added:', newUrl)
+    setImageUrls(prev => [...prev, newUrl])
+    setActive(imageUrls.length) // 切换到新添加的图片
+    onImageAdded?.(newUrl)
+    // 刷新页面以重新加载图片列表
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  }
 
   // 在客户端挂载之前，返回一个简单的占位符，避免 hydration 错误
   if (!mounted) {
@@ -29,7 +47,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
     )
   }
   
-  if (!urls || urls.length === 0) {
+  if (!imageUrls || imageUrls.length === 0) {
     return (
       <div className="space-y-4">
         <div className="h-64 bg-gray-100 flex items-center justify-center text-textMuted" style={{ borderRadius: '4px' }}>
@@ -37,7 +55,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
         </div>
         {venueId && (
           <div className="mt-4">
-            <ImageUpload venueId={venueId} onSuccess={onImageAdded} />
+            <ImageUpload venueId={venueId} onSuccess={handleImageAdded} />
           </div>
         )}
       </div>
@@ -47,9 +65,9 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   return (
     <div className="space-y-4">
       <div className="relative h-64 overflow-hidden bg-gray-50" style={{ borderRadius: '4px', position: 'relative', minHeight: '256px' }}>
-        {urls[active] && (
+        {imageUrls[active] && (
           <ResponsiveImage 
-            src={urls[active]} 
+            src={imageUrls[active]} 
             alt="场地图片" 
             sizes="(max-width: 768px) 100vw, 50vw"
             priority={active === 0}
@@ -58,7 +76,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       </div>
       
       <div className="flex gap-2 overflow-x-auto">
-        {urls.map((u, i) => (
+        {imageUrls.map((u, i) => (
           <button key={i} onClick={()=>setActive(i)} className={`relative w-24 h-16 overflow-hidden border flex-shrink-0 ${active===i? 'border-brandBlue' : 'border-border'}`} style={{ borderRadius: '4px' }}>
             <ResponsiveImage 
               src={u} 
@@ -71,7 +89,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       
         {venueId && (
           <div className="mt-4">
-            <ImageUpload venueId={venueId} onSuccess={onImageAdded} />
+            <ImageUpload venueId={venueId} onSuccess={handleImageAdded} />
           </div>
         )}
     </div>
