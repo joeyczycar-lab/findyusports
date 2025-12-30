@@ -78,10 +78,12 @@ export async function GET(req: NextRequest) {
       )
     }
     
+    // 只读取一次响应体
+    const text = await res.text()
+    
     // 检查响应内容类型
     const contentType = res.headers.get('content-type')
     if (!contentType || !contentType.includes('application/json')) {
-      const text = await res.text()
       console.error('❌ [API Route] Response is not JSON:', { contentType, text: text.substring(0, 200) })
       return Response.json(
         {
@@ -98,8 +100,7 @@ export async function GET(req: NextRequest) {
       )
     }
     
-    // 安全地解析 JSON
-    const text = await res.text()
+    // 检查响应是否为空
     if (!text || text.trim().length === 0) {
       console.error('❌ [API Route] Response is empty')
       return Response.json(
@@ -117,6 +118,7 @@ export async function GET(req: NextRequest) {
       )
     }
     
+    // 安全地解析 JSON
     let data
     try {
       data = JSON.parse(text)
