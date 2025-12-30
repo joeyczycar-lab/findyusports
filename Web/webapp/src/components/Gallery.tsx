@@ -46,13 +46,15 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   
   return (
     <div className="space-y-4">
-      <div className="relative h-64 overflow-hidden bg-gray-50" style={{ borderRadius: '4px' }}>
-        <ResponsiveImage 
-          src={urls[active]} 
-          alt="场地图片" 
-          sizes="(max-width: 768px) 100vw, 50vw"
-          priority={active === 0}
-        />
+      <div className="relative h-64 overflow-hidden bg-gray-50" style={{ borderRadius: '4px', position: 'relative', minHeight: '256px' }}>
+        {urls[active] && (
+          <ResponsiveImage 
+            src={urls[active]} 
+            alt="场地图片" 
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority={active === 0}
+          />
+        )}
       </div>
       
       <div className="flex gap-2 overflow-x-auto">
