@@ -135,37 +135,72 @@ export class VenuesService {
         let firstImages: any[] = []
         
         try {
-          // 方法1: 使用 QueryBuilder 查询，尝试多种字段名格式
-          // TypeORM ManyToOne 关系可能生成 venueId 或 venue_id
-          const qb = this.imageRepo
+          // 方法1: 使用 QueryBuilder 通过关系查询
+          firstImages = await this.imageRepo
             .createQueryBuilder('img')
-            .select('img.url', 'url')
-            .addSelect('COALESCE(img.venueId, img."venueId", img.venue_id, img."venue_id")', 'venueId')
-            .where('(img.venueId IN (:...venueIds) OR img."venueId" IN (:...venueIds) OR img.venue_id IN (:...venueIds) OR img."venue_id" IN (:...venueIds))', { venueIds })
+            .leftJoin('img.venue', 'venue')
+            .select('venue.id', 'venueId')
+            .addSelect('img.url', 'url')
+            .where('venue.id IN (:...venueIds)', { venueIds })
             .orderBy('img.sort', 'ASC')
             .addOrderBy('img.id', 'ASC')
-          
-          firstImages = await qb.getRawMany()
+            .getRawMany()
           
           // 处理 QueryBuilder 返回的字段名
-          firstImages = firstImages.map((img: any) => {
-            const venueId = img.venueId || img.img_venueId || img.img_venue_id || img.venue_id
-            const url = img.url || img.img_url || img.imgUrl
-            return { venueId: Number(venueId), url }
-          }).filter((img: any) => img.venueId && img.url)
+          firstImages = firstImages.map((img: any) => ({
+            venueId: Number(img.venueId || img.venue_id || img.venueId),
+            url: img.url || img.img_url || img.imgUrl,
+          })).filter((img: any) => img.venueId && img.url)
           
-          console.log(`📸 QueryBuilder found ${firstImages.length} images`)
+          console.log(`📸 QueryBuilder (via join) found ${firstImages.length} images`)
+          
+          // 如果通过关系查询没找到，尝试直接查询外键字段
+          if (firstImages.length === 0) {
+            try {
+              // 尝试不同的字段名格式
+              const directQuery = await this.imageRepo
+                .createQueryBuilder('img')
+                .select('img.url', 'url')
+                .addSelect('(SELECT "venueId" FROM venue_image WHERE id = img.id)', 'venueId')
+                .where('img.venueId IN (:...venueIds)', { venueIds })
+                .orderBy('img.sort', 'ASC')
+                .addOrderBy('img.id', 'ASC')
+                .getRawMany()
+              
+              firstImages = directQuery.map((img: any) => ({
+                venueId: Number(img.venueId),
+                url: img.url,
+              })).filter((img: any) => img.venueId && img.url)
+              
+              console.log(`📸 QueryBuilder (direct) found ${firstImages.length} images`)
+            } catch (directError) {
+              console.warn('⚠️  Direct query failed:', directError)
+            }
+          }
         } catch (qbError) {
           console.warn('⚠️  QueryBuilder failed, trying raw SQL:', qbError)
           // 方法2: 使用原生 SQL 查询，尝试多种字段名格式
           try {
-            // 先尝试 venueId（驼峰命名）
+            // 先尝试通过 JOIN 查询
             firstImages = await this.imageRepo.query(
-              `SELECT "venueId" as "venueId", url FROM venue_image WHERE "venueId" IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
+              `SELECT v.id as "venueId", img.url 
+               FROM venue_image img 
+               JOIN venue v ON img."venueId" = v.id OR img.venue_id = v.id
+               WHERE v.id IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) 
+               ORDER BY img.sort ASC, img.id ASC`,
               venueIds
             )
             
-            // 如果没找到，尝试 venue_id（下划线命名）
+            // 如果没找到，尝试直接查询外键
+            if (firstImages.length === 0) {
+              // 尝试 venueId（驼峰命名）
+              firstImages = await this.imageRepo.query(
+                `SELECT "venueId" as "venueId", url FROM venue_image WHERE "venueId" IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
+                venueIds
+              )
+            }
+            
+            // 如果还是没找到，尝试 venue_id（下划线命名）
             if (firstImages.length === 0) {
               firstImages = await this.imageRepo.query(
                 `SELECT venue_id as "venueId", url FROM venue_image WHERE venue_id IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
