@@ -640,8 +640,10 @@ export class VenuesService {
       // 2. 上传所有尺寸到OSS
       const uploadPromises = Object.entries(processedImages).map(async ([size, imageBuffer]) => {
         const key = keys[size]
-        const { uploadUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg')
+        console.log(`📤 [Upload] Generating presigned URL for ${size} size, key: ${key}`)
+        const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg')
         
+        console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}`)
         // 直传处理后的图片
         const response = await fetch(uploadUrl, {
           method: 'PUT',
@@ -649,12 +651,19 @@ export class VenuesService {
           body: imageBuffer
         })
         
-        if (!response.ok) throw new Error(`上传${size}尺寸失败`)
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error(`❌ [Upload] Failed to upload ${size} size:`, response.status, errorText)
+          throw new Error(`上传${size}尺寸失败: ${response.status} ${errorText}`)
+        }
+        
+        const finalUrl = publicUrl || `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
+        console.log(`✅ [Upload] Successfully uploaded ${size} size, URL: ${finalUrl}`)
         
         return {
           size,
           key,
-          url: `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`,
+          url: finalUrl,
           sizeBytes: imageBuffer.length
         }
       })

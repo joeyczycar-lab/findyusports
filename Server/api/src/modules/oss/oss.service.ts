@@ -31,6 +31,12 @@ export class OssService {
     const key = `venues/${Date.now()}-${crypto.randomBytes(8).toString('hex')}.${ext}`
     const expires = 3600 // 1小时过期
     
+    const bucket = process.env.OSS_BUCKET || 'venues-images'
+    const region = process.env.OSS_REGION || 'oss-cn-hangzhou'
+    
+    console.log(`🔐 [OSS] Generating presigned URL for key: ${key}`)
+    console.log(`🔐 [OSS] Bucket: ${bucket}, Region: ${region}`)
+    
     try {
       // 生成预签名URL用于直传
       const url = this.client.signatureUrl(key, {
@@ -39,13 +45,19 @@ export class OssService {
         'Content-Type': mime,
       })
       
+      // 构建公共访问URL
+      const publicUrl = `https://${bucket}.${region}.aliyuncs.com/${key}`
+      console.log(`🔐 [OSS] Generated presigned URL: ${url.substring(0, 100)}...`)
+      console.log(`🔐 [OSS] Public URL: ${publicUrl}`)
+      
       return {
         uploadUrl: url,
         key,
         expires: Date.now() + expires * 1000,
-        publicUrl: `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
+        publicUrl
       }
     } catch (error) {
+      console.error('❌ [OSS] Failed to generate presigned URL:', error)
       throw new Error(`OSS签名生成失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
