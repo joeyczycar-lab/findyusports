@@ -36,7 +36,21 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         body: JSON.stringify(formData)
       })
 
-      const data = await response.json()
+      // 安全地解析 JSON
+      const text = await response.text()
+      let data: any
+      
+      if (!text || text.trim().length === 0) {
+        throw new Error('服务器返回了空响应')
+      }
+      
+      try {
+        data = JSON.parse(text)
+      } catch (parseError) {
+        console.error('❌ [LoginModal] JSON parse error:', parseError)
+        console.error('Response text:', text.substring(0, 500))
+        throw new Error(`响应解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
+      }
 
       if (!response.ok) {
         throw new Error(data.message || data.error?.message || '操作失败')
