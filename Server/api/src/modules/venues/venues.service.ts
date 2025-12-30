@@ -646,10 +646,12 @@ export class VenuesService {
         
         console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
         // 直传处理后的图片
+        // 将 Buffer 转换为 Uint8Array 以兼容 fetch API
+        const body = new Uint8Array(imageBuffer)
         const response = await fetch(uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'image/jpeg' },
-          body: imageBuffer
+          body: body
         })
         
         if (!response.ok) {
