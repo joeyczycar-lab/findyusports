@@ -55,7 +55,6 @@ async function viewData() {
         console.log(`\n${index + 1}. ${u.nickname || u.phone || '未命名用户'}`)
         console.log(`   ID: ${u.id}`)
         if (u.phone) console.log(`   手机: ${u.phone}`)
-        if (u.wechatOpenid) console.log(`   微信OpenID: ${u.wechatOpenid.substring(0, 20)}...`)
         console.log(`   角色: ${u.role}`)
         console.log(`   状态: ${u.status}`)
       })
@@ -93,7 +92,6 @@ async function viewData() {
         console.log(`\n${index + 1}. 场地ID: ${img.venue?.id || '未知'}`)
         console.log(`   URL: ${img.url}`)
         console.log(`   排序: ${img.sort}`)
-        console.log(`   时间: ${img.createdAt}`)
       })
     }
 
