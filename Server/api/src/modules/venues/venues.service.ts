@@ -145,32 +145,57 @@ export class VenuesService {
         let firstImages: any[] = []
         
         try {
-          // 方法1: 使用 QueryBuilder 通过关系查询
-          const qb = this.imageRepo
-            .createQueryBuilder('img')
-            .leftJoin('img.venue', 'venue')
-            .select('venue.id', 'venueId')
-            .addSelect('img.url', 'url')
-            .where('venue.id IN (:...venueIds)', { venueIds })
-            .orderBy('img.sort', 'ASC')
-            .addOrderBy('img.id', 'ASC')
+          // 方法1: 直接查询外键字段，避免 JOIN venue 表（防止 geom 列问题）
+          // 先尝试直接查询外键字段
+          try {
+            const qb = this.imageRepo
+              .createQueryBuilder('img')
+              .select('img.venueId', 'venueId')
+              .addSelect('img.url', 'url')
+              .where('img.venueId IN (:...venueIds)', { venueIds })
+              .orderBy('img.sort', 'ASC')
+              .addOrderBy('img.id', 'ASC')
+            
+            const sql = qb.getSql()
+            console.log(`📸 QueryBuilder SQL (direct):`, sql)
+            
+            firstImages = await qb.getRawMany()
+            
+            console.log(`📸 QueryBuilder raw results (first 3):`, JSON.stringify(firstImages.slice(0, 3)))
+            
+            // 处理 QueryBuilder 返回的字段名
+            firstImages = firstImages.map((img: any) => ({
+              venueId: Number(img.venueId || img.venue_id || img.venueId),
+              url: img.url || img.img_url || img.imgUrl,
+            })).filter((img: any) => img.venueId && img.url)
+            
+            console.log(`📸 QueryBuilder (direct venueId) found ${firstImages.length} images`)
+          } catch (directError) {
+            console.warn('⚠️  Direct query failed, trying alternative field name:', directError)
+            // 如果直接查询失败，尝试不同的字段名格式
+            try {
+              const qb = this.imageRepo
+                .createQueryBuilder('img')
+                .select('img.venue_id', 'venueId')
+                .addSelect('img.url', 'url')
+                .where('img.venue_id IN (:...venueIds)', { venueIds })
+                .orderBy('img.sort', 'ASC')
+                .addOrderBy('img.id', 'ASC')
+              
+              firstImages = await qb.getRawMany()
+              
+              firstImages = firstImages.map((img: any) => ({
+                venueId: Number(img.venueId || img.venue_id),
+                url: img.url || img.img_url || img.imgUrl,
+              })).filter((img: any) => img.venueId && img.url)
+              
+              console.log(`📸 QueryBuilder (venue_id) found ${firstImages.length} images`)
+            } catch (altError) {
+              console.warn('⚠️  Alternative field name query also failed:', altError)
+            }
+          }
           
-          const sql = qb.getSql()
-          console.log(`📸 QueryBuilder SQL:`, sql)
-          
-          firstImages = await qb.getRawMany()
-          
-          console.log(`📸 QueryBuilder raw results (first 3):`, JSON.stringify(firstImages.slice(0, 3)))
-          
-          // 处理 QueryBuilder 返回的字段名
-          firstImages = firstImages.map((img: any) => ({
-            venueId: Number(img.venueId || img.venue_id || img.venueId),
-            url: img.url || img.img_url || img.imgUrl,
-          })).filter((img: any) => img.venueId && img.url)
-          
-          console.log(`📸 QueryBuilder (via join) found ${firstImages.length} images`)
-          
-          // 如果通过关系查询没找到，尝试直接查询外键字段
+          // 如果直接查询没找到，尝试原生 SQL
           if (firstImages.length === 0) {
             try {
               // 先检查实际的表结构
@@ -519,44 +544,38 @@ export class VenuesService {
       `)
       console.log(`📸 venue_image table columns:`, tableInfo.map((c: any) => c.column_name))
       
-      // 先尝试使用关系查询
-      let rows = await this.imageRepo.find({ 
-        where: { venue: { id: venueId } as any }, 
-        order: { sort: 'ASC', id: 'ASC' } 
-      })
-      
-      console.log(`📸 Relation query found ${rows.length} images`)
-      
-      // 如果关系查询失败或返回空，尝试使用 QueryBuilder 直接查询外键
-      if (rows.length === 0) {
-        try {
-          // 尝试通过 JOIN 查询
-          const qbRows = await this.imageRepo
-            .createQueryBuilder('img')
-            .leftJoin('img.venue', 'venue')
-            .where('venue.id = :venueId', { venueId })
-            .orderBy('img.sort', 'ASC')
-            .addOrderBy('img.id', 'ASC')
-            .getMany()
-          
-          console.log(`📸 QueryBuilder (JOIN) found ${qbRows.length} images`)
-          rows = qbRows
-          
-          // 如果还是没找到，尝试直接查询外键字段
-          if (rows.length === 0) {
-            // 尝试不同的字段名格式
-            const directRows = await this.imageRepo
+      // 直接使用 QueryBuilder 查询外键，避免 JOIN venue 表（防止 geom 列问题）
+      let rows: any[] = []
+      try {
+        // 先尝试直接查询外键字段（不 JOIN venue 表）
+        const directRows = await this.imageRepo
+          .createQueryBuilder('img')
+          .where('img.venueId = :venueId', { venueId })
+          .orderBy('img.sort', 'ASC')
+          .addOrderBy('img.id', 'ASC')
+          .getMany()
+        
+        console.log(`📸 QueryBuilder (direct venueId) found ${directRows.length} images`)
+        rows = directRows
+        
+        // 如果没找到，尝试不同的字段名格式
+        if (rows.length === 0) {
+          try {
+            const altRows = await this.imageRepo
               .createQueryBuilder('img')
-              .where('img.venueId = :venueId', { venueId })
+              .where('img.venue_id = :venueId', { venueId })
               .orderBy('img.sort', 'ASC')
               .addOrderBy('img.id', 'ASC')
               .getMany()
             
-            console.log(`📸 QueryBuilder (direct venueId) found ${directRows.length} images`)
-            rows = directRows
+            console.log(`📸 QueryBuilder (venue_id) found ${altRows.length} images`)
+            rows = altRows
+          } catch (altError) {
+            console.warn('⚠️  Alternative field name query failed:', altError)
           }
-        } catch (qbError) {
-          console.warn('⚠️  QueryBuilder query failed, trying raw query:', qbError)
+        }
+      } catch (qbError) {
+        console.warn('⚠️  QueryBuilder query failed, trying raw query:', qbError)
           // 如果 QueryBuilder 也失败，尝试原生 SQL 查询
           try {
             // 尝试不同的字段名格式
@@ -587,7 +606,6 @@ export class VenuesService {
             console.error('❌ Raw SQL also failed:', rawError)
           }
         }
-      }
       
       console.log(`📸 Final result: Found ${rows.length} images for venue ${venueId}`)
       if (rows.length > 0) {
@@ -752,10 +770,25 @@ export class VenuesService {
     try {
       console.log(`🗑️ [Delete Image] Starting deletion for image ${imageId} of venue ${venueId} by user ${userId}`)
       
-      const image = await this.imageRepo.findOne({ 
-        where: { id: imageId, venue: { id: venueId } as any },
-        relations: ['venue']
-      })
+      // 使用 QueryBuilder 直接查询，避免加载 venue 关系（防止 geom 列问题）
+      let image = await this.imageRepo
+        .createQueryBuilder('img')
+        .where('img.id = :imageId', { imageId })
+        .andWhere('img.venueId = :venueId', { venueId })
+        .getOne()
+      
+      // 如果上面的查询失败，尝试不同的字段名格式
+      if (!image) {
+        image = await this.imageRepo
+          .createQueryBuilder('img')
+          .where('img.id = :imageId', { imageId })
+          .andWhere('img.venue_id = :venueId', { venueId })
+          .getOne()
+        
+        if (image) {
+          console.log(`✅ [Delete Image] Found image using alternative field name`)
+        }
+      }
       if (!image) {
         console.log(`❌ [Delete Image] Image ${imageId} not found for venue ${venueId}`)
         return { error: { code: 'NotFound', message: 'Image not found' } }
@@ -820,9 +853,19 @@ export class VenuesService {
       }
 
       // 删除所有关联的图片（从OSS和数据库）
-      const images = await this.imageRepo.find({ 
-        where: { venue: { id: venueId } as any }
-      })
+      // 使用 QueryBuilder 直接查询外键，避免 JOIN venue 表（防止 geom 列问题）
+      let images = await this.imageRepo
+        .createQueryBuilder('img')
+        .where('img.venueId = :venueId', { venueId })
+        .getMany()
+      
+      // 如果上面的查询失败，尝试不同的字段名格式
+      if (images.length === 0) {
+        images = await this.imageRepo
+          .createQueryBuilder('img')
+          .where('img.venue_id = :venueId', { venueId })
+          .getMany()
+      }
       
       console.log(`🗑️ [Delete Venue] Found ${images.length} images to delete for venue ${venueId}`)
       
