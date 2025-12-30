@@ -504,43 +504,95 @@ export class VenuesService {
 
   async listImages(venueId: number, userId?: string) {
     try {
+      console.log(`📸 Listing images for venue ${venueId}`)
+      
+      // 先检查数据库中图片总数
+      const totalImages = await this.imageRepo.count()
+      console.log(`📸 Total images in database: ${totalImages}`)
+      
+      // 检查表结构
+      const tableInfo = await this.imageRepo.query(`
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'venue_image'
+        ORDER BY ordinal_position
+      `)
+      console.log(`📸 venue_image table columns:`, tableInfo.map((c: any) => c.column_name))
+      
       // 先尝试使用关系查询
       let rows = await this.imageRepo.find({ 
         where: { venue: { id: venueId } as any }, 
         order: { sort: 'ASC', id: 'ASC' } 
       })
       
+      console.log(`📸 Relation query found ${rows.length} images`)
+      
       // 如果关系查询失败或返回空，尝试使用 QueryBuilder 直接查询外键
       if (rows.length === 0) {
         try {
-          // TypeORM 会自动创建外键列，通常是 venueId
-          rows = await this.imageRepo
+          // 尝试通过 JOIN 查询
+          const qbRows = await this.imageRepo
             .createQueryBuilder('img')
             .leftJoin('img.venue', 'venue')
-            .where('venue.id = :venueId OR img.venueId = :venueId', { venueId })
+            .where('venue.id = :venueId', { venueId })
             .orderBy('img.sort', 'ASC')
             .addOrderBy('img.id', 'ASC')
             .getMany()
+          
+          console.log(`📸 QueryBuilder (JOIN) found ${qbRows.length} images`)
+          rows = qbRows
+          
+          // 如果还是没找到，尝试直接查询外键字段
+          if (rows.length === 0) {
+            // 尝试不同的字段名格式
+            const directRows = await this.imageRepo
+              .createQueryBuilder('img')
+              .where('img.venueId = :venueId', { venueId })
+              .orderBy('img.sort', 'ASC')
+              .addOrderBy('img.id', 'ASC')
+              .getMany()
+            
+            console.log(`📸 QueryBuilder (direct venueId) found ${directRows.length} images`)
+            rows = directRows
+          }
         } catch (qbError) {
           console.warn('⚠️  QueryBuilder query failed, trying raw query:', qbError)
           // 如果 QueryBuilder 也失败，尝试原生 SQL 查询
-          const rawRows = await this.imageRepo.query(
-            'SELECT * FROM venue_image WHERE "venueId" = $1 ORDER BY sort ASC, id ASC',
-            [venueId]
-          )
-          rows = rawRows.map((row: any) => ({
-            id: row.id,
-            venue: { id: row.venueId } as any,
-            userId: row.userId,
-            url: row.url,
-            sort: row.sort || 0,
-          })) as any[]
+          try {
+            // 尝试不同的字段名格式
+            const queries = [
+              `SELECT * FROM venue_image WHERE "venueId" = $1 ORDER BY sort ASC, id ASC`,
+              `SELECT * FROM venue_image WHERE venue_id = $1 ORDER BY sort ASC, id ASC`,
+            ]
+            
+            for (const query of queries) {
+              try {
+                const rawRows = await this.imageRepo.query(query, [venueId])
+                if (rawRows.length > 0) {
+                  console.log(`📸 Raw SQL found ${rawRows.length} images with query: ${query.substring(0, 50)}`)
+                  rows = rawRows.map((row: any) => ({
+                    id: row.id,
+                    venue: { id: row.venueId || row.venue_id } as any,
+                    userId: row.userId || row.user_id,
+                    url: row.url,
+                    sort: row.sort || 0,
+                  })) as any[]
+                  break
+                }
+              } catch (queryError) {
+                console.warn(`⚠️  Query failed: ${queryError}`)
+              }
+            }
+          } catch (rawError) {
+            console.error('❌ Raw SQL also failed:', rawError)
+          }
         }
       }
       
-      console.log(`📸 Found ${rows.length} images for venue ${venueId}`)
+      console.log(`📸 Final result: Found ${rows.length} images for venue ${venueId}`)
       if (rows.length > 0) {
         console.log('📸 First image URL:', rows[0].url)
+        console.log('📸 All image URLs:', rows.map((r: any) => r.url))
       }
       
       return { 
@@ -618,7 +670,18 @@ export class VenuesService {
       image.user = { id: userId } as any
       image.url = mainImage.url
       image.sort = 0
+      
+      console.log(`💾 Saving processed image to database for venue ${venueId}...`)
       const saved = await this.imageRepo.save(image)
+      console.log(`✅ Processed image saved: id=${saved.id}, venueId=${venueId}, url=${saved.url}`)
+      
+      // 验证保存是否成功
+      const verify = await this.imageRepo.findOne({ where: { id: saved.id } })
+      if (verify) {
+        console.log(`✅ Verified processed image exists: id=${verify.id}`)
+      } else {
+        console.error(`❌ Processed image not found after save!`)
+      }
       
       return {
         id: saved.id,
@@ -635,16 +698,42 @@ export class VenuesService {
   }
 
   async addImage(venueId: number, url: string, sort: number | undefined, userId: number) {
-    const venue = await this.repo.findOne({ where: { id: venueId } })
-    if (!venue) return { error: { code: 'NotFound', message: 'Venue not found' } }
-    
-    const image = new VenueImageEntity()
-    image.venue = venue as any
-    image.user = { id: userId } as any
-    image.url = url
-    image.sort = sort ?? 0
-    const saved = await this.imageRepo.save(image)
-    return { id: saved.id, url: saved.url }
+    try {
+      console.log(`📸 Adding image for venue ${venueId}, URL: ${url}`)
+      
+      const venue = await this.repo.findOne({ where: { id: venueId } })
+      if (!venue) {
+        console.error(`❌ Venue ${venueId} not found`)
+        return { error: { code: 'NotFound', message: 'Venue not found' } }
+      }
+      
+      const image = new VenueImageEntity()
+      image.venue = venue as any
+      image.user = { id: userId } as any
+      image.url = url
+      image.sort = sort ?? 0
+      
+      console.log(`💾 Saving image to database...`)
+      const saved = await this.imageRepo.save(image)
+      console.log(`✅ Image saved successfully: id=${saved.id}, venueId=${venueId}, url=${saved.url}`)
+      
+      // 验证保存是否成功
+      const verify = await this.imageRepo.findOne({ where: { id: saved.id } })
+      if (verify) {
+        console.log(`✅ Verified image exists in database: id=${verify.id}`)
+      } else {
+        console.error(`❌ Image not found after save!`)
+      }
+      
+      return { id: saved.id, url: saved.url }
+    } catch (error) {
+      console.error('❌ Error adding image:', error)
+      if (error instanceof Error) {
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw error
+    }
   }
 
   async deleteImage(venueId: number, imageId: number, userId: number) {
