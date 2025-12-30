@@ -81,8 +81,10 @@ export async function POST(
       console.error('❌ Backend returned error:', res.status, errorText)
       let errorMessage = `Request failed: ${res.status}`
       try {
-        const errorJson = JSON.parse(errorText)
-        errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+        if (errorText && errorText.trim().length > 0) {
+          const errorJson = JSON.parse(errorText)
+          errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+        }
       } catch {
         errorMessage = errorText || errorMessage
       }
@@ -97,8 +99,55 @@ export async function POST(
       )
     }
     
-    const data = await res.json()
-    console.log('✅ Successfully uploaded image:', data.url || data.id)
+    // 检查响应内容类型
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text()
+      console.error('❌ [API Route] Response is not JSON:', { contentType, text: text.substring(0, 200) })
+      return Response.json(
+        {
+          error: {
+            code: 'InvalidResponse',
+            message: `后端返回了非 JSON 格式的响应 (${contentType})`,
+          },
+        },
+        { status: 500 }
+      )
+    }
+    
+    // 安全地解析 JSON
+    const text = await res.text()
+    if (!text || text.trim().length === 0) {
+      console.error('❌ [API Route] Response is empty')
+      return Response.json(
+        {
+          error: {
+            code: 'EmptyResponse',
+            message: '后端返回了空响应',
+          },
+        },
+        { status: 500 }
+      )
+    }
+    
+    let data
+    try {
+      data = JSON.parse(text)
+      console.log('✅ Successfully uploaded image:', data.url || data.id)
+    } catch (parseError) {
+      console.error('❌ [API Route] JSON parse error:', parseError)
+      console.error('Response text:', text.substring(0, 500))
+      return Response.json(
+        {
+          error: {
+            code: 'ParseError',
+            message: `JSON 解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+          },
+        },
+        { status: 500 }
+      )
+    }
+    
     return Response.json(data)
   } catch (error) {
     console.error('❌ Error proxying image upload to backend:', error)

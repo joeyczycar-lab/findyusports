@@ -35,15 +35,38 @@ export async function fetchJson(path: string, options?: RequestInit) {
       const errorText = await res.text()
       let errorMessage = `Request failed: ${res.status}`
       try {
-        const errorJson = JSON.parse(errorText)
-        errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+        if (errorText && errorText.trim().length > 0) {
+          const errorJson = JSON.parse(errorText)
+          errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+        }
       } catch {
         errorMessage = errorText || errorMessage
       }
       throw new Error(errorMessage)
     }
     
-    return await res.json()
+    // 检查响应内容类型
+    const contentType = res.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text()
+      console.error('❌ [fetchJson] Response is not JSON:', { contentType, text: text.substring(0, 200) })
+      throw new Error(`服务器返回了非 JSON 格式的响应 (${contentType})`)
+    }
+    
+    // 安全地解析 JSON
+    const text = await res.text()
+    if (!text || text.trim().length === 0) {
+      console.error('❌ [fetchJson] Response is empty')
+      throw new Error('服务器返回了空响应')
+    }
+    
+    try {
+      return JSON.parse(text)
+    } catch (parseError) {
+      console.error('❌ [fetchJson] JSON parse error:', parseError)
+      console.error('Response text:', text.substring(0, 500))
+      throw new Error(`JSON 解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
+    }
   } catch (error) {
     // 如果是网络错误，提供更友好的错误信息
     if (error instanceof TypeError && error.message.includes('fetch')) {
