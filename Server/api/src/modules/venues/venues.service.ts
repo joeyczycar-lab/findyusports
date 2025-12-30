@@ -130,13 +130,23 @@ export class VenuesService {
     
     if (venueIds.length > 0) {
       try {
+        console.log(`📸 Querying images for ${venueIds.length} venues:`, venueIds)
+        
+        // 先检查数据库中是否有图片数据
+        const totalImages = await this.imageRepo.count()
+        console.log(`📸 Total images in database: ${totalImages}`)
+        
+        if (totalImages === 0) {
+          console.warn('⚠️  No images found in database at all')
+        }
+        
         // 查询每个场地的第一张图片（按sort排序，取第一个）
         // 使用多种方法尝试查询，确保兼容性
         let firstImages: any[] = []
         
         try {
           // 方法1: 使用 QueryBuilder 通过关系查询
-          firstImages = await this.imageRepo
+          const qb = this.imageRepo
             .createQueryBuilder('img')
             .leftJoin('img.venue', 'venue')
             .select('venue.id', 'venueId')
@@ -144,7 +154,13 @@ export class VenuesService {
             .where('venue.id IN (:...venueIds)', { venueIds })
             .orderBy('img.sort', 'ASC')
             .addOrderBy('img.id', 'ASC')
-            .getRawMany()
+          
+          const sql = qb.getSql()
+          console.log(`📸 QueryBuilder SQL:`, sql)
+          
+          firstImages = await qb.getRawMany()
+          
+          console.log(`📸 QueryBuilder raw results (first 3):`, JSON.stringify(firstImages.slice(0, 3)))
           
           // 处理 QueryBuilder 返回的字段名
           firstImages = firstImages.map((img: any) => ({
@@ -157,19 +173,30 @@ export class VenuesService {
           // 如果通过关系查询没找到，尝试直接查询外键字段
           if (firstImages.length === 0) {
             try {
-              // 尝试不同的字段名格式
+              // 先检查实际的表结构
+              const tableInfo = await this.imageRepo.query(`
+                SELECT column_name, data_type 
+                FROM information_schema.columns 
+                WHERE table_name = 'venue_image'
+                ORDER BY ordinal_position
+              `)
+              console.log(`📸 venue_image table columns:`, tableInfo)
+              
+              // 尝试直接查询，不通过关系
               const directQuery = await this.imageRepo
                 .createQueryBuilder('img')
                 .select('img.url', 'url')
-                .addSelect('(SELECT "venueId" FROM venue_image WHERE id = img.id)', 'venueId')
+                .addSelect('img.venueId', 'venueId')
                 .where('img.venueId IN (:...venueIds)', { venueIds })
                 .orderBy('img.sort', 'ASC')
                 .addOrderBy('img.id', 'ASC')
                 .getRawMany()
               
+              console.log(`📸 Direct query raw results (first 3):`, JSON.stringify(directQuery.slice(0, 3)))
+              
               firstImages = directQuery.map((img: any) => ({
-                venueId: Number(img.venueId),
-                url: img.url,
+                venueId: Number(img.venueId || img.img_venueId || img.venue_id),
+                url: img.url || img.img_url,
               })).filter((img: any) => img.venueId && img.url)
               
               console.log(`📸 QueryBuilder (direct) found ${firstImages.length} images`)
@@ -225,6 +252,9 @@ export class VenuesService {
         })
         
         console.log(`📸 Loaded ${Object.keys(firstImagesMap).length} venue images`)
+        if (Object.keys(firstImagesMap).length > 0) {
+          console.log(`📸 Image URLs (first 3):`, Object.entries(firstImagesMap).slice(0, 3))
+        }
       } catch (imageError) {
         console.error('❌ Error loading venue images:', imageError instanceof Error ? imageError.message : String(imageError))
         if (imageError instanceof Error) {
