@@ -131,25 +131,54 @@ export class VenuesService {
     if (venueIds.length > 0) {
       try {
         // 查询每个场地的第一张图片（按sort排序，取第一个）
-        const firstImages = await this.imageRepo
-          .createQueryBuilder('img')
-          .select(['img.venueId', 'img.url'])
-          .where('img.venueId IN (:...venueIds)', { venueIds })
-          .orderBy('img.sort', 'ASC')
-          .addOrderBy('img.id', 'ASC')
-          .getRawMany()
+        // 使用多种方法尝试查询，确保兼容性
+        let firstImages: any[] = []
+        
+        try {
+          // 方法1: 使用 QueryBuilder 查询
+          firstImages = await this.imageRepo
+            .createQueryBuilder('img')
+            .select('img.venueId', 'venueId')
+            .addSelect('img.url', 'url')
+            .where('img.venueId IN (:...venueIds)', { venueIds })
+            .orderBy('img.sort', 'ASC')
+            .addOrderBy('img.id', 'ASC')
+            .getRawMany()
+          
+          // 处理 QueryBuilder 返回的字段名（可能是 img_venueId 或 venueId）
+          firstImages = firstImages.map((img: any) => ({
+            venueId: img.venueId || img.img_venueId || img.img_venue_id,
+            url: img.url || img.img_url || img.imgUrl,
+          })).filter((img: any) => img.venueId && img.url)
+        } catch (qbError) {
+          console.warn('⚠️  QueryBuilder failed, trying raw SQL:', qbError)
+          // 方法2: 使用原生 SQL 查询
+          try {
+            firstImages = await this.imageRepo.query(
+              `SELECT "venueId", url FROM venue_image WHERE "venueId" IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
+              venueIds
+            )
+          } catch (rawError) {
+            console.warn('⚠️  Raw SQL also failed:', rawError)
+          }
+        }
         
         // 为每个venueId只保留第一张图片
         const seenVenues = new Set<number>()
         firstImages.forEach((img: any) => {
-          const venueId = img.img_venueId
-          if (!seenVenues.has(venueId)) {
-            firstImagesMap[venueId] = img.img_url
+          const venueId = img.venueId
+          if (venueId && !seenVenues.has(venueId)) {
+            firstImagesMap[venueId] = img.url
             seenVenues.add(venueId)
           }
         })
+        
+        console.log(`📸 Loaded ${Object.keys(firstImagesMap).length} venue images`)
       } catch (imageError) {
-        console.warn('⚠️  Error loading venue images:', imageError instanceof Error ? imageError.message : String(imageError))
+        console.error('❌ Error loading venue images:', imageError instanceof Error ? imageError.message : String(imageError))
+        if (imageError instanceof Error) {
+          console.error('Error stack:', imageError.stack)
+        }
       }
       
       // 查询评价统计（用于热度排序）
