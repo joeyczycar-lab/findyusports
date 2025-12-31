@@ -91,9 +91,15 @@ export default function DataViewPage() {
         footballVenues: venues.filter((v: any) => v.sportType === 'football').length,
         indoorVenues: venues.filter((v: any) => v.indoor === true).length,
         outdoorVenues: venues.filter((v: any) => v.indoor === false).length,
-        // 使用 priceMin 而不是 price（API 返回的是 priceMin）
-        venuesWithPrice: venues.filter((v: any) => v.priceMin && v.priceMin > 0).length,
-        freeVenues: venues.filter((v: any) => !v.priceMin || v.priceMin === 0).length,
+        // 兼容 price 和 priceMin 两种字段名（API 可能返回 price）
+        venuesWithPrice: venues.filter((v: any) => {
+          const price = v.priceMin ?? v.price ?? 0
+          return price > 0
+        }).length,
+        freeVenues: venues.filter((v: any) => {
+          const price = v.priceMin ?? v.price ?? 0
+          return price === 0
+        }).length,
         venues: venues,
       }
       
@@ -235,7 +241,7 @@ export default function DataViewPage() {
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
                       <td className="py-3 text-body-sm">
-                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'}
+                        {(venue.priceMin ?? venue.price ?? 0) > 0 ? `¥${venue.priceMin ?? venue.price}` : '免费'}
                       </td>
                       <td className="py-3 text-body-sm">
                         {venue.indoor ? '是' : '否'}
