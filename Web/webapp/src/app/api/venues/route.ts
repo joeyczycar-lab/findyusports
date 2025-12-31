@@ -7,14 +7,17 @@ function getApiBase(): string {
     return base
   }
   
-  // 如果未配置，使用默认的 Railway 后端地址
+  // 在开发环境中，使用本地后端地址
+  if (process.env.NODE_ENV !== 'production') {
+    const localBackend = 'http://localhost:4000'
+    console.log('🔧 [API Route] Development mode, using local backend:', localBackend)
+    return localBackend
+  }
+  
+  // 在生产环境中，如果未配置，使用默认的 Railway 后端地址
   // 注意：在生产环境中，应该通过 Vercel 环境变量配置 NEXT_PUBLIC_API_BASE
   const defaultBackend = 'https://findyusports-production.up.railway.app'
-  
-  // 只在开发环境显示警告
-  if (process.env.NODE_ENV !== 'production') {
-    console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set, using default:', defaultBackend)
-  }
+  console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set in production, using default:', defaultBackend)
   
   return defaultBackend
 }
