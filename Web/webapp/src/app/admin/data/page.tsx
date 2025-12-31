@@ -25,31 +25,52 @@ export default function DataViewPage() {
       let hasMore = true
       
       while (hasMore) {
-        const params = new URLSearchParams({
-          page: String(page),
-          pageSize: String(pageSize),
-          sortBy: 'name', // 按名称排序
-        })
-        
-        const venuesData = await fetchJson(`/venues?${params.toString()}`)
-        
-        // 检查是否有错误
-        if (venuesData.error) {
-          throw new Error(venuesData.error.message || '获取场地数据失败')
-        }
-        
-        const items = venuesData.items || []
-        allVenues = [...allVenues, ...items]
-        
-        // 如果返回的数据少于 pageSize，说明没有更多数据了
-        if (items.length < pageSize) {
-          hasMore = false
-        } else {
-          page++
-        }
-        
-        // 防止无限循环，最多获取 1000 个场地
-        if (allVenues.length >= 1000) {
+        try {
+          const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            sortBy: 'name', // 按名称排序
+          })
+          
+          const venuesData = await fetchJson(`/venues?${params.toString()}`)
+          
+          // 检查是否有错误
+          if (venuesData.error) {
+            throw new Error(venuesData.error.message || '获取场地数据失败')
+          }
+          
+          const items = venuesData.items || []
+          const total = venuesData.total || 0
+          
+          allVenues = [...allVenues, ...items]
+          
+          console.log(`📊 [Data Page] Loaded page ${page}: ${items.length} items, total: ${total}, accumulated: ${allVenues.length}`)
+          
+          // 如果返回的数据少于 pageSize，或者已经获取了所有数据，说明没有更多数据了
+          if (items.length < pageSize || allVenues.length >= total) {
+            hasMore = false
+          } else {
+            page++
+          }
+          
+          // 防止无限循环，最多获取 1000 个场地
+          if (allVenues.length >= 1000) {
+            console.warn('⚠️ [Data Page] Reached maximum limit of 1000 venues')
+            hasMore = false
+          }
+          
+          // 防止无限循环，最多尝试 20 页
+          if (page > 20) {
+            console.warn('⚠️ [Data Page] Reached maximum page limit of 20')
+            hasMore = false
+          }
+        } catch (pageError: any) {
+          console.error(`❌ [Data Page] Error loading page ${page}:`, pageError)
+          // 如果第一页就失败，抛出错误
+          if (page === 1) {
+            throw pageError
+          }
+          // 如果后续页面失败，停止加载，使用已加载的数据
           hasMore = false
         }
       }
@@ -63,8 +84,9 @@ export default function DataViewPage() {
         footballVenues: venues.filter((v: any) => v.sportType === 'football').length,
         indoorVenues: venues.filter((v: any) => v.indoor === true).length,
         outdoorVenues: venues.filter((v: any) => v.indoor === false).length,
-        venuesWithPrice: venues.filter((v: any) => v.price && v.price > 0).length,
-        freeVenues: venues.filter((v: any) => !v.price || v.price === 0).length,
+        // 使用 priceMin 而不是 price（API 返回的是 priceMin）
+        venuesWithPrice: venues.filter((v: any) => v.priceMin && v.priceMin > 0).length,
+        freeVenues: venues.filter((v: any) => !v.priceMin || v.priceMin === 0).length,
         venues: venues,
       }
       
@@ -172,7 +194,7 @@ export default function DataViewPage() {
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
                       <td className="py-3 text-body-sm">
-                        {venue.price ? `¥${venue.price}` : '免费'}
+                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'}
                       </td>
                       <td className="py-3 text-body-sm">
                         {venue.indoor ? '是' : '否'}
