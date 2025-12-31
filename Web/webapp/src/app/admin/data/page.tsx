@@ -23,6 +23,7 @@ export default function DataViewPage() {
     try {
       setLoading(true)
       setError(null)
+      console.log('📊 [Data Page] Starting to load stats...')
       
       // 获取所有场地数据（不使用坐标参数，获取所有场地）
       // 使用较大的 pageSize 获取所有数据
@@ -39,10 +40,17 @@ export default function DataViewPage() {
             sortBy: 'name', // 按名称排序
           })
           
+          console.log(`📊 [Data Page] Fetching page ${page}...`)
           const venuesData = await fetchJson(`/venues?${params.toString()}`)
+          console.log(`📊 [Data Page] Received response for page ${page}:`, {
+            hasError: !!venuesData.error,
+            itemsCount: venuesData.items?.length || 0,
+            total: venuesData.total || 0,
+          })
           
           // 检查是否有错误
           if (venuesData.error) {
+            console.error(`❌ [Data Page] Error in response:`, venuesData.error)
             throw new Error(venuesData.error.message || '获取场地数据失败')
           }
           
@@ -83,6 +91,7 @@ export default function DataViewPage() {
       }
       
       const venues = allVenues
+      console.log(`📊 [Data Page] Total venues loaded: ${venues.length}`)
       
       // 统计信息
       const stats = {
@@ -103,14 +112,17 @@ export default function DataViewPage() {
         venues: venues,
       }
       
+      console.log('📊 [Data Page] Stats calculated:', stats)
       setStats(stats)
+      console.log('✅ [Data Page] Successfully loaded all data')
     } catch (err: any) {
-      console.error('加载数据失败:', err)
+      console.error('❌ [Data Page] Failed to load data:', err)
       const errorMessage = err.message || '加载数据失败'
       setError(errorMessage)
-      console.error('详细错误:', {
+      console.error('❌ [Data Page] Error details:', {
         message: errorMessage,
         error: err,
+        stack: err.stack,
       })
     } finally {
       setLoading(false)
