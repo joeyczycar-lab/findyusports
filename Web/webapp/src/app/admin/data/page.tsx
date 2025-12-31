@@ -17,15 +17,44 @@ export default function DataViewPage() {
       setLoading(true)
       setError(null)
       
-      // 获取所有场地数据
-      const venuesData = await fetchJson('/venues?ne=135,54&sw=73,18&pageSize=1000')
+      // 获取所有场地数据（不使用坐标参数，获取所有场地）
+      // 使用较大的 pageSize 获取所有数据
+      let allVenues: any[] = []
+      let page = 1
+      const pageSize = 100
+      let hasMore = true
       
-      // 检查是否有错误
-      if (venuesData.error) {
-        throw new Error(venuesData.error.message || '获取场地数据失败')
+      while (hasMore) {
+        const params = new URLSearchParams({
+          page: String(page),
+          pageSize: String(pageSize),
+          sortBy: 'name', // 按名称排序
+        })
+        
+        const venuesData = await fetchJson(`/venues?${params.toString()}`)
+        
+        // 检查是否有错误
+        if (venuesData.error) {
+          throw new Error(venuesData.error.message || '获取场地数据失败')
+        }
+        
+        const items = venuesData.items || []
+        allVenues = [...allVenues, ...items]
+        
+        // 如果返回的数据少于 pageSize，说明没有更多数据了
+        if (items.length < pageSize) {
+          hasMore = false
+        } else {
+          page++
+        }
+        
+        // 防止无限循环，最多获取 1000 个场地
+        if (allVenues.length >= 1000) {
+          hasMore = false
+        }
       }
       
-      const venues = venuesData.items || []
+      const venues = allVenues
       
       // 统计信息
       const stats = {
