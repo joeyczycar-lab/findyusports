@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server'
 
+// 标记为动态路由，因为使用了 searchParams
+export const dynamic = 'force-dynamic'
+
 function getApiBase(): string {
   // 在生产环境中，必须使用环境变量
   const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
