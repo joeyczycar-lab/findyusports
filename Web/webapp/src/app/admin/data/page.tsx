@@ -7,10 +7,17 @@ export default function DataViewPage() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    loadStats()
+    setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      loadStats()
+    }
+  }, [mounted])
 
   async function loadStats() {
     try {
@@ -104,6 +111,21 @@ export default function DataViewPage() {
     }
   }
 
+  // 在客户端挂载之前，返回一个简单的加载状态，避免 hydration 错误
+  if (!mounted) {
+    return (
+      <div className="container-page py-8">
+        <div className="mb-8">
+          <h1 className="text-heading font-bold mb-2">数据统计</h1>
+          <p className="text-body text-textSecondary">加载中...</p>
+        </div>
+        <div className="text-center py-16 text-textSecondary">
+          加载中...
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container-page py-8">
       <div className="mb-8">
@@ -115,13 +137,32 @@ export default function DataViewPage() {
 
       {loading && (
         <div className="text-center py-16 text-textSecondary">
-          加载中...
+          <div className="mb-4">加载中...</div>
+          <div className="text-sm text-textMuted">正在获取场地数据...</div>
         </div>
       )}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          ❌ {error}
+          <div className="font-bold mb-2">❌ {error}</div>
+          <div className="text-sm mt-2">
+            请检查：
+            <ul className="list-disc list-inside mt-1">
+              <li>后端服务是否正常运行</li>
+              <li>打开浏览器控制台（F12）查看详细错误</li>
+              <li>检查 Network 标签页中的 API 请求</li>
+            </ul>
+          </div>
+          <button
+            onClick={() => {
+              setError(null)
+              setLoading(true)
+              loadStats()
+            }}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            重试
+          </button>
         </div>
       )}
 
