@@ -75,8 +75,11 @@ export async function fetchJson(path: string, options?: RequestInit) {
     }
   } catch (error) {
     // 如果是网络错误，提供更友好的错误信息
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error(`无法连接到后端服务 (${base})。请确保后端服务正在运行。`)
+    if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      const errorMsg = `无法连接到后端服务 (${url})。请确保：\n1. 后端服务正在运行\n2. 后端地址正确\n3. 没有防火墙阻止连接`
+      console.error('❌ [fetchJson] Network error:', error)
+      console.error('❌ [fetchJson] Attempted URL:', url)
+      throw new Error(errorMsg)
     }
     throw error
   }
