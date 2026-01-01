@@ -43,7 +43,7 @@ export default function AnalyticsPage() {
         headers['Authorization'] = `Bearer ${token}`
       }
 
-      const data = await fetchJson<Stats>('/api/analytics/stats', {
+      const data = await fetchJson<Stats>('/analytics/stats', {
         headers,
       })
 
