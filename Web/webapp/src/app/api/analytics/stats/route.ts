@@ -25,9 +25,17 @@ export async function GET(req: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 10000)
     
     const authToken = req.headers.get('authorization')
+    console.log('📊 [API Route] Authorization header:', authToken ? 'Present' : 'Missing')
+    if (authToken) {
+      console.log('📊 [API Route] Token preview:', authToken.substring(0, 20) + '...')
+    }
+    
     const headers: HeadersInit = { 'Content-Type': 'application/json' }
     if (authToken) {
       headers['Authorization'] = authToken
+    } else {
+      console.warn('⚠️ [API Route] No authorization token found in request headers')
+      console.log('📊 [API Route] All headers:', Object.fromEntries(req.headers.entries()))
     }
     
     let res: Response

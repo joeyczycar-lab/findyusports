@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { fetchJson } from '@/lib/api'
-import { getAuthState } from '@/lib/auth'
+import { getAuthState, getAuthHeader } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 
 type Stats = {
@@ -60,7 +60,27 @@ export default function AnalyticsPage() {
       setLoading(true)
       setError(null)
       console.log('📊 [Analytics Page] Loading stats...')
+      
+      // 检查认证状态
+      const currentAuth = getAuthState()
+      console.log('📊 [Analytics Page] Auth state:', {
+        isAuthenticated: currentAuth.isAuthenticated,
+        hasToken: !!currentAuth.token,
+        userRole: currentAuth.user?.role,
+        userId: currentAuth.user?.id,
+      })
+      
+      if (!currentAuth.isAuthenticated || !currentAuth.token) {
+        setError('请先登录')
+        setIsLoginModalOpen(true)
+        setLoading(false)
+        return
+      }
 
+      // 检查 Authorization header
+      const authHeader = getAuthHeader()
+      console.log('📊 [Analytics Page] Auth header:', authHeader)
+      
       // fetchJson 会自动通过 getAuthHeader() 添加 Authorization header
       const data = await fetchJson<Stats>('/analytics/stats')
 
