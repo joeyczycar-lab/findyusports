@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
         return
       }
       if (authState.user?.role !== 'admin') {
-        setError('只有管理员可以查看访问统计')
+        setError(`只有管理员可以查看访问统计。当前用户角色: ${authState.user?.role || '未设置'}。请重新登录以刷新用户信息。`)
         setLoading(false)
         return
       }
@@ -112,14 +112,21 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">❌ {error}</p>
-                {error.includes('Unauthorized') || error.includes('未授权') || error.includes('管理员') ? (
+                {error.includes('Unauthorized') || error.includes('未授权') || error.includes('管理员') || error.includes('角色') ? (
                   <div>
-                    <p className="text-gray-600 mb-4">请先登录管理员账号</p>
+                    <p className="text-gray-600 mb-4">请重新登录以刷新用户信息</p>
                     <button
-                      onClick={() => setIsLoginModalOpen(true)}
+                      onClick={() => {
+                        // 清除旧的认证信息
+                        if (typeof window !== 'undefined') {
+                          localStorage.removeItem('auth_token')
+                          localStorage.removeItem('auth_user')
+                        }
+                        setIsLoginModalOpen(true)
+                      }}
                       className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark mr-2"
                     >
-                      登录
+                      重新登录
                     </button>
                     <button
                       onClick={() => router.push('/')}
