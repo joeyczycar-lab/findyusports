@@ -5,11 +5,12 @@ import { VenueEntity } from './modules/venues/venue.entity'
 import { VenueImageEntity } from './modules/venues/image.entity'
 import { ReviewEntity } from './modules/venues/review.entity'
 import { UserEntity } from './modules/auth/user.entity'
+import { PageViewEntity } from './modules/analytics/page-view.entity'
 
 dotenv.config()
 
 function buildDataSourceOptions(): DataSourceOptions {
-  const entities = [VenueEntity, VenueImageEntity, ReviewEntity, UserEntity]
+  const entities = [VenueEntity, VenueImageEntity, ReviewEntity, UserEntity, PageViewEntity]
   const migrations = [__dirname + '/migrations/*.{ts,js}']
   const common: DataSourceOptions = {
   type: 'postgres',
