@@ -38,4 +38,3 @@ export default function LotteryAd({ className = '' }: Props) {
     </div>
   )
 }
-
