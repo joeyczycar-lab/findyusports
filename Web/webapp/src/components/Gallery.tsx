@@ -20,6 +20,8 @@ type Props = {
 export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   const [active, setActive] = useState(0)
   const [mounted, setMounted] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   // 将 urls 转换为 ImageItem 格式
   const [imageItems, setImageItems] = useState<ImageItem[]>(() => {
     if (!urls || urls.length === 0) return []
@@ -61,6 +63,47 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       window.location.reload()
     }, 1000)
   }
+
+  // 打开大图预览
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index)
+    setLightboxOpen(true)
+    // 阻止背景滚动
+    document.body.style.overflow = 'hidden'
+  }
+
+  // 关闭大图预览
+  const closeLightbox = () => {
+    setLightboxOpen(false)
+    document.body.style.overflow = ''
+  }
+
+  // 切换上一张/下一张图片
+  const navigateLightbox = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      setLightboxIndex(prev => (prev > 0 ? prev - 1 : imageItems.length - 1))
+    } else {
+      setLightboxIndex(prev => (prev < imageItems.length - 1 ? prev + 1 : 0))
+    }
+  }
+
+  // 键盘事件处理
+  useEffect(() => {
+    if (!lightboxOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeLightbox()
+      } else if (e.key === 'ArrowLeft') {
+        navigateLightbox('prev')
+      } else if (e.key === 'ArrowRight') {
+        navigateLightbox('next')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxOpen, imageItems.length])
 
   // 处理删除图片
   const handleDeleteImage = async (imageId: number, index: number) => {
@@ -135,7 +178,11 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   
   return (
     <div className="space-y-4">
-      <div className="relative h-64 overflow-hidden bg-gray-50" style={{ borderRadius: '4px', position: 'relative', minHeight: '256px' }}>
+      <div 
+        className="relative h-64 overflow-hidden bg-gray-50 cursor-pointer" 
+        style={{ borderRadius: '4px', position: 'relative', minHeight: '256px' }}
+        onClick={() => openLightbox(active)}
+      >
         {imageItems[active] && (
           <>
             <ResponsiveImage 
@@ -144,9 +191,16 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={active === 0}
             />
+            {/* 点击提示 */}
+            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded">
+              🔍 点击查看大图
+            </div>
             {isAdmin && imageItems[active].id && (
               <button
-                onClick={() => handleDeleteImage(imageItems[active].id!, active)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteImage(imageItems[active].id!, active)
+                }}
                 disabled={deletingImageId === imageItems[active].id}
                 className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 text-xs font-bold rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ zIndex: 10 }}
@@ -162,8 +216,11 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
         {imageItems.map((item, i) => (
           <div key={i} className="relative flex-shrink-0">
             <button 
-              onClick={()=>setActive(i)} 
-              className={`relative w-24 h-16 overflow-hidden border ${active===i? 'border-brandBlue' : 'border-border'}`} 
+              onClick={() => {
+                setActive(i)
+                openLightbox(i)
+              }}
+              className={`relative w-24 h-16 overflow-hidden border ${active===i? 'border-brandBlue' : 'border-border'} cursor-pointer`} 
               style={{ borderRadius: '4px' }}
             >
               <ResponsiveImage 
@@ -189,11 +246,80 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
         ))}
       </div>
       
-        {venueId && (
-          <div className="mt-4">
-            <ImageUpload venueId={venueId} onSuccess={handleImageAdded} />
+      {venueId && (
+        <div className="mt-4">
+          <ImageUpload venueId={venueId} onSuccess={handleImageAdded} />
+        </div>
+      )}
+
+      {/* 大图预览模态框 */}
+      {lightboxOpen && imageItems[lightboxIndex] && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-[999999] flex items-center justify-center"
+          onClick={closeLightbox}
+          style={{ zIndex: 999999 }}
+        >
+          {/* 关闭按钮 */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white text-3xl font-bold hover:text-gray-300 z-10"
+            style={{ zIndex: 1000000 }}
+          >
+            ×
+          </button>
+
+          {/* 上一张按钮 */}
+          {imageItems.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                navigateLightbox('prev')
+              }}
+              className="absolute left-4 text-white text-4xl font-bold hover:text-gray-300 z-10"
+              style={{ zIndex: 1000000 }}
+            >
+              ‹
+            </button>
+          )}
+
+          {/* 下一张按钮 */}
+          {imageItems.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                navigateLightbox('next')
+              }}
+              className="absolute right-4 text-white text-4xl font-bold hover:text-gray-300 z-10"
+              style={{ zIndex: 1000000 }}
+            >
+              ›
+            </button>
+          )}
+
+          {/* 图片容器 */}
+          <div
+            className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={imageItems[lightboxIndex].url}
+              alt={`场地图片 ${lightboxIndex + 1}`}
+              className="max-w-full max-h-[90vh] object-contain"
+              style={{ borderRadius: '4px' }}
+            />
           </div>
-        )}
+
+          {/* 图片索引指示器 */}
+          {imageItems.length > 1 && (
+            <div
+              className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded text-sm"
+              style={{ zIndex: 1000000 }}
+            >
+              {lightboxIndex + 1} / {imageItems.length}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
