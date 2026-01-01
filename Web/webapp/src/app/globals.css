@@ -219,7 +219,6 @@ section:first-of-type .btn-secondary[href*="basketball"],
 section:first-of-type .btn-secondary[href*="football"] {
   border: none !important;
   border-width: 0 !important;
-}
   /* 再次强制设置，确保 @apply 不会覆盖 */
   border-radius: 4px !important;
   -webkit-border-radius: 4px !important;
