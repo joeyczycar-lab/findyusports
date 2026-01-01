@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import Link from 'next/link'
 import Nav from '@/components/Nav'
 import ForceButtonRadius from '@/components/ForceButtonRadius'
+import AnalyticsProvider from '@/components/AnalyticsProvider'
 
 export const metadata = {
   title: '运动场地分享 | 篮球·足球',
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head />
       <body style={{ margin: 0, padding: 0, paddingTop: '64px' }}>
         <ForceButtonRadius />
+        <AnalyticsProvider />
         <Nav />
         {children}
       </body>
