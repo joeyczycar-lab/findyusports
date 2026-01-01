@@ -212,6 +212,14 @@ header#main-nav-header a[href="/admin/add-venue"]:active {
   @apply bg-white text-black border-2 border-black px-8 py-3 text-sm font-medium uppercase tracking-wider;
   @apply hover:bg-black hover:text-white transition-all duration-200;
   @apply focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2;
+}
+
+/* 主页 Hero 区域的篮球和足球按钮 - 移除边框 */
+section:first-of-type .btn-secondary[href*="basketball"],
+section:first-of-type .btn-secondary[href*="football"] {
+  border: none !important;
+  border-width: 0 !important;
+}
   /* 再次强制设置，确保 @apply 不会覆盖 */
   border-radius: 4px !important;
   -webkit-border-radius: 4px !important;
