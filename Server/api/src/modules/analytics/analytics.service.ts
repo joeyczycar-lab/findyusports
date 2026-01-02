@@ -50,7 +50,7 @@ export class AnalyticsService {
         qb.andWhere('pv.createdAt <= :endDate', { endDate: options.endDate })
       }
       if (options?.pageType) {
-        qb.andWhere('pv.pageType = :pageType', { pageType: options.pageType })
+        qb.andWhere('pv.page_type = :pageType', { pageType: options.pageType })
       }
 
       // 总访问量
