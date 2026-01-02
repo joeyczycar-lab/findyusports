@@ -102,6 +102,16 @@ export class AuthService {
 
   private sanitizeUser(user: UserEntity) {
     const { password, ...sanitized } = user
-    return sanitized
+    // 确保返回的用户对象包含所有必要字段，特别是 role
+    return {
+      id: sanitized.id,
+      phone: sanitized.phone,
+      nickname: sanitized.nickname,
+      avatar: sanitized.avatar,
+      role: sanitized.role,
+      status: sanitized.status,
+      createdAt: sanitized.createdAt,
+      updatedAt: sanitized.updatedAt,
+    }
   }
 }
