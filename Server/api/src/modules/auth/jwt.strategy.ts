@@ -7,12 +7,22 @@ import { AuthService } from './auth.service'
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret'
-    console.log('🔐 [JWT Strategy] Initializing with secret:', jwtSecret ? 'SET' : 'NOT SET')
+    console.log('🔐 [JWT Strategy] Initializing with secret:', jwtSecret ? 'SET (length: ' + jwtSecret.length + ')' : 'NOT SET')
     
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtSecret
+      secretOrKey: jwtSecret,
+      // 添加错误处理回调
+      passReqToCallback: false,
+    })
+    
+    // 添加错误处理
+    this.on('error', (error: any) => {
+      console.error('❌ [JWT Strategy] Passport error:', {
+        name: error?.name,
+        message: error?.message,
+      })
     })
   }
 
