@@ -18,7 +18,7 @@ export function getApiBase(): string {
   return base && base.length > 0 ? base : 'http://localhost:4000'
 }
 
-export async function fetchJson(path: string, options?: RequestInit) {
+export async function fetchJson<T = any>(path: string, options?: RequestInit): Promise<T> {
   const base = getApiBase()
   const url = `${base}${path}`
   
