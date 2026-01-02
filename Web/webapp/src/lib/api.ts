@@ -1,9 +1,15 @@
 import { getAuthHeader } from './auth'
 
 export function getApiBase(): string {
-  // 在浏览器环境中，始终使用 Next.js API 路由作为代理
-  // 这样可以避免 CORS 问题，并且可以更好地处理错误
+  // 在浏览器环境中，检查是否在生产环境且需要直接调用后端
+  // 如果 NEXT_PUBLIC_API_BASE 已设置，直接使用后端地址（绕过 Next.js API 路由）
   if (typeof window !== 'undefined') {
+    const directBackend = process.env.NEXT_PUBLIC_API_BASE?.trim()
+    if (directBackend && directBackend.length > 0) {
+      // 生产环境：直接使用后端地址，避免 Next.js API 路由的 405 问题
+      return directBackend
+    }
+    // 开发环境：使用 Next.js API 路由作为代理
     return '/api'
   }
   
