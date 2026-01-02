@@ -13,16 +13,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: jwtSecret,
-      // 添加错误处理回调
-      passReqToCallback: false,
-    })
-    
-    // 添加错误处理
-    this.on('error', (error: any) => {
-      console.error('❌ [JWT Strategy] Passport error:', {
-        name: error?.name,
-        message: error?.message,
-      })
     })
   }
 
