@@ -31,13 +31,27 @@ export async function GET(req: NextRequest) {
     
     // 尝试从多个可能的 header 名称获取 token
     // Next.js 的 headers 是只读的 Headers 对象，需要正确获取
-    const authHeader = req.headers.get('authorization') || 
-                      req.headers.get('Authorization') ||
-                      req.headers.get('x-authorization')
+    // 注意：Next.js headers 是大小写不敏感的，但为了兼容性，我们检查多个变体
+    let authHeader = req.headers.get('authorization') || 
+                     req.headers.get('Authorization') ||
+                     req.headers.get('x-authorization') ||
+                     req.headers.get('X-Authorization')
+    
+    // 如果还是没有找到，尝试从 headers 对象中查找（不区分大小写）
+    if (!authHeader) {
+      const allHeaders = Array.from(req.headers.entries())
+      const authEntry = allHeaders.find(([key]) => 
+        key.toLowerCase() === 'authorization' || key.toLowerCase() === 'x-authorization'
+      )
+      if (authEntry) {
+        authHeader = authEntry[1]
+      }
+    }
     
     console.log('📊 [API Route] Request headers:', {
       hasAuth: !!authHeader,
       allHeaders: Array.from(req.headers.keys()),
+      authHeaderPreview: authHeader ? authHeader.substring(0, 30) + '...' : 'none',
     })
     
     if (authHeader) {
