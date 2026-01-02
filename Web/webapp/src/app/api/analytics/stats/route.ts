@@ -72,12 +72,27 @@ export async function GET(req: NextRequest) {
     
     const responseText = await res.text()
     
+    console.log('📊 [API Route] Backend response status:', res.status)
+    console.log('📊 [API Route] Backend response headers:', Object.fromEntries(res.headers.entries()))
+    
     if (!res.ok) {
-      console.error('❌ [API Route] Backend error:', responseText)
+      console.error('❌ [API Route] Backend error:', {
+        status: res.status,
+        statusText: res.statusText,
+        responseText: responseText.substring(0, 500),
+      })
       let errorData: any = { code: 'BackendError', message: '后端服务错误' }
       try {
-        errorData = JSON.parse(responseText)
-      } catch {}
+        if (responseText && responseText.trim().length > 0) {
+          errorData = JSON.parse(responseText)
+        }
+      } catch (parseError) {
+        console.error('❌ [API Route] Failed to parse error response:', parseError)
+        errorData = { 
+          code: 'BackendError', 
+          message: responseText || `后端返回错误: ${res.status} ${res.statusText}` 
+        }
+      }
       return Response.json({ error: errorData }, { status: res.status })
     }
     
