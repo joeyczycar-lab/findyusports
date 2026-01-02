@@ -24,8 +24,22 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       isPublic,
       hasAuthHeader: !!authHeader,
       authHeaderPreview: authHeader ? authHeader.substring(0, 30) + '...' : 'none',
+      url: request.url,
+      method: request.method,
     })
     
-    return super.canActivate(context)
+    try {
+      const result = super.canActivate(context)
+      if (result instanceof Promise) {
+        return result.catch((error) => {
+          console.error('❌ [JWT Auth Guard] Authentication failed:', error.message)
+          throw error
+        })
+      }
+      return result
+    } catch (error) {
+      console.error('❌ [JWT Auth Guard] Authentication error:', error)
+      throw error
+    }
   }
 }
