@@ -6,10 +6,13 @@ import { AuthService } from './auth.service'
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
+    const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret'
+    console.log('🔐 [JWT Strategy] Initializing with secret:', jwtSecret ? 'SET' : 'NOT SET')
+    
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'default-jwt-secret'
+      secretOrKey: jwtSecret
     })
   }
 

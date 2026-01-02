@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext } from '@nestjs/common'
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { Reflector } from '@nestjs/core'
 
@@ -32,14 +32,28 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       const result = super.canActivate(context)
       if (result instanceof Promise) {
         return result.catch((error) => {
-          console.error('❌ [JWT Auth Guard] Authentication failed:', error.message)
-          throw error
+          console.error('❌ [JWT Auth Guard] Authentication failed:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack?.substring(0, 500),
+          })
+          // 如果是 JWT 相关错误，提供更详细的错误信息
+          if (error.message?.includes('jwt') || error.message?.includes('token')) {
+            console.error('❌ [JWT Auth Guard] JWT Error details:', {
+              errorType: error.constructor.name,
+              message: error.message,
+            })
+          }
+          throw new UnauthorizedException(error.message || '认证失败')
         })
       }
       return result
     } catch (error) {
-      console.error('❌ [JWT Auth Guard] Authentication error:', error)
-      throw error
+      console.error('❌ [JWT Auth Guard] Authentication error:', {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : 'Unknown',
+      })
+      throw error instanceof UnauthorizedException ? error : new UnauthorizedException('认证失败')
     }
   }
 }
