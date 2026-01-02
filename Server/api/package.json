@@ -13,6 +13,7 @@
     "set-admin": "ts-node src/set-admin.ts",
     "migrate:page-view": "ts-node src/migrations/run-migration.ts",
     "migrate:alter-user-agent": "ts-node src/migrations/run-alter-migration.ts",
+    "migrate:add-contact": "ts-node src/migrations/run-add-contact-migration.ts",
     "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/AutoMigration",
     "migration:run": "npm run typeorm -- migration:run",
