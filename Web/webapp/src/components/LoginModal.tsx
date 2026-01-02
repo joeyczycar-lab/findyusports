@@ -57,7 +57,15 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
       // 保存认证信息到 localStorage
       if (data.user && data.token) {
+        console.log('✅ [LoginModal] Login successful, user:', {
+          id: data.user.id,
+          phone: data.user.phone,
+          role: data.user.role,
+          nickname: data.user.nickname,
+        })
         setAuthState(data.user, data.token)
+      } else {
+        console.error('❌ [LoginModal] Missing user or token in response:', data)
       }
 
       onSuccess(data.user, data.token)

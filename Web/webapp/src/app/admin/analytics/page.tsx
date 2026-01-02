@@ -48,10 +48,20 @@ export default function AnalyticsPage() {
 
   const handleLoginSuccess = () => {
     setIsLoginModalOpen(false)
-    setAuthState(getAuthState())
+    // 重新获取认证状态
+    const newAuthState = getAuthState()
+    setAuthState(newAuthState)
+    console.log('📊 [Analytics Page] After login, auth state:', {
+      isAuthenticated: newAuthState.isAuthenticated,
+      userRole: newAuthState.user?.role,
+      userId: newAuthState.user?.id,
+    })
     // 重新加载数据
-    if (authState.user?.role === 'admin') {
+    if (newAuthState.user?.role === 'admin') {
       loadStats()
+    } else {
+      setError(`当前用户角色: ${newAuthState.user?.role || '未设置'}，需要管理员权限`)
+      setLoading(false)
     }
   }
 
