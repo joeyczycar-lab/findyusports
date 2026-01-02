@@ -20,6 +20,19 @@ async function bootstrap() {
     console.log(`🌐 Configuring CORS...`)
     app.enableCors({ origin: true, credentials: true })
     
+    // 添加全局请求日志中间件
+    app.use((req: any, res: any, next: any) => {
+      if (req.url?.includes('/analytics/stats')) {
+        console.log('📡 [Global Middleware] Request received:', {
+          method: req.method,
+          url: req.url,
+          hasAuth: !!req.headers.authorization,
+          authPreview: req.headers.authorization ? req.headers.authorization.substring(0, 30) + '...' : 'none',
+        })
+      }
+      next()
+    })
+    
     console.log(`🔌 Binding to 0.0.0.0:${port}...`)
     // 显式绑定到 0.0.0.0 以确保外部可访问（Railway 需要）
     await app.listen(port, '0.0.0.0')
