@@ -1,15 +1,11 @@
 import { getAuthHeader } from './auth'
 
 export function getApiBase(): string {
-  // 在浏览器环境中，检查是否在生产环境且需要直接调用后端
-  // 如果 NEXT_PUBLIC_API_BASE 已设置，直接使用后端地址（绕过 Next.js API 路由）
+  // 在浏览器环境中，始终使用 Next.js API 路由作为代理
+  // 这样可以避免 CORS 问题，并且可以更好地处理错误
+  // 注意：对于需要认证的 API（如 /analytics/stats），必须通过 Next.js API 路由
+  // 因为 Next.js API 路由可以正确转发 Authorization header
   if (typeof window !== 'undefined') {
-    const directBackend = process.env.NEXT_PUBLIC_API_BASE?.trim()
-    if (directBackend && directBackend.length > 0) {
-      // 生产环境：直接使用后端地址，避免 Next.js API 路由的 405 问题
-      return directBackend
-    }
-    // 开发环境：使用 Next.js API 路由作为代理
     return '/api'
   }
   
