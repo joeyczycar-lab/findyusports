@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     console.log('📊 [API Route] Environment:', process.env.NODE_ENV)
     
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 增加到 30 秒
     
     // 尝试从多个可能的 header 名称获取 token
     // Next.js 的 headers 是只读的 Headers 对象，需要正确获取
