@@ -75,6 +75,8 @@ export class AnalyticsService {
         .groupBy('pv.pageType')
         .orderBy('count', 'DESC')
         .getRawMany()
+      
+      // 注意：TypeORM 会自动处理 camelCase 到 snake_case 的转换
 
       // 今日访问量
       const today = new Date()
