@@ -34,8 +34,19 @@ export class AnalyticsController {
     @Query('pageType') pageType?: string,
     @CurrentUser() user?: any
   ) {
+    console.log('📊 [Analytics Controller] getStats called, user:', {
+      id: user?.id,
+      phone: user?.phone,
+      role: user?.role,
+      hasUser: !!user,
+    })
+    
     // 检查用户是否为管理员
     if (!user || user.role !== 'admin') {
+      console.warn('⚠️ [Analytics Controller] Access denied:', {
+        hasUser: !!user,
+        userRole: user?.role,
+      })
       return {
         error: {
           code: 'Forbidden',
