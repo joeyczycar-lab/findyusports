@@ -15,7 +15,7 @@ export class PageViewEntity {
   @Column({ type: 'varchar', length: 200, nullable: true, name: 'referer' })
   referer?: string // 来源页面
 
-  @Column({ type: 'varchar', length: 50, nullable: true, name: 'user_agent' })
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'user_agent' })
   userAgent?: string // 用户代理
 
   @Column({ type: 'varchar', length: 45, nullable: true, name: 'ip' })

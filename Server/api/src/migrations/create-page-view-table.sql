@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS page_view (
   path VARCHAR(200) NOT NULL,
   page_type VARCHAR(50),
   referer VARCHAR(200),
-  user_agent VARCHAR(50),
+  user_agent VARCHAR(500),
   ip VARCHAR(45),
   user_id VARCHAR(50),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
