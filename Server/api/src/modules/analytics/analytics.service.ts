@@ -66,17 +66,15 @@ export class AnalyticsService {
         .limit(20)
         .getRawMany()
 
-      // 按页面类型统计
+      // 按页面类型统计（使用数据库列名 page_type）
       const viewsByType = await this.pageViewRepo
         .createQueryBuilder('pv')
-        .select('pv.pageType', 'pageType')
+        .select('pv.page_type', 'pageType')
         .addSelect('COUNT(*)', 'count')
-        .where('pv.pageType IS NOT NULL')
-        .groupBy('pv.pageType')
+        .where('pv.page_type IS NOT NULL')
+        .groupBy('pv.page_type')
         .orderBy('count', 'DESC')
         .getRawMany()
-      
-      // 注意：TypeORM 会自动处理 camelCase 到 snake_case 的转换
 
       // 今日访问量
       const today = new Date()
