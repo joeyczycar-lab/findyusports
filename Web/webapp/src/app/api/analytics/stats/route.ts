@@ -29,18 +29,25 @@ export async function GET(req: NextRequest) {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000)
     
-    const authToken = req.headers.get('authorization')
+    // 尝试从多个可能的 header 名称获取 token
+    const authToken = req.headers.get('authorization') || 
+                     req.headers.get('Authorization') ||
+                     req.headers.get('x-authorization')
+    
     console.log('📊 [API Route] Authorization header:', authToken ? 'Present' : 'Missing')
     if (authToken) {
-      console.log('📊 [API Route] Token preview:', authToken.substring(0, 20) + '...')
+      console.log('📊 [API Route] Token preview:', authToken.substring(0, 30) + '...')
+    } else {
+      console.warn('⚠️ [API Route] No authorization token found')
+      console.log('📊 [API Route] Available headers:', Array.from(req.headers.keys()))
     }
     
     const headers: HeadersInit = { 'Content-Type': 'application/json' }
     if (authToken) {
       headers['Authorization'] = authToken
     } else {
-      console.warn('⚠️ [API Route] No authorization token found in request headers')
-      console.log('📊 [API Route] All headers:', Object.fromEntries(req.headers.entries()))
+      // 即使没有 token，也尝试请求，让后端返回明确的错误
+      console.warn('⚠️ [API Route] Proceeding without authorization token')
     }
     
     let res: Response
