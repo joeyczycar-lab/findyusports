@@ -31,27 +31,38 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     try {
       const result = super.canActivate(context)
       if (result instanceof Promise) {
-        return result.catch((error) => {
+        return result.catch((error: any) => {
           console.error('❌ [JWT Auth Guard] Authentication failed:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack?.substring(0, 500),
+            message: error?.message,
+            name: error?.name,
+            statusCode: error?.statusCode,
+            error: error?.error,
+            stack: error?.stack?.substring(0, 500),
           })
-          // 如果是 JWT 相关错误，提供更详细的错误信息
-          if (error.message?.includes('jwt') || error.message?.includes('token')) {
-            console.error('❌ [JWT Auth Guard] JWT Error details:', {
-              errorType: error.constructor.name,
-              message: error.message,
+          
+          // 检查是否是 JWT 解析错误
+          if (error?.message?.includes('jwt') || 
+              error?.message?.includes('token') || 
+              error?.message?.includes('malformed') ||
+              error?.message?.includes('invalid') ||
+              error?.name === 'JsonWebTokenError' ||
+              error?.name === 'TokenExpiredError') {
+            console.error('❌ [JWT Auth Guard] JWT parsing error:', {
+              errorType: error?.constructor?.name,
+              errorName: error?.name,
+              message: error?.message,
             })
           }
-          throw new UnauthorizedException(error.message || '认证失败')
+          
+          throw new UnauthorizedException(error?.message || '认证失败')
         })
       }
       return result
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [JWT Auth Guard] Authentication error:', {
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : 'Unknown',
+        message: error?.message,
+        name: error?.name,
+        statusCode: error?.statusCode,
       })
       throw error instanceof UnauthorizedException ? error : new UnauthorizedException('认证失败')
     }
