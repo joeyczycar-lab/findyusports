@@ -30,24 +30,29 @@ export async function GET(req: NextRequest) {
     const timeoutId = setTimeout(() => controller.abort(), 10000)
     
     // 尝试从多个可能的 header 名称获取 token
-    const authToken = req.headers.get('authorization') || 
-                     req.headers.get('Authorization') ||
-                     req.headers.get('x-authorization')
+    // Next.js 的 headers 是只读的 Headers 对象，需要正确获取
+    const authHeader = req.headers.get('authorization') || 
+                      req.headers.get('Authorization') ||
+                      req.headers.get('x-authorization')
     
-    console.log('📊 [API Route] Authorization header:', authToken ? 'Present' : 'Missing')
-    if (authToken) {
-      console.log('📊 [API Route] Token preview:', authToken.substring(0, 30) + '...')
+    console.log('📊 [API Route] Request headers:', {
+      hasAuth: !!authHeader,
+      allHeaders: Array.from(req.headers.keys()),
+    })
+    
+    if (authHeader) {
+      console.log('📊 [API Route] Authorization header found, preview:', authHeader.substring(0, 30) + '...')
     } else {
-      console.warn('⚠️ [API Route] No authorization token found')
-      console.log('📊 [API Route] Available headers:', Array.from(req.headers.keys()))
+      console.warn('⚠️ [API Route] No authorization header found in request')
+      // 尝试从 cookie 或其他地方获取（如果需要）
     }
     
     const headers: HeadersInit = { 'Content-Type': 'application/json' }
-    if (authToken) {
-      headers['Authorization'] = authToken
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+      console.log('✅ [API Route] Authorization header will be forwarded to backend')
     } else {
-      // 即使没有 token，也尝试请求，让后端返回明确的错误
-      console.warn('⚠️ [API Route] Proceeding without authorization token')
+      console.warn('⚠️ [API Route] No authorization header, request will likely fail')
     }
     
     let res: Response
