@@ -94,8 +94,17 @@ export default function AnalyticsPage() {
       // fetchJson 会自动通过 getAuthHeader() 添加 Authorization header
       const data = await fetchJson<Stats>('/analytics/stats')
 
-      if ('error' in data) {
-        throw new Error(data.error?.message || '获取统计数据失败')
+      // 检查响应是否包含错误
+      if (data && typeof data === 'object' && 'error' in data) {
+        const errorMsg = (data as any).error?.message || '获取统计数据失败'
+        console.error('❌ [Analytics Page] API returned error:', errorMsg)
+        throw new Error(errorMsg)
+      }
+      
+      // 检查是否是有效的统计数据
+      if (!data || typeof data !== 'object' || !('totalViews' in data)) {
+        console.error('❌ [Analytics Page] Invalid response format:', data)
+        throw new Error('服务器返回了无效的数据格式')
       }
 
       console.log('✅ [Analytics Page] Stats loaded:', data)

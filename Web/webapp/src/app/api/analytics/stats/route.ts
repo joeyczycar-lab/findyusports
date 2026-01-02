@@ -14,12 +14,17 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const apiBase = getApiBase()
+    // 在服务器端，getApiBase 应该返回后端地址
+    const apiBase = process.env.NODE_ENV !== 'production' 
+      ? 'http://localhost:4000'
+      : (process.env.NEXT_PUBLIC_API_BASE || 'https://findyusports-api-production.up.railway.app')
+    
     const searchParams = req.nextUrl.searchParams
     const queryString = searchParams.toString()
     const backendUrl = `${apiBase}/analytics/stats${queryString ? `?${queryString}` : ''}`
     
     console.log('📊 [API Route] Proxying analytics stats to:', backendUrl)
+    console.log('📊 [API Route] Environment:', process.env.NODE_ENV)
     
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000)
