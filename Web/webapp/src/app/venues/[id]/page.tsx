@@ -88,6 +88,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 <div className="text-textSecondary uppercase tracking-wide mb-1">室内外</div>
                 <div className="font-medium">{v?.indoor ? '室内' : '室外'}</div>
               </div>
+              {v?.contact && (
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
+                  <div className="font-medium">{v.contact}</div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -115,6 +121,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     name={v.name}
                   />
                 </div>
+                {v.contact && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
+                    <div className="font-medium">{v.contact}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -426,6 +426,7 @@ export class VenuesService {
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
       venue.indoor = dto.indoor
+      venue.contact = dto.contact
       
       // 检查数据库中是否存在 geom 列
       // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段

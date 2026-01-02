@@ -27,6 +27,7 @@ export default function AddVenuePage() {
     priceMin: '',
     priceMax: '',
     indoor: false,
+    contact: '',
   })
 
   const cityOptions = [
@@ -71,6 +72,7 @@ export default function AddVenuePage() {
       if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
+      if (formData.contact) payload.contact = formData.contact
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -129,6 +131,7 @@ export default function AddVenuePage() {
         priceMin: '',
         priceMax: '',
         indoor: false,
+        contact: '',
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -291,6 +294,24 @@ export default function AddVenuePage() {
               />
               <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
             </label>
+          </div>
+
+          <div>
+            <label htmlFor="contact" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              联系方式 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <input
+              type="text"
+              id="contact"
+              value={formData.contact}
+              onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+              placeholder="例如：13800138000 或 微信号：xxx"
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：可以填写电话、微信或其他联系方式
+            </p>
           </div>
 
           <div>

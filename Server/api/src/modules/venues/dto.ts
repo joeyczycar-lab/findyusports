@@ -117,6 +117,10 @@ export class CreateVenueDto {
 
   @IsOptional()
   indoor?: boolean
+
+  @IsOptional()
+  @IsString()
+  contact?: string // 联系方式（电话、微信等）
 }
 
 

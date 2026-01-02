@@ -294,6 +294,12 @@ export default function VenuesListPage() {
                         <span className="text-xs line-clamp-1">{venue.address}</span>
                       </div>
                     )}
+                    {venue.contact && (
+                      <div className="flex items-center gap-2">
+                        <span>📞</span>
+                        <span className="text-xs line-clamp-1">{venue.contact}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       {venue.price !== undefined && venue.price > 0 && (
                         <div className="flex items-center gap-1">

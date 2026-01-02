@@ -42,6 +42,9 @@ export class VenueEntity {
 
   @Column({ type: 'boolean', nullable: true })
   indoor?: boolean
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  contact?: string // 联系方式（电话、微信等）
 }
 
 
