@@ -17,11 +17,23 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    if (!payload) {
+      console.error('❌ [JWT Strategy] No payload received')
+      throw new UnauthorizedException('无效的 token')
+    }
+    
     console.log('🔐 [JWT Strategy] Validating token payload:', {
       sub: payload.sub,
       phone: payload.phone,
       role: payload.role,
+      exp: payload.exp,
+      iat: payload.iat,
     })
+    
+    if (!payload.sub) {
+      console.error('❌ [JWT Strategy] Missing user ID in payload')
+      throw new UnauthorizedException('无效的 token payload')
+    }
     
     const user = await this.authService.findById(payload.sub)
     if (!user) {
