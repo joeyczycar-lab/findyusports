@@ -32,16 +32,25 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     if (mounted) {
+      console.log('📊 [Analytics Page] useEffect triggered, authState:', {
+        isAuthenticated: authState.isAuthenticated,
+        userRole: authState.user?.role,
+      })
+      
       // 检查是否已登录且是管理员
       if (!authState.isAuthenticated) {
+        console.log('📊 [Analytics Page] Not authenticated, showing login modal')
         setIsLoginModalOpen(true)
+        setLoading(false)
         return
       }
       if (authState.user?.role !== 'admin') {
+        console.warn('📊 [Analytics Page] Not admin, role:', authState.user?.role)
         setError(`只有管理员可以查看访问统计。当前用户角色: ${authState.user?.role || '未设置'}。请重新登录以刷新用户信息。`)
         setLoading(false)
         return
       }
+      console.log('📊 [Analytics Page] Calling loadStats...')
       loadStats()
     }
   }, [mounted, authState])
