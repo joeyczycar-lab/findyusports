@@ -855,18 +855,69 @@ export class VenuesService {
       }
 
       // 删除所有关联的图片（从OSS和数据库）
-      // 使用 QueryBuilder 直接查询外键，避免 JOIN venue 表（防止 geom 列问题）
-      let images = await this.imageRepo
-        .createQueryBuilder('img')
-        .where('img.venueId = :venueId', { venueId })
-        .getMany()
+      // 使用原生 SQL 查询，先检查实际的外键列名
+      const columnInfo = await this.imageRepo.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'venue_image' 
+        AND (column_name = 'venueId' OR column_name = 'venue_id' OR column_name LIKE '%venue%')
+        ORDER BY column_name
+      `)
+      console.log(`🗑️ [Delete Venue] venue_image table columns:`, columnInfo.map((c: any) => c.column_name))
       
-      // 如果上面的查询失败，尝试不同的字段名格式
-      if (images.length === 0) {
-        images = await this.imageRepo
-          .createQueryBuilder('img')
-          .where('img.venue_id = :venueId', { venueId })
-          .getMany()
+      // 查找实际的外键列名
+      const venueColumn = columnInfo.find((c: any) => 
+        c.column_name === 'venueId' || 
+        c.column_name === 'venue_id' || 
+        c.column_name.toLowerCase().includes('venue')
+      )
+      
+      let images: any[] = []
+      if (venueColumn) {
+        const colName = venueColumn.column_name
+        console.log(`🗑️ [Delete Venue] Using column: ${colName}`)
+        try {
+          // 使用找到的列名查询
+          const result = await this.imageRepo.query(
+            `SELECT id, url FROM venue_image WHERE "${colName}" = $1`,
+            [venueId]
+          )
+          images = result || []
+          console.log(`✅ [Delete Venue] Found ${images.length} images using column: ${colName}`)
+        } catch (sqlError) {
+          console.error(`❌ [Delete Venue] Error querying with column ${colName}:`, sqlError)
+          // 尝试不使用引号
+          try {
+            const result = await this.imageRepo.query(
+              `SELECT id, url FROM venue_image WHERE ${colName} = $1`,
+              [venueId]
+            )
+            images = result || []
+            console.log(`✅ [Delete Venue] Found ${images.length} images (without quotes)`)
+          } catch (sqlError2) {
+            console.error(`❌ [Delete Venue] Error querying without quotes:`, sqlError2)
+          }
+        }
+      } else {
+        console.warn(`⚠️ [Delete Venue] Could not find venue foreign key column, trying all possible names`)
+        // 尝试所有可能的列名
+        const possibleColumns = ['venueId', 'venue_id']
+        for (const colName of possibleColumns) {
+          try {
+            const result = await this.imageRepo.query(
+              `SELECT id, url FROM venue_image WHERE ${colName} = $1`,
+              [venueId]
+            )
+            if (result && result.length > 0) {
+              images = result
+              console.log(`✅ [Delete Venue] Found ${images.length} images using column: ${colName}`)
+              break
+            }
+          } catch (colError) {
+            // 继续尝试下一个
+            continue
+          }
+        }
       }
       
       console.log(`🗑️ [Delete Venue] Found ${images.length} images to delete for venue ${venueId}`)
