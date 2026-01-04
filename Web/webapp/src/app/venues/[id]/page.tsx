@@ -63,10 +63,6 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">关键信息</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-body-sm">
               <div>
-                <div className="text-textSecondary uppercase tracking-wide mb-1">城市</div>
-                <div className="font-medium">{v?.cityCode ?? '-'}</div>
-              </div>
-              <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
                 <div className="font-medium">
                   {v && v.location ? (
@@ -81,19 +77,27 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 </div>
               </div>
               <div>
-                <div className="text-textSecondary uppercase tracking-wide mb-1">价格</div>
-                <div className="font-medium">{v?.priceMin ? `¥${v.priceMin}` : '免费'}</div>
+                <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
+                <div className="font-medium">
+                  {v?.priceMin !== undefined && v?.priceMin !== null ? (
+                    v.priceMax && v.priceMax !== v.priceMin ? (
+                      `¥${v.priceMin} - ¥${v.priceMax}/小时`
+                    ) : (
+                      `¥${v.priceMin}/小时`
+                    )
+                  ) : (
+                    '免费'
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">室内外</div>
                 <div className="font-medium">{v?.indoor ? '室内' : '室外'}</div>
               </div>
-              {v?.contact && (
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
-                  <div className="font-medium">{v.contact}</div>
-                </div>
-              )}
+              <div>
+                <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
+                <div className="font-medium">{v?.contact || '未提供'}</div>
+              </div>
             </div>
           </section>
 
@@ -121,12 +125,24 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     name={v.name}
                   />
                 </div>
-                {v.contact && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
-                    <div className="font-medium">{v.contact}</div>
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
+                  <div className="font-medium">
+                    {v.priceMin !== undefined && v.priceMin !== null ? (
+                      v.priceMax && v.priceMax !== v.priceMin ? (
+                        `¥${v.priceMin} - ¥${v.priceMax}/小时`
+                      ) : (
+                        `¥${v.priceMin}/小时`
+                      )
+                    ) : (
+                      '免费'
+                    )}
                   </div>
-                )}
+                </div>
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
+                  <div className="font-medium">{v.contact || '未提供'}</div>
+                </div>
               </div>
             </div>
           )}
