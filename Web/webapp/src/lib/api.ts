@@ -35,11 +35,24 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
     
     if (!res.ok) {
       const errorText = await res.text()
-      let errorMessage = `Request failed: ${res.status}`
+      let errorMessage = `请求失败: ${res.status}`
       try {
         if (errorText && errorText.trim().length > 0) {
           const errorJson = JSON.parse(errorText)
+          // 优先使用中文错误信息
           errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+          // 如果是英文错误，转换为中文
+          if (errorMessage.includes('Unauthorized')) {
+            errorMessage = '未授权，请先登录'
+          } else if (errorMessage.includes('Forbidden')) {
+            errorMessage = '禁止访问，权限不足'
+          } else if (errorMessage.includes('Not Found')) {
+            errorMessage = '未找到请求的资源'
+          } else if (errorMessage.includes('Internal Server Error')) {
+            errorMessage = '服务器内部错误'
+          } else if (errorMessage.includes('Bad Request')) {
+            errorMessage = '请求参数错误'
+          }
         }
       } catch {
         errorMessage = errorText || errorMessage
@@ -69,7 +82,7 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       console.log('✅ [fetchJson] Successfully parsed JSON')
       return parsed
     } catch (parseError) {
-      console.error('❌ [fetchJson] JSON parse error:', parseError)
+      console.error('❌ [fetchJson] JSON 解析错误:', parseError)
       console.error('Response text length:', text.length)
       console.error('Response text (first 500 chars):', text.substring(0, 500))
       console.error('Response text (last 100 chars):', text.substring(Math.max(0, text.length - 100)))
@@ -79,8 +92,27 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
     // 如果是网络错误，提供更友好的错误信息
     if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
       const errorMsg = `无法连接到后端服务 (${url})。请确保：\n1. 后端服务正在运行\n2. 后端地址正确\n3. 没有防火墙阻止连接`
-      console.error('❌ [fetchJson] Network error:', error)
-      console.error('❌ [fetchJson] Attempted URL:', url)
+      console.error('❌ [fetchJson] 网络错误:', error)
+      console.error('❌ [fetchJson] 尝试访问的 URL:', url)
+      throw new Error(errorMsg)
+    }
+    // 如果是其他错误，确保错误信息是中文
+    if (error instanceof Error) {
+      let errorMsg = error.message
+      // 转换常见的英文错误信息为中文
+      if (errorMsg.includes('Unauthorized')) {
+        errorMsg = '未授权，请先登录'
+      } else if (errorMsg.includes('Forbidden')) {
+        errorMsg = '禁止访问，权限不足'
+      } else if (errorMsg.includes('Not Found')) {
+        errorMsg = '未找到请求的资源'
+      } else if (errorMsg.includes('Internal Server Error')) {
+        errorMsg = '服务器内部错误'
+      } else if (errorMsg.includes('Bad Request')) {
+        errorMsg = '请求参数错误'
+      } else if (errorMsg.includes('Request failed')) {
+        errorMsg = errorMsg.replace('Request failed', '请求失败')
+      }
       throw new Error(errorMsg)
     }
     throw error

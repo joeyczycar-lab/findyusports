@@ -46,13 +46,24 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       try {
         data = JSON.parse(text)
       } catch (parseError) {
-        console.error('❌ [LoginModal] JSON parse error:', parseError)
+        console.error('❌ [LoginModal] JSON 解析错误:', parseError)
         console.error('Response text:', text.substring(0, 500))
         throw new Error(`响应解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
       }
 
       if (!response.ok) {
-        throw new Error(data.message || data.error?.message || '操作失败')
+        let errorMsg = data.message || data.error?.message || '操作失败'
+        // 转换英文错误信息为中文
+        if (errorMsg.includes('Unauthorized')) {
+          errorMsg = '未授权，请先登录'
+        } else if (errorMsg.includes('Invalid credentials')) {
+          errorMsg = '用户名或密码错误'
+        } else if (errorMsg.includes('User already exists')) {
+          errorMsg = '用户已存在'
+        } else if (errorMsg.includes('User not found')) {
+          errorMsg = '用户不存在'
+        }
+        throw new Error(errorMsg)
       }
 
       // 保存认证信息到 localStorage
@@ -72,7 +83,16 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       onClose()
       setFormData({ phone: '', password: '', nickname: '' })
     } catch (err: any) {
-      setError(err.message || '网络错误，请检查后端服务是否正常运行')
+      let errorMsg = err.message || '网络错误，请检查后端服务是否正常运行'
+      // 确保错误信息是中文
+      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch')) {
+        errorMsg = '无法连接到服务器，请检查网络连接'
+      } else if (errorMsg.includes('Unauthorized')) {
+        errorMsg = '未授权，请先登录'
+      } else if (errorMsg.includes('401')) {
+        errorMsg = '登录失败，用户名或密码错误'
+      }
+      setError(errorMsg)
     } finally {
       setLoading(false)
     }
