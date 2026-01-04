@@ -945,11 +945,18 @@ export class VenuesService {
         }
       }
 
-      // 删除所有图片记录（由于设置了 CASCADE，可能不需要手动删除）
+      // 删除所有图片记录（使用原生 SQL，避免列名问题）
       if (images.length > 0) {
         try {
-          await this.imageRepo.remove(images)
-          console.log(`✅ [Delete Venue] Successfully removed ${images.length} image records from database`)
+          // 使用原生 SQL 删除图片记录
+          const imageIds = images.map(img => img.id)
+          if (imageIds.length > 0) {
+            await this.imageRepo.query(
+              `DELETE FROM venue_image WHERE id = ANY($1::int[])`,
+              [imageIds]
+            )
+            console.log(`✅ [Delete Venue] Successfully removed ${images.length} image records from database`)
+          }
         } catch (error) {
           console.error(`❌ [Delete Venue] Failed to remove image records:`, error)
           // 继续删除场地
