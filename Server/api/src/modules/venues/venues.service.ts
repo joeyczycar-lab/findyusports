@@ -844,11 +844,12 @@ export class VenuesService {
     try {
       console.log(`🗑️ [Delete Venue] Starting deletion for venue ${venueId} by user ${userId}`)
       
-      // 检查场地是否存在（不加载关系，避免 geom 列问题）
-      const venue = await this.repo.findOne({ 
-        where: { id: venueId }
-      })
-      if (!venue) {
+      // 检查场地是否存在（使用原生 SQL，避免 TypeORM 访问 geom 列）
+      const venueCheck = await this.repo.query(
+        'SELECT id FROM venue WHERE id = $1',
+        [venueId]
+      )
+      if (!venueCheck || venueCheck.length === 0) {
         console.log(`❌ [Delete Venue] Venue ${venueId} not found`)
         return { error: { code: 'NotFound', message: 'Venue not found' } }
       }
