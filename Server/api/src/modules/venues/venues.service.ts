@@ -904,11 +904,15 @@ export class VenuesService {
         }
       }
       
-      // 删除场地（使用 delete 而不是 remove，避免加载关系）
+      // 删除场地（使用原生 SQL，避免 TypeORM 访问 geom 列）
       // CASCADE 会自动删除关联的 reviews 和 images
       try {
-        await this.repo.delete(venueId)
-        console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`)
+        // 使用原生 SQL 删除，避免 TypeORM 尝试访问 geom 列
+        const deleteResult = await this.repo.query(
+          'DELETE FROM venue WHERE id = $1',
+          [venueId]
+        )
+        console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`, deleteResult)
       } catch (error) {
         console.error(`❌ [Delete Venue] Failed to delete venue from database:`, error)
         throw error
