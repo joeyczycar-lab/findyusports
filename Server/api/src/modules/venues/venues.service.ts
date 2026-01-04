@@ -904,12 +904,13 @@ export class VenuesService {
         }
       }
       
-      // 删除场地（CASCADE 会自动删除关联的 reviews 和 images）
+      // 删除场地（使用 delete 而不是 remove，避免加载关系）
+      // CASCADE 会自动删除关联的 reviews 和 images
       try {
-        await this.repo.remove(venue)
+        await this.repo.delete(venueId)
         console.log(`✅ [Delete Venue] Successfully deleted venue ${venueId}`)
       } catch (error) {
-        console.error(`❌ [Delete Venue] Failed to remove venue from database:`, error)
+        console.error(`❌ [Delete Venue] Failed to delete venue from database:`, error)
         throw error
       }
       
