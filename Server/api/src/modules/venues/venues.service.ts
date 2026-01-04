@@ -844,9 +844,9 @@ export class VenuesService {
     try {
       console.log(`🗑️ [Delete Venue] Starting deletion for venue ${venueId} by user ${userId}`)
       
+      // 检查场地是否存在（不加载关系，避免 geom 列问题）
       const venue = await this.repo.findOne({ 
-        where: { id: venueId },
-        relations: ['images']
+        where: { id: venueId }
       })
       if (!venue) {
         console.log(`❌ [Delete Venue] Venue ${venueId} not found`)
