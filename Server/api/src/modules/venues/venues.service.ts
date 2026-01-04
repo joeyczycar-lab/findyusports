@@ -383,6 +383,7 @@ export class VenuesService {
           'v.priceMin',
           'v.priceMax',
           'v.indoor',
+          'v.contact',
         ])
       }
 
@@ -399,6 +400,7 @@ export class VenuesService {
         priceMin: v.priceMin,
         priceMax: v.priceMax,
         indoor: v.indoor ?? false,
+        contact: v.contact,
         location: [v.lng, v.lat] as [number, number],
       }
     } catch (error) {
