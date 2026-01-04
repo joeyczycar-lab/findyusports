@@ -160,7 +160,7 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">❌ {error}</p>
-                {error.includes('Unauthorized') || error.includes('未授权') || error.includes('管理员') || error.includes('角色') ? (
+                {(error.includes('Unauthorized') || error.includes('未授权') || error.includes('管理员') || error.includes('角色') || error.includes('401')) ? (
                   <div>
                     <p className="text-gray-600 mb-4">请重新登录以刷新用户信息</p>
                     <button
