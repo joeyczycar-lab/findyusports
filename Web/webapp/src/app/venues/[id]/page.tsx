@@ -95,6 +95,10 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 <div className="font-medium">{v?.indoor ? '室内' : '室外'}</div>
               </div>
               <div>
+                <div className="text-textSecondary uppercase tracking-wide mb-1">是否对外开放</div>
+                <div className="font-medium">{v?.isPublic !== false ? '对外开放' : '仅限内部'}</div>
+              </div>
+              <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
                 <div className="font-medium">{v?.contact || '未提供'}</div>
               </div>
@@ -138,6 +142,10 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                       '免费'
                     )}
                   </div>
+                </div>
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">是否对外开放</div>
+                  <div className="font-medium">{v.isPublic !== false ? '对外开放' : '仅限内部'}</div>
                 </div>
                 <div>
                   <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>

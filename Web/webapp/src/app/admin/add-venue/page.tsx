@@ -28,6 +28,7 @@ export default function AddVenuePage() {
     priceMax: '',
     indoor: false,
     contact: '',
+    isPublic: true,
   })
 
   const cityOptions = [
@@ -73,6 +74,7 @@ export default function AddVenuePage() {
       if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
       if (formData.contact) payload.contact = formData.contact
+      if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -132,6 +134,7 @@ export default function AddVenuePage() {
         priceMax: '',
         indoor: false,
         contact: '',
+        isPublic: true,
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -294,6 +297,22 @@ export default function AddVenuePage() {
               />
               <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
             </label>
+          </div>
+
+          <div>
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+                className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                style={{ borderRadius: '4px' }}
+              />
+              <span className="text-body-sm font-bold uppercase tracking-wide">对外开放</span>
+            </label>
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：勾选表示场地对外开放，未勾选表示仅限内部使用
+            </p>
           </div>
 
           <div>

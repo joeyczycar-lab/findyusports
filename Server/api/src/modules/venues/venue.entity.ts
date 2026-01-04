@@ -45,6 +45,9 @@ export class VenueEntity {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   contact?: string // 联系方式（电话、微信等）
+
+  @Column({ type: 'boolean', nullable: true, default: true, name: 'is_public' })
+  isPublic?: boolean // 是否对外开放
 }
 
 

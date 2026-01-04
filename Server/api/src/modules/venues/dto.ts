@@ -121,6 +121,10 @@ export class CreateVenueDto {
   @IsOptional()
   @IsString()
   contact?: string // 联系方式（电话、微信等）
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isPublic?: boolean // 是否对外开放
 }
 
 

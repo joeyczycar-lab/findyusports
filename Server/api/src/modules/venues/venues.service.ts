@@ -384,6 +384,7 @@ export class VenuesService {
           'v.priceMax',
           'v.indoor',
           'v.contact',
+          'v.isPublic',
         ])
       }
 
@@ -401,6 +402,7 @@ export class VenuesService {
         priceMax: v.priceMax,
         indoor: v.indoor ?? false,
         contact: v.contact,
+        isPublic: v.isPublic !== undefined ? v.isPublic : true,
         location: [v.lng, v.lat] as [number, number],
       }
     } catch (error) {
@@ -429,6 +431,7 @@ export class VenuesService {
       venue.priceMax = dto.priceMax
       venue.indoor = dto.indoor
       venue.contact = dto.contact
+      venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       
       // 检查数据库中是否存在 geom 列
       // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
@@ -462,8 +465,8 @@ export class VenuesService {
       if (!hasGeomColumn) {
         // 使用原生 SQL INSERT，完全控制要插入的列
         const insertSql = `
-          INSERT INTO "venue" (name, "sportType", "cityCode", address, lng, lat, "priceMin", "priceMax", indoor)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          INSERT INTO "venue" (name, "sportType", "cityCode", address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
           RETURNING *
         `
         const result = await this.repo.query(insertSql, [
@@ -476,6 +479,8 @@ export class VenuesService {
           venue.priceMin || null,
           venue.priceMax || null,
           venue.indoor !== undefined ? venue.indoor : null,
+          venue.contact || null,
+          venue.isPublic !== undefined ? venue.isPublic : true,
         ])
         
         if (!result || result.length === 0) {
@@ -495,6 +500,8 @@ export class VenuesService {
           priceMin: row.priceMin,
           priceMax: row.priceMax,
           indoor: row.indoor,
+          contact: row.contact,
+          isPublic: row.is_public !== undefined ? row.is_public : true,
         } as VenueEntity
       } else {
         // geom 列存在，使用正常的 save 方法
@@ -512,6 +519,8 @@ export class VenuesService {
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,
         indoor: saved.indoor ?? false,
+        contact: saved.contact,
+        isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
         location: [saved.lng, saved.lat] as [number, number],
       }
     } catch (error) {
