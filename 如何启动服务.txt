@@ -1,0 +1,73 @@
+如何启动服务（解决"Application not found"错误）
+============================================
+
+问题原因：
+后端服务没有运行，所以无法上传场地。
+
+解决方法：
+----------
+
+方法一：使用启动脚本（最简单）⭐
+------------------------------
+1. 打开终端（Terminal）
+2. 运行：
+   cd /Users/Zhuanz/Documents/findyusports
+   ./start-backend.sh
+
+3. 等待几秒，看到"✅ 后端服务已成功启动"就说明成功了
+4. 然后就可以上传场地了
+
+
+方法二：手动启动后端
+-------------------
+1. 打开终端（Terminal）
+2. 运行：
+   cd /Users/Zhuanz/Documents/findyusports/Server/api
+   npm run dev
+
+3. 等待看到类似这样的信息：
+   [Nest] XXXX  - XX/XX/XXXX, X:XX:XX AM     LOG [NestFactory] Starting Nest application...
+   [Nest] XXXX  - XX/XX/XXXX, X:XX:XX AM     LOG [NestFactory] Nest application successfully started
+
+4. 看到"successfully started"就说明启动成功了
+
+
+检查服务是否运行
+---------------
+运行这个命令检查：
+  lsof -i :4000
+
+如果看到输出，说明服务正在运行。
+如果没有输出，说明服务没有运行。
+
+
+同时启动前端和后端
+-----------------
+1. 打开第一个终端，启动后端：
+   cd /Users/Zhuanz/Documents/findyusports/Server/api
+   npm run dev
+
+2. 打开第二个终端，启动前端：
+   cd /Users/Zhuanz/Documents/findyusports/Web/webapp
+   npm run dev
+
+3. 两个服务都启动后：
+   - 前端：http://localhost:3000
+   - 后端：http://localhost:4000
+
+
+常见问题
+--------
+Q: 端口4000被占用怎么办？
+A: 运行：lsof -ti :4000 | xargs kill -9
+
+Q: 启动失败怎么办？
+A: 检查：
+   1. 是否安装了依赖：cd Server/api && npm install
+   2. 数据库是否配置正确（检查.env文件）
+   3. 查看错误信息，根据提示修复
+
+Q: 如何查看后端日志？
+A: 如果使用start-backend.sh启动，运行：
+   tail -f /tmp/backend.log
+
