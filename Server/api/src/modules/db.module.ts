@@ -31,10 +31,25 @@ function buildTypeOrmOptions(): DataSourceOptions {
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        ...buildTypeOrmOptions(),
-        autoLoadEntities: true,
-      }),
+      useFactory: () => {
+        const options = buildTypeOrmOptions()
+        return {
+          ...options,
+          autoLoadEntities: true,
+          // 添加连接重试配置
+          retryAttempts: 5, // 重试5次
+          retryDelay: 3000, // 每次重试间隔3秒
+          // 连接超时设置
+          connectTimeoutMS: 10000, // 10秒连接超时
+          // 连接池配置
+          extra: {
+            max: 10, // 最大连接数
+            min: 2, // 最小连接数
+            idleTimeoutMillis: 30000, // 空闲连接超时
+            connectionTimeoutMillis: 10000, // 连接超时
+          },
+        }
+      },
     }),
   ],
 })
