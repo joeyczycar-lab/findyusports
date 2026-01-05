@@ -1,0 +1,5 @@
+name,sportType,cityCode,districtCode,address,lng,lat,priceMin,priceMax,indoor,contact,isPublic
+朝阳体育中心篮球场,basketball,110000,110105,北京市朝阳区朝阳路1号,116.45,39.92,50,100,true,13800138000,true
+工人体育场足球场,football,110000,110105,北京市朝阳区工人体育场北路,116.44,39.93,200,500,false,13800138001,true
+海淀体育馆篮球场,basketball,110000,110108,北京市海淀区中关村大街1号,116.30,39.95,80,150,true,13800138002,true
+

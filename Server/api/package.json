@@ -9,6 +9,7 @@
     "seed": "ts-node src/seed.ts",
     "add-venue": "ts-node src/add-venue.ts",
     "add-venue:interactive": "ts-node src/add-venue-interactive.ts",
+    "add-venue:csv": "ts-node src/add-venue-csv.ts",
     "view-data": "ts-node src/view-data.ts",
     "set-admin": "ts-node src/set-admin.ts",
     "migrate:page-view": "ts-node src/migrations/run-migration.ts",
