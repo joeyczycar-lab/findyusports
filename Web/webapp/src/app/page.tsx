@@ -108,7 +108,7 @@ export default async function HomePage() {
                 className="flex-1 bg-white text-black px-6 py-4 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white" 
                 placeholder="搜索城市、关键词…" 
               />
-              <Link href="/map" className="btn-primary whitespace-nowrap flex items-center justify-center" style={{ borderRadius: '4px' }}>
+              <Link href="/map" className="btn-primary whitespace-nowrap flex items-center justify-center" style={{ borderRadius: '4px', lineHeight: '1.5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 开始探索
               </Link>
             </div>
