@@ -1,0 +1,45 @@
+如何重启 Next.js 开发服务器
+============================
+
+方法一：使用脚本（最简单）⭐
+--------------------------
+1. 打开终端（Terminal）
+2. 运行：
+   cd /Users/Zhuanz/Documents/findyusports/Web/webapp
+   ./quick-restart.sh
+
+完成！脚本会自动停止、清理、重启。
+
+
+方法二：手动重启
+----------------
+1. 找到运行 npm run dev 的终端窗口
+2. 按 Ctrl+C（停止服务）
+3. 运行：
+   rm -rf .next
+   npm run dev
+
+完成！
+
+
+方法三：如果找不到原来的终端窗口
+----------------------------------
+1. 打开新的终端窗口
+2. 运行：
+   cd /Users/Zhuanz/Documents/findyusports/Web/webapp
+   lsof -ti :3000 | xargs kill -9
+   rm -rf .next
+   npm run dev
+
+完成！
+
+
+检查服务是否启动成功
+--------------------
+看到这行文字就说明启动成功了：
+  ✓ Ready in X seconds
+  ○ Local: http://localhost:3000
+
+然后就可以访问：
+  http://localhost:3000/admin/add-venue
+
