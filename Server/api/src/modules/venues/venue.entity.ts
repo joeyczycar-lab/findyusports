@@ -14,6 +14,9 @@ export class VenueEntity {
   @Column({ type: 'varchar', length: 6 })
   cityCode!: string
 
+  @Column({ type: 'varchar', length: 6, nullable: true, name: 'district_code' })
+  districtCode?: string // 区级代码，精确到区
+
   @Column({ type: 'varchar', length: 200, nullable: true })
   address?: string
 

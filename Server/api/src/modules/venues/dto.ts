@@ -93,6 +93,10 @@ export class CreateVenueDto {
 
   @IsOptional()
   @IsString()
+  districtCode?: string // 区级代码，精确到区
+
+  @IsOptional()
+  @IsString()
   address?: string
 
   @IsNumber()

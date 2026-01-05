@@ -377,6 +377,7 @@ export class VenuesService {
           'v.name',
           'v.sportType',
           'v.cityCode',
+          'v.districtCode',
           'v.address',
           'v.lng',
           'v.lat',
@@ -397,6 +398,7 @@ export class VenuesService {
         name: v.name,
         sportType: v.sportType,
         cityCode: v.cityCode,
+        districtCode: v.districtCode,
         address: v.address,
         priceMin: v.priceMin,
         priceMax: v.priceMax,
@@ -424,6 +426,7 @@ export class VenuesService {
       venue.name = dto.name
       venue.sportType = dto.sportType
       venue.cityCode = dto.cityCode
+      venue.districtCode = dto.districtCode
       venue.address = dto.address
       venue.lng = dto.lng
       venue.lat = dto.lat
@@ -465,14 +468,15 @@ export class VenuesService {
       if (!hasGeomColumn) {
         // 使用原生 SQL INSERT，完全控制要插入的列
         const insertSql = `
-          INSERT INTO "venue" (name, "sportType", "cityCode", address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          INSERT INTO "venue" (name, "sportType", "cityCode", district_code, address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
           RETURNING *
         `
         const result = await this.repo.query(insertSql, [
           venue.name,
           venue.sportType,
           venue.cityCode,
+          venue.districtCode || null,
           venue.address || null,
           venue.lng,
           venue.lat,
@@ -494,6 +498,7 @@ export class VenuesService {
           name: row.name,
           sportType: row.sportType,
           cityCode: row.cityCode,
+          districtCode: row.district_code,
           address: row.address,
           lng: row.lng,
           lat: row.lat,
@@ -515,6 +520,7 @@ export class VenuesService {
         name: saved.name,
         sportType: saved.sportType,
         cityCode: saved.cityCode,
+        districtCode: saved.districtCode,
         address: saved.address,
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,

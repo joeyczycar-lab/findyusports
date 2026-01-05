@@ -62,6 +62,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           <section className="border-t border-border pt-8 mb-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">关键信息</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-body-sm">
+              {v?.districtCode && (
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">区级</div>
+                  <div className="font-medium">{v.districtCode}</div>
+                </div>
+              )}
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
                 <div className="font-medium">
