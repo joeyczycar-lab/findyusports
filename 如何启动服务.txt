@@ -71,3 +71,4 @@ Q: 如何查看后端日志？
 A: 如果使用start-backend.sh启动，运行：
    tail -f /tmp/backend.log
 
+

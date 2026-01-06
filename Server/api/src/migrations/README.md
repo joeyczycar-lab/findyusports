@@ -46,3 +46,4 @@ psql $DATABASE_URL -f src/migrations/create-page-view-table.sql
 - `idx_page_view_created_at`: 按时间查询
 - `idx_page_view_page_type`: 按页面类型查询
 
+

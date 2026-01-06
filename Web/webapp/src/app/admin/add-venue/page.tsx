@@ -16,6 +16,7 @@ export default function AddVenuePage() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -584,24 +585,36 @@ export default function AddVenuePage() {
               
               {selectedImages.length > 0 && (
                 <div className="grid grid-cols-4 gap-2">
-                  {selectedImages.map((file, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt={`预览 ${index + 1}`}
-                        className="w-full h-24 object-cover border border-gray-300"
-                      />
+                  {selectedImages.map((file, index) => {
+                    const objectUrl = URL.createObjectURL(file)
+                    return (
                       <button
+                        key={index}
                         type="button"
-                        onClick={() => {
-                          setSelectedImages(selectedImages.filter((_, i) => i !== index))
-                        }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="relative group w-full h-24 border border-gray-300 overflow-hidden"
+                        onClick={() => setPreviewIndex(index)}
                       >
-                        ×
+                        <img
+                          src={objectUrl}
+                          alt={`预览 ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">
+                          点击放大预览
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedImages(selectedImages.filter((_, i) => i !== index))
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
                       </button>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
               
@@ -638,6 +651,34 @@ export default function AddVenuePage() {
           // 登录成功后，可以继续上传图片
         }}
       />
+
+      {/* 图片放大预览弹层 */}
+      {previewIndex !== null && selectedImages[previewIndex] && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center"
+          onClick={() => setPreviewIndex(null)}
+        >
+          <div
+            className="relative max-w-3xl max-h-[90vh] w-full px-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="absolute -top-8 right-0 text-white text-sm px-3 py-1 bg-black/60 rounded-full"
+              onClick={() => setPreviewIndex(null)}
+            >
+              关闭预览
+            </button>
+            <div className="w-full h-[60vh] md:h-[70vh] bg-black rounded overflow-hidden flex items-center justify-center">
+              <img
+                src={URL.createObjectURL(selectedImages[previewIndex])}
+                alt={`放大预览 ${previewIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

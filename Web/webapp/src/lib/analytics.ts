@@ -36,3 +36,4 @@ export function getPageType(pathname: string): string | undefined {
   return undefined
 }
 
+

@@ -36,3 +36,4 @@ cp /path/to/your/qrcode.jpg Web/webapp/public/wechat-qrcode.jpg
 - 如果图片加载失败，组件会显示提示信息
 - 确保图片文件名完全匹配：`wechat-qrcode.jpg`（区分大小写）
 
+

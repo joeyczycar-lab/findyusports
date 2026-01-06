@@ -100,3 +100,4 @@ trap "echo ''; echo '停止服务...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/nu
 wait $BACKEND_PID
 wait $FRONTEND_PID
 
+
