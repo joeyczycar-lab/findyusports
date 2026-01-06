@@ -833,6 +833,32 @@ export default function AddVenuePage() {
             </div>
           </div>
 
+          {/* 图片大图预览（仅本地预览，未上传阶段） */}
+          {previewIndex !== null && selectedImages[previewIndex] && (
+            <div
+              className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4"
+              onClick={() => setPreviewIndex(null)}
+            >
+              <div
+                className="relative max-w-4xl max-h-[90vh] w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="absolute -top-10 right-0 text-white text-sm px-3 py-1 border border-white/60 rounded-full hover:bg-white hover:text-black transition-colors"
+                  onClick={() => setPreviewIndex(null)}
+                >
+                  关闭预览
+                </button>
+                <img
+                  src={URL.createObjectURL(selectedImages[previewIndex])}
+                  alt="图片预览"
+                  className="w-full max-h-[90vh] object-contain bg-black"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex space-x-4 pt-4">
             <button
               type="submit"

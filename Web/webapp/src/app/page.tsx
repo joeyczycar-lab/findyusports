@@ -39,8 +39,32 @@ async function getFeaturedVenues() {
   }
 }
 
+async function getVenuesBySport(sport: 'basketball' | 'football') {
+  try {
+    const base = getApiBase()
+    if (!base || base.length === 0) {
+      return []
+    }
+    const url = `${base}/venues?sport=${sport}&pageSize=100`
+    const res = await fetch(url, { 
+      next: { revalidate: 60 },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+    const data = await res.json()
+    return data?.items || []
+  } catch (error) {
+    console.error(`Failed to fetch ${sport} venues:`, error)
+    return []
+  }
+}
+
 export default async function HomePage() {
   const venues = await getFeaturedVenues()
+  const basketballVenues = await getVenuesBySport('basketball')
+  const footballVenues = await getVenuesBySport('football')
 
   return (
     <main className="bg-white" style={{ paddingTop: 0 }}>
@@ -131,6 +155,103 @@ export default async function HomePage() {
                 ➕ 添加场地
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sport Categories Section - 在搜索栏下面 */}
+      <section className="container-page py-16 bg-gray-50">
+        {/* 篮球场地分类 */}
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">🏀</span>
+              <h2 className="text-heading font-bold tracking-tight">篮球场地</h2>
+              <span className="text-body-sm text-textSecondary">({basketballVenues.length} 个场地)</span>
+            </div>
+            <Link href="/map?sport=basketball" className="link-nike">查看全部 →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {basketballVenues.length > 0 ? (
+              basketballVenues.map((venue: any) => {
+                const firstImage = venue.firstImage || null
+                return (
+                  <Link key={venue.id} href={`/venues/${venue.id}`} className="card-nike group bg-white">
+                    <div className="h-48 bg-gray-100 relative overflow-hidden">
+                      {firstImage ? (
+                        <img 
+                          src={firstImage} 
+                          alt={venue.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
+                          🏀
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
+                      <div className="text-body-sm text-textSecondary uppercase tracking-wide">
+                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })
+            ) : (
+              <div className="col-span-full text-center text-textSecondary py-12 text-body">
+                暂无篮球场地数据
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 足球场地分类 */}
+        <div>
+          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">⚽</span>
+              <h2 className="text-heading font-bold tracking-tight">足球场地</h2>
+              <span className="text-body-sm text-textSecondary">({footballVenues.length} 个场地)</span>
+            </div>
+            <Link href="/map?sport=football" className="link-nike">查看全部 →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {footballVenues.length > 0 ? (
+              footballVenues.map((venue: any) => {
+                const firstImage = venue.firstImage || null
+                return (
+                  <Link key={venue.id} href={`/venues/${venue.id}`} className="card-nike group bg-white">
+                    <div className="h-48 bg-gray-100 relative overflow-hidden">
+                      {firstImage ? (
+                        <img 
+                          src={firstImage} 
+                          alt={venue.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
+                          ⚽
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
+                      <div className="text-body-sm text-textSecondary uppercase tracking-wide">
+                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })
+            ) : (
+              <div className="col-span-full text-center text-textSecondary py-12 text-body">
+                暂无足球场地数据
+              </div>
+            )}
           </div>
         </div>
       </section>

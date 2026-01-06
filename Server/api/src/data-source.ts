@@ -44,6 +44,10 @@ function buildDataSourceOptions(): DataSourceOptions {
 
 export const dataSourceOptions = buildDataSourceOptions()
 
-export const AppDataSource = new DataSource(dataSourceOptions)
+// 创建 DataSource 实例
+const AppDataSource = new DataSource(dataSourceOptions)
+
+// 默认导出，供 TypeORM CLI 使用（必须只有一个导出）
+export default AppDataSource
 
 
