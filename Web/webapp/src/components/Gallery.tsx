@@ -153,7 +153,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
     return (
       <div className="space-y-4">
         <div className="h-64 bg-gray-100 flex items-center justify-center text-textMuted" style={{ borderRadius: '4px' }}>
-          加载中...
+          <span className="text-sm">图片加载中...</span>
         </div>
       </div>
     )

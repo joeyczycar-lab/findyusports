@@ -51,7 +51,7 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
       <>
         {!loaded && (
           <div className="bg-gray-100 flex items-center justify-center text-gray-400 absolute inset-0" style={{ zIndex: 1 }}>
-            加载中...
+            <span className="text-xs">图片加载中...</span>
           </div>
         )}
         <img
