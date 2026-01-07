@@ -155,8 +155,48 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="font-medium">{v.courtCount} 个{v.sportType === 'basketball' ? '篮球场' : '足球场'}</div>
                 </div>
               )}
+              {v?.floorType && (
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">地板类型</div>
+                  <div className="font-medium">{v.floorType}</div>
+                </div>
+              )}
+              {v?.openHours && (
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">开放时间</div>
+                  <div className="font-medium">{v.openHours}</div>
+                </div>
+              )}
             </div>
           </section>
+
+          {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined) && (
+            <section className="border-t border-border pt-8 mb-8">
+              <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {v?.hasLighting !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasLighting ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasLighting ? '有灯光' : '无灯光'}</span>
+                  </div>
+                )}
+                {v?.hasAirConditioning !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasAirConditioning ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasAirConditioning ? '有空调' : '无空调'}</span>
+                  </div>
+                )}
+                {v?.hasParking !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasParking ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          <section className="border-t border-border pt-8 mb-8">
 
           <section className="border-t border-border pt-8 mb-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">用户点评</h2>
@@ -210,7 +250,44 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     <div className="font-medium">{v.courtCount} 个{v.sportType === 'basketball' ? '篮球场' : '足球场'}</div>
                   </div>
                 )}
+                {v.floorType && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">地板类型</div>
+                    <div className="font-medium">{v.floorType}</div>
+                  </div>
+                )}
+                {v.openHours && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">开放时间</div>
+                    <div className="font-medium">{v.openHours}</div>
+                  </div>
+                )}
               </div>
+              {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined) && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <h4 className="text-body-sm font-bold mb-3 uppercase tracking-wide">设施信息</h4>
+                  <div className="space-y-2 text-body-sm">
+                    {v?.hasLighting !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasLighting ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasLighting ? '有灯光' : '无灯光'}</span>
+                      </div>
+                    )}
+                    {v?.hasAirConditioning !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasAirConditioning ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasAirConditioning ? '有空调' : '无空调'}</span>
+                      </div>
+                    )}
+                    {v?.hasParking !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasParking ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <button className="btn-secondary w-full">收藏</button>

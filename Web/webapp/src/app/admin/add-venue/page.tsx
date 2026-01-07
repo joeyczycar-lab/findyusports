@@ -32,6 +32,11 @@ export default function AddVenuePage() {
     contact: '',
     isPublic: true,
     courtCount: '',
+    floorType: '',
+    openHours: '',
+    hasLighting: false,
+    hasAirConditioning: false,
+    hasParking: false,
   })
 
   const cityOptions = [
@@ -247,6 +252,11 @@ export default function AddVenuePage() {
       if (formData.contact) payload.contact = formData.contact
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
       if (formData.courtCount) payload.courtCount = parseInt(formData.courtCount)
+      if (formData.floorType) payload.floorType = formData.floorType
+      if (formData.openHours) payload.openHours = formData.openHours
+      if (formData.hasLighting !== undefined) payload.hasLighting = formData.hasLighting
+      if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
+      if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -309,6 +319,11 @@ export default function AddVenuePage() {
         contact: '',
         isPublic: true,
         courtCount: '',
+        floorType: '',
+        openHours: '',
+        hasLighting: false,
+        hasAirConditioning: false,
+        hasParking: false,
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -546,6 +561,83 @@ export default function AddVenuePage() {
             <p className="text-xs text-gray-600 mt-2">
               💡 提示：填写该场地包含的篮球场或足球场数量
             </p>
+          </div>
+
+          <div>
+            <label htmlFor="floorType" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              地板类型 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <select
+              id="floorType"
+              value={formData.floorType}
+              onChange={(e) => setFormData({ ...formData, floorType: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+            >
+              <option value="">请选择地板类型</option>
+              <option value="木地板">木地板</option>
+              <option value="塑胶">塑胶</option>
+              <option value="水泥">水泥</option>
+              <option value="人工草皮">人工草皮</option>
+              <option value="天然草皮">天然草皮</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="openHours" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              开放时间 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <input
+              type="text"
+              id="openHours"
+              value={formData.openHours}
+              onChange={(e) => setFormData({ ...formData, openHours: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+              placeholder="例如：周一至周五 9:00-22:00，周末 8:00-23:00"
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：填写场地的开放时间
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              设施信息 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasLighting}
+                  onChange={(e) => setFormData({ ...formData, hasLighting: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有灯光</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasAirConditioning}
+                  onChange={(e) => setFormData({ ...formData, hasAirConditioning: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有空调</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasParking}
+                  onChange={(e) => setFormData({ ...formData, hasParking: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有停车场</span>
+              </label>
+            </div>
           </div>
 
           <div>

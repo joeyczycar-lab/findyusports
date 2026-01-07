@@ -135,6 +135,26 @@ export class CreateVenueDto {
   @IsNumber()
   @Min(1)
   courtCount?: number // 场地数量（篮球场/足球场数量）
+
+  @IsOptional()
+  @IsString()
+  floorType?: string // 地板类型（如：木地板、塑胶、水泥等）
+
+  @IsOptional()
+  @IsString()
+  openHours?: string // 开放时间（如：周一至周五 9:00-22:00）
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasLighting?: boolean // 是否有灯光
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasAirConditioning?: boolean // 是否有空调
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasParking?: boolean // 是否有停车场
 }
 
 

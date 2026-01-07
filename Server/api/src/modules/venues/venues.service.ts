@@ -387,6 +387,11 @@ export class VenuesService {
           'v.contact',
           'v.isPublic',
           'v.courtCount',
+          'v.floorType',
+          'v.openHours',
+          'v.hasLighting',
+          'v.hasAirConditioning',
+          'v.hasParking',
         ])
       }
 
@@ -407,6 +412,11 @@ export class VenuesService {
         contact: v.contact,
         isPublic: v.isPublic !== undefined ? v.isPublic : true,
         courtCount: v.courtCount,
+        floorType: v.floorType,
+        openHours: v.openHours,
+        hasLighting: v.hasLighting,
+        hasAirConditioning: v.hasAirConditioning,
+        hasParking: v.hasParking,
         location: [v.lng, v.lat] as [number, number],
       }
     } catch (error) {
@@ -438,6 +448,11 @@ export class VenuesService {
       venue.contact = dto.contact
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       venue.courtCount = dto.courtCount
+      venue.floorType = dto.floorType
+      venue.openHours = dto.openHours
+      venue.hasLighting = dto.hasLighting
+      venue.hasAirConditioning = dto.hasAirConditioning
+      venue.hasParking = dto.hasParking
       
       // 检查数据库中是否存在 geom 列
       // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
@@ -471,8 +486,8 @@ export class VenuesService {
       if (!hasGeomColumn) {
         // 使用原生 SQL INSERT，完全控制要插入的列
         const insertSql = `
-          INSERT INTO "venue" (name, "sportType", "cityCode", district_code, address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public, court_count)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          INSERT INTO "venue" (name, "sportType", "cityCode", district_code, address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public, court_count, floor_type, open_hours, has_lighting, has_air_conditioning, has_parking)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
           RETURNING *
         `
         const result = await this.repo.query(insertSql, [
@@ -489,6 +504,11 @@ export class VenuesService {
           venue.contact || null,
           venue.isPublic !== undefined ? venue.isPublic : true,
           venue.courtCount || null,
+          venue.floorType || null,
+          venue.openHours || null,
+          venue.hasLighting !== undefined ? venue.hasLighting : null,
+          venue.hasAirConditioning !== undefined ? venue.hasAirConditioning : null,
+          venue.hasParking !== undefined ? venue.hasParking : null,
         ])
         
         if (!result || result.length === 0) {
@@ -512,6 +532,11 @@ export class VenuesService {
           contact: row.contact,
           isPublic: row.is_public !== undefined ? row.is_public : true,
           courtCount: row.court_count,
+          floorType: row.floor_type,
+          openHours: row.open_hours,
+          hasLighting: row.has_lighting,
+          hasAirConditioning: row.has_air_conditioning,
+          hasParking: row.has_parking,
         } as VenueEntity
       } else {
         // geom 列存在，使用正常的 save 方法

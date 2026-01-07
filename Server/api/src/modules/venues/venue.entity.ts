@@ -54,6 +54,21 @@ export class VenueEntity {
 
   @Column({ type: 'int', nullable: true, name: 'court_count' })
   courtCount?: number // 场地数量（篮球场/足球场数量）
+
+  @Column({ type: 'varchar', length: 50, nullable: true, name: 'floor_type' })
+  floorType?: string // 地板类型（如：木地板、塑胶、水泥等）
+
+  @Column({ type: 'varchar', length: 200, nullable: true, name: 'open_hours' })
+  openHours?: string // 开放时间（如：周一至周五 9:00-22:00）
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_lighting' })
+  hasLighting?: boolean // 是否有灯光
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_air_conditioning' })
+  hasAirConditioning?: boolean // 是否有空调
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_parking' })
+  hasParking?: boolean // 是否有停车场
 }
 
 
