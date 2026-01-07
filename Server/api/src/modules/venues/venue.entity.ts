@@ -51,6 +51,9 @@ export class VenueEntity {
 
   @Column({ type: 'boolean', nullable: true, default: true, name: 'is_public' })
   isPublic?: boolean // 是否对外开放
+
+  @Column({ type: 'int', nullable: true, name: 'court_count' })
+  courtCount?: number // 场地数量（篮球场/足球场数量）
 }
 
 

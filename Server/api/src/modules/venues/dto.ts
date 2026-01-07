@@ -129,6 +129,12 @@ export class CreateVenueDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   isPublic?: boolean // 是否对外开放
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(1)
+  courtCount?: number // 场地数量（篮球场/足球场数量）
 }
 
 

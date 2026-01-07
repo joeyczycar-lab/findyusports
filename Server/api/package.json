@@ -17,6 +17,7 @@
     "migrate:add-contact": "ts-node src/migrations/run-add-contact-migration.ts",
     "migrate:add-is-public": "ts-node src/migrations/run-add-is-public-migration.ts",
     "migrate:add-district-code": "ts-node src/migrations/run-add-district-code-migration.ts",
+    "migrate:add-court-count": "ts-node src/migrations/run-add-court-count-migration.ts",
     "typeorm": "ts-node ./node_modules/typeorm/cli.js -d src/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate src/migrations/AutoMigration",
     "migration:run": "npm run typeorm -- migration:run",

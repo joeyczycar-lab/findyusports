@@ -31,6 +31,7 @@ export default function AddVenuePage() {
     indoor: false,
     contact: '',
     isPublic: true,
+    courtCount: '',
   })
 
   const cityOptions = [
@@ -245,6 +246,7 @@ export default function AddVenuePage() {
       if (formData.indoor !== undefined) payload.indoor = formData.indoor
       if (formData.contact) payload.contact = formData.contact
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
+      if (formData.courtCount) payload.courtCount = parseInt(formData.courtCount)
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -306,6 +308,7 @@ export default function AddVenuePage() {
         indoor: false,
         contact: '',
         isPublic: true,
+        courtCount: '',
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -523,6 +526,25 @@ export default function AddVenuePage() {
             />
             <p className="text-xs text-gray-600 mt-2">
               💡 提示：可以填写电话、微信或其他联系方式
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="courtCount" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              场地数量 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <input
+              type="number"
+              id="courtCount"
+              min="1"
+              value={formData.courtCount}
+              onChange={(e) => setFormData({ ...formData, courtCount: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+              placeholder="例如：4（表示有4个篮球场/足球场）"
+            />
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：填写该场地包含的篮球场或足球场数量
             </p>
           </div>
 

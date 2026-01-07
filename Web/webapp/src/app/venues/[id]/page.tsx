@@ -149,6 +149,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
                 <div className="font-medium">{v?.contact || '未提供'}</div>
               </div>
+              {v?.courtCount && (
+                <div>
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">场地数量</div>
+                  <div className="font-medium">{v.courtCount} 个{v.sportType === 'basketball' ? '篮球场' : '足球场'}</div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -198,6 +204,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
                   <div className="font-medium">{v.contact || '未提供'}</div>
                 </div>
+                {v.courtCount && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">场地数量</div>
+                    <div className="font-medium">{v.courtCount} 个{v.sportType === 'basketball' ? '篮球场' : '足球场'}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
