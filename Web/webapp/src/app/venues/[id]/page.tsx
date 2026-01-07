@@ -197,8 +197,6 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           )}
 
           <section className="border-t border-border pt-8 mb-8">
-
-          <section className="border-t border-border pt-8 mb-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">用户点评</h2>
             <Reviews items={reviews?.items ?? []} />
           </section>
