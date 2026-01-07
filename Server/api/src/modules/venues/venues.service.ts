@@ -484,13 +484,26 @@ export class VenuesService {
       // 如果 geom 列不存在，使用原生 SQL INSERT 语句，明确指定要插入的列，排除 geom
       let saved: VenueEntity
       if (!hasGeomColumn) {
-        // 使用原生 SQL INSERT，完全控制要插入的列
-        const insertSql = `
-          INSERT INTO "venue" (name, "sportType", "cityCode", district_code, address, lng, lat, "priceMin", "priceMax", indoor, contact, is_public, court_count, floor_type, open_hours, has_lighting, has_air_conditioning, has_parking)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
-          RETURNING *
-        `
-        const result = await this.repo.query(insertSql, [
+        // 检查哪些新字段存在
+        const tableName = this.repo.metadata.tableName
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking')
+        `, [tableName])
+        
+        const existingColumns = columnCheck.map((row: any) => row.column_name)
+        const hasCourtCount = existingColumns.includes('court_count')
+        const hasFloorType = existingColumns.includes('floor_type')
+        const hasOpenHours = existingColumns.includes('open_hours')
+        const hasLighting = existingColumns.includes('has_lighting')
+        const hasAirConditioning = existingColumns.includes('has_air_conditioning')
+        const hasParking = existingColumns.includes('has_parking')
+        
+        // 构建动态的 INSERT 语句
+        const baseColumns = ['name', '"sportType"', '"cityCode"', 'district_code', 'address', 'lng', 'lat', '"priceMin"', '"priceMax"', 'indoor', 'contact', 'is_public']
+        const baseValues = [
           venue.name,
           venue.sportType,
           venue.cityCode,
@@ -503,13 +516,51 @@ export class VenuesService {
           venue.indoor !== undefined ? venue.indoor : null,
           venue.contact || null,
           venue.isPublic !== undefined ? venue.isPublic : true,
-          venue.courtCount || null,
-          venue.floorType || null,
-          venue.openHours || null,
-          venue.hasLighting !== undefined ? venue.hasLighting : null,
-          venue.hasAirConditioning !== undefined ? venue.hasAirConditioning : null,
-          venue.hasParking !== undefined ? venue.hasParking : null,
-        ])
+        ]
+        
+        let paramIndex = baseValues.length + 1
+        const columns = [...baseColumns]
+        const values = [...baseValues]
+        
+        if (hasCourtCount) {
+          columns.push('court_count')
+          values.push(venue.courtCount || null)
+          paramIndex++
+        }
+        if (hasFloorType) {
+          columns.push('floor_type')
+          values.push(venue.floorType || null)
+          paramIndex++
+        }
+        if (hasOpenHours) {
+          columns.push('open_hours')
+          values.push(venue.openHours || null)
+          paramIndex++
+        }
+        if (hasLighting) {
+          columns.push('has_lighting')
+          values.push(venue.hasLighting !== undefined ? venue.hasLighting : null)
+          paramIndex++
+        }
+        if (hasAirConditioning) {
+          columns.push('has_air_conditioning')
+          values.push(venue.hasAirConditioning !== undefined ? venue.hasAirConditioning : null)
+          paramIndex++
+        }
+        if (hasParking) {
+          columns.push('has_parking')
+          values.push(venue.hasParking !== undefined ? venue.hasParking : null)
+          paramIndex++
+        }
+        
+        const placeholders = values.map((_, i) => `$${i + 1}`).join(', ')
+        const insertSql = `
+          INSERT INTO "venue" (${columns.join(', ')})
+          VALUES (${placeholders})
+          RETURNING *
+        `
+        
+        const result = await this.repo.query(insertSql, values)
         
         if (!result || result.length === 0) {
           throw new Error('Failed to insert venue')
