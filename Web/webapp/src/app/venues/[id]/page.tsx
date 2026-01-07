@@ -49,7 +49,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           <div className="mb-8">
             <Gallery urls={imageItems} venueId={venueId} />
           </div>
-          <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : `场地 #${venueId}`}</h1>
+          <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : '加载中…'}</h1>
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
             {v ? (
               <>
