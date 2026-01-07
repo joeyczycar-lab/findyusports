@@ -582,12 +582,12 @@ export class VenuesService {
           indoor: row.indoor,
           contact: row.contact,
           isPublic: row.is_public !== undefined ? row.is_public : true,
-          courtCount: row.court_count,
-          floorType: row.floor_type,
-          openHours: row.open_hours,
-          hasLighting: row.has_lighting,
-          hasAirConditioning: row.has_air_conditioning,
-          hasParking: row.has_parking,
+          courtCount: hasCourtCount ? row.court_count : undefined,
+          floorType: hasFloorType ? row.floor_type : undefined,
+          openHours: hasOpenHours ? row.open_hours : undefined,
+          hasLighting: hasLighting ? row.has_lighting : undefined,
+          hasAirConditioning: hasAirConditioning ? row.has_air_conditioning : undefined,
+          hasParking: hasParking ? row.has_parking : undefined,
         } as VenueEntity
       } else {
         // geom 列存在，使用正常的 save 方法
