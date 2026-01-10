@@ -497,7 +497,7 @@ export default function AddVenuePage() {
             </div>
           </div>
 
-          <div>
+          <div className="space-y-3">
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -508,9 +508,7 @@ export default function AddVenuePage() {
               />
               <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
             </label>
-          </div>
-
-          <div>
+            
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -519,9 +517,9 @@ export default function AddVenuePage() {
                 className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
                 style={{ borderRadius: '4px' }}
               />
-              <span className="text-body-sm font-bold uppercase tracking-wide">对外开放</span>
+              <span className="text-body-sm font-bold uppercase tracking-wide">是否对外开放 <span className="text-gray-500 text-xs normal-case">(可选)</span></span>
             </label>
-            <p className="text-xs text-gray-600 mt-2">
+            <p className="text-xs text-gray-600 ml-8">
               💡 提示：勾选表示场地对外开放，未勾选表示仅限内部使用
             </p>
           </div>
