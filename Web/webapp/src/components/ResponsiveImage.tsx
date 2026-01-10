@@ -18,14 +18,17 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
   // 如果是 OSS 图片，直接使用 img 标签避免 Next.js Image 优化问题
   const isOssImage = src?.includes('aliyuncs.com')
   
-  console.log('🖼️ [ResponsiveImage] Rendering:', { 
-    src: src?.substring(0, 100), 
-    isOssImage, 
-    error, 
-    imgError, 
-    loaded,
-    className 
-  })
+  // 只在开发环境打印日志
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🖼️ [ResponsiveImage] Rendering:', { 
+      src: src?.substring(0, 100), 
+      isOssImage, 
+      error, 
+      imgError, 
+      loaded,
+      className 
+    })
+  }
   
   if (error || imgError) {
     return (
@@ -71,12 +74,18 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
             display: loaded ? 'block' : 'none'
           }}
           onLoad={() => {
-            console.log('✅ Image loaded successfully:', src)
+            if (process.env.NODE_ENV === 'development') {
+              console.log('✅ Image loaded successfully:', src)
+            }
             setLoaded(true)
           }}
           onError={(e) => {
             console.error('❌ Image load error:', src)
-            console.error('Error event:', e)
+            console.error('Error details:', {
+              url: src,
+              error: e,
+              timestamp: new Date().toISOString()
+            })
             setImgError(true)
           }}
           loading={priority ? 'eager' : 'lazy'}

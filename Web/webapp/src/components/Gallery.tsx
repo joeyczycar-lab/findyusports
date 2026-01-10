@@ -55,6 +55,10 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
   // 处理新图片添加
   const handleImageAdded = (newUrl: string) => {
     console.log('🖼️ [Gallery] New image added:', newUrl)
+    if (!newUrl) {
+      console.error('❌ [Gallery] Invalid image URL:', newUrl)
+      return
+    }
     setImageItems(prev => [...prev, { url: newUrl }])
     setActive(imageItems.length) // 切换到新添加的图片
     onImageAdded?.(newUrl)
@@ -63,6 +67,16 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       window.location.reload()
     }, 1000)
   }
+  
+  // 调试：打印图片数据
+  useEffect(() => {
+    if (imageItems.length > 0) {
+      console.log('🖼️ [Gallery] Image items:', imageItems.map(item => ({
+        id: item.id,
+        url: item.url?.substring(0, 100)
+      })))
+    }
+  }, [imageItems])
 
   // 打开大图预览
   const openLightbox = (index: number) => {
