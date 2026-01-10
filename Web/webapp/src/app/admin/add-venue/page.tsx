@@ -497,31 +497,60 @@ export default function AddVenuePage() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.indoor}
-                onChange={(e) => setFormData({ ...formData, indoor: e.target.checked })}
-                className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
-                style={{ borderRadius: '4px' }}
-              />
-              <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
-            </label>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+                场地类型 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="indoor"
+                    checked={formData.indoor === true}
+                    onChange={() => setFormData({ ...formData, indoor: true })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">室内场地</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="indoor"
+                    checked={formData.indoor === false}
+                    onChange={() => setFormData({ ...formData, indoor: false })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">室外场地</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="indoor"
+                    checked={formData.indoor === undefined || formData.indoor === null}
+                    onChange={() => setFormData({ ...formData, indoor: undefined })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">不指定</span>
+                </label>
+              </div>
+            </div>
             
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.isPublic}
-                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-                className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
-                style={{ borderRadius: '4px' }}
-              />
-              <span className="text-body-sm font-bold uppercase tracking-wide">是否对外开放 <span className="text-gray-500 text-xs normal-case">(可选)</span></span>
-            </label>
-            <p className="text-xs text-gray-600 ml-8">
-              💡 提示：勾选表示场地对外开放，未勾选表示仅限内部使用
-            </p>
+            <div>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.isPublic}
+                  onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">是否对外开放 <span className="text-gray-500 text-xs normal-case">(可选)</span></span>
+              </label>
+              <p className="text-xs text-gray-600 mt-2 ml-8">
+                💡 提示：勾选表示场地对外开放，未勾选表示仅限内部使用
+              </p>
+            </div>
           </div>
 
           <div>
