@@ -32,7 +32,7 @@ export default function AddVenuePage() {
     contact: '',
     isPublic: true,
     courtCount: '',
-    floorType: '',
+    floorType: [] as string[],
     openHours: '',
     hasLighting: false,
     hasAirConditioning: false,
@@ -252,7 +252,7 @@ export default function AddVenuePage() {
       if (formData.contact) payload.contact = formData.contact
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
       if (formData.courtCount) payload.courtCount = parseInt(formData.courtCount)
-      if (formData.floorType) payload.floorType = formData.floorType
+      if (formData.floorType && formData.floorType.length > 0) payload.floorType = formData.floorType.join('、')
       if (formData.openHours) payload.openHours = formData.openHours
       if (formData.hasLighting !== undefined) payload.hasLighting = formData.hasLighting
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
@@ -319,7 +319,7 @@ export default function AddVenuePage() {
         contact: '',
         isPublic: true,
         courtCount: '',
-        floorType: '',
+        floorType: [],
         openHours: '',
         hasLighting: false,
         hasAirConditioning: false,
@@ -591,24 +591,34 @@ export default function AddVenuePage() {
           </div>
 
           <div>
-            <label htmlFor="floorType" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-              地板类型 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              地板类型 <span className="text-gray-500 text-xs normal-case">(可选，可多选)</span>
             </label>
-            <select
-              id="floorType"
-              value={formData.floorType}
-              onChange={(e) => setFormData({ ...formData, floorType: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
-              style={{ borderRadius: '4px' }}
-            >
-              <option value="">请选择地板类型</option>
-              <option value="木地板">木地板</option>
-              <option value="塑胶">塑胶</option>
-              <option value="水泥">水泥</option>
-              <option value="人工草皮">人工草皮</option>
-              <option value="天然草皮">天然草皮</option>
-              <option value="其他">其他</option>
-            </select>
+            <div className="space-y-2">
+              {['木地板', '塑胶', '水泥', '人工草皮', '天然草皮', '其他'].map((type) => (
+                <label key={type} className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.floorType.includes(type)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormData({ ...formData, floorType: [...formData.floorType, type] })
+                      } else {
+                        setFormData({ ...formData, floorType: formData.floorType.filter(t => t !== type) })
+                      }
+                    }}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">{type}</span>
+                </label>
+              ))}
+            </div>
+            {formData.floorType.length > 0 && (
+              <p className="text-xs text-gray-600 mt-2">
+                已选择：{formData.floorType.join('、')}
+              </p>
+            )}
           </div>
 
           <div>
