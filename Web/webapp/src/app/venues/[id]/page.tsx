@@ -2,6 +2,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { fetchJson } from '@/lib/api'
 import NavigationMenu from '@/components/NavigationMenu'
+import EditVenueButton from './EditVenueButton'
 
 // 使用动态导入延迟加载客户端组件，避免 SSR 问题
 // Gallery 是客户端组件（使用 useState），禁用 SSR 以避免 hydration 错误
@@ -39,10 +40,11 @@ export default async function VenueDetailPage({ params }: { params: { id: string
 
   return (
     <main className="container-page py-12 bg-white">
-      <div className="mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <Link href="/map" className="link-nike inline-flex items-center gap-2">
           ← 返回地图
         </Link>
+        <EditVenueButton venueId={venueId} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
         <div>

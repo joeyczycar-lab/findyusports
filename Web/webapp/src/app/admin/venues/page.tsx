@@ -245,20 +245,28 @@ export default function VenuesListPage() {
                   )}
                 </div>
                 
-                {/* 删除按钮 - 仅管理员可见 */}
+                {/* 编辑和删除按钮 - 仅管理员可见 */}
                 {isAdmin && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      handleDeleteVenue(venue.id, venue.name)
-                    }}
-                    disabled={deletingVenueId === venue.id}
-                    className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 text-xs font-bold rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed z-10"
-                    style={{ zIndex: 10 }}
-                  >
-                    {deletingVenueId === venue.id ? '删除中...' : '🗑️ 删除'}
-                  </button>
+                  <div className="absolute top-2 right-2 flex gap-2 z-10">
+                    <Link
+                      href={`/admin/edit-venue/${venue.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-blue-500 text-white px-3 py-1 text-xs font-bold rounded hover:bg-blue-600 transition-colors"
+                    >
+                      ✏️ 编辑
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleDeleteVenue(venue.id, venue.name)
+                      }}
+                      disabled={deletingVenueId === venue.id}
+                      className="bg-red-500 text-white px-3 py-1 text-xs font-bold rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deletingVenueId === venue.id ? '删除中...' : '🗑️ 删除'}
+                    </button>
+                  </div>
                 )}
 
                 {/* 内容区域 */}

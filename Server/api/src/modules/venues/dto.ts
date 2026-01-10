@@ -157,4 +157,85 @@ export class CreateVenueDto {
   hasParking?: boolean // 是否有停车场
 }
 
+export class UpdateVenueDto {
+  @IsOptional()
+  @IsString()
+  name?: string
+
+  @IsOptional()
+  @IsEnum(SportType)
+  sportType?: SportType
+
+  @IsOptional()
+  @IsString()
+  cityCode?: string
+
+  @IsOptional()
+  @IsString()
+  districtCode?: string
+
+  @IsOptional()
+  @IsString()
+  address?: string
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  lng?: number
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  lat?: number
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceMin?: number
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceMax?: number
+
+  @IsOptional()
+  indoor?: boolean
+
+  @IsOptional()
+  @IsString()
+  contact?: string
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  isPublic?: boolean
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(1)
+  courtCount?: number
+
+  @IsOptional()
+  @IsString()
+  floorType?: string
+
+  @IsOptional()
+  @IsString()
+  openHours?: string
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasLighting?: boolean
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasAirConditioning?: boolean
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasParking?: boolean
+}
+
 

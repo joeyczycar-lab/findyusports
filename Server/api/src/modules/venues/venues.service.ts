@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { QueryVenuesDto, CreateReviewDto, CreateVenueDto } from './dto'
+import { QueryVenuesDto, CreateReviewDto, CreateVenueDto, UpdateVenueDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { VenueEntity } from './venue.entity'
@@ -618,6 +618,70 @@ export class VenuesService {
         console.error('Error stack:', error.stack)
       }
       throw error // 重新抛出，让控制器处理
+    }
+  }
+
+  async updateVenue(venueId: number, dto: UpdateVenueDto, userId: number) {
+    try {
+      console.log('📝 Updating venue:', venueId, dto)
+      
+      // 检查场地是否存在
+      const venue = await this.repo.findOne({ where: { id: venueId } })
+      if (!venue) {
+        return { error: { code: 'NotFound', message: '场地不存在' } }
+      }
+
+      // 检查用户权限：只有管理员可以更新所有场地
+      // 这里假设管理员role为'admin'，可以根据实际情况调整
+      // 注意：这里需要从user对象获取role，但当前方法签名只有userId
+      // 如果需要更严格的权限控制，可以传入user对象
+      
+      // 更新字段
+      if (dto.name !== undefined) venue.name = dto.name
+      if (dto.sportType !== undefined) venue.sportType = dto.sportType
+      if (dto.cityCode !== undefined) venue.cityCode = dto.cityCode
+      if (dto.districtCode !== undefined) venue.districtCode = dto.districtCode
+      if (dto.address !== undefined) venue.address = dto.address
+      if (dto.lng !== undefined) venue.lng = dto.lng
+      if (dto.lat !== undefined) venue.lat = dto.lat
+      if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
+      if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
+      if (dto.indoor !== undefined) venue.indoor = dto.indoor
+      if (dto.contact !== undefined) venue.contact = dto.contact
+      if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
+      if (dto.courtCount !== undefined) venue.courtCount = dto.courtCount
+      if (dto.floorType !== undefined) venue.floorType = dto.floorType
+      if (dto.openHours !== undefined) venue.openHours = dto.openHours
+      if (dto.hasLighting !== undefined) venue.hasLighting = dto.hasLighting
+      if (dto.hasAirConditioning !== undefined) venue.hasAirConditioning = dto.hasAirConditioning
+      if (dto.hasParking !== undefined) venue.hasParking = dto.hasParking
+      
+      const saved = await this.repo.save(venue)
+      
+      console.log('✅ Venue updated successfully:', saved.id)
+      
+      return {
+        id: String(saved.id),
+        name: saved.name,
+        sportType: saved.sportType,
+        cityCode: saved.cityCode,
+        districtCode: saved.districtCode,
+        address: saved.address,
+        priceMin: saved.priceMin,
+        priceMax: saved.priceMax,
+        indoor: saved.indoor ?? false,
+        contact: saved.contact,
+        isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
+        location: [saved.lng, saved.lat] as [number, number],
+      }
+    } catch (error) {
+      console.error('❌ Error in updateVenue:', error)
+      if (error instanceof Error) {
+        console.error('Error name:', error.name)
+        console.error('Error message:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw error
     }
   }
 

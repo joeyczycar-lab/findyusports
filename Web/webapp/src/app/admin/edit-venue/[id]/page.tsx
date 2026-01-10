@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson, getApiBase } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
 
-export default function AddVenuePage() {
+export default function EditVenuePage() {
   const router = useRouter()
+  const params = useParams()
+  const venueId = params?.id as string
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
@@ -17,6 +19,7 @@ export default function AddVenuePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
+  const [loadingData, setLoadingData] = useState(true)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -220,12 +223,79 @@ export default function AddVenuePage() {
   // 获取当前城市对应的区级选项
   const currentDistricts = districtOptions[formData.cityCode] || []
 
+  // 加载场地数据
+  useEffect(() => {
+    if (!venueId) {
+      setLoadingData(false)
+      return
+    }
+    
+    async function loadVenueData() {
+      try {
+        setLoadingData(true)
+        const data = await fetchJson(`/venues/${venueId}`)
+        
+        if (data.error) {
+          setMessage({ type: 'error', text: `❌ 加载场地数据失败：${data.error.message || data.error.code}` })
+          setLoadingData(false)
+          return
+        }
+        
+        // 填充表单数据
+        const venue = data
+        setFormData({
+          name: venue.name || '',
+          sportType: venue.sportType || 'basketball',
+          cityCode: venue.cityCode || '110000',
+          districtCode: venue.districtCode || '',
+          address: venue.address || '',
+          lng: venue.location?.[0] || 0,
+          lat: venue.location?.[1] || 0,
+          priceMin: venue.priceMin?.toString() || '',
+          priceMax: venue.priceMax?.toString() || '',
+          isFree: venue.priceMin === 0 && venue.priceMax === 0,
+          venueTypes: venue.indoor === true ? ['indoor'] : venue.indoor === false ? ['outdoor'] : [],
+          contact: venue.contact || '',
+          isPublic: venue.isPublic !== undefined ? venue.isPublic : true,
+          courtCount: venue.courtCount?.toString() || '',
+          floorType: venue.floorType ? venue.floorType.split('、') : [],
+          openHours: venue.openHours || '',
+          hasLighting: venue.hasLighting || false,
+          hasAirConditioning: venue.hasAirConditioning || false,
+          hasParking: venue.hasParking || false,
+        })
+      } catch (error: any) {
+        setMessage({ type: 'error', text: `❌ 加载场地数据失败：${error.message || '网络错误'}` })
+      } finally {
+        setLoadingData(false)
+      }
+    }
+    
+    loadVenueData()
+  }, [venueId])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
 
     try {
+      // 检查用户是否已登录
+      const authState = getAuthState()
+      if (!authState.isAuthenticated) {
+        setMessage({ type: 'error', text: '❌ 请先登录后再编辑场地' })
+        setIsLoginModalOpen(true)
+        setLoading(false)
+        return
+      }
+
+      // 检查是否为管理员
+      if (authState.user?.role !== 'admin') {
+        setMessage({ type: 'error', text: '❌ 只有管理员可以编辑场地' })
+        setLoading(false)
+        return
+      }
+
       // 验证地址
       if (!formData.address || formData.address.trim() === '') {
         setMessage({ type: 'error', text: '❌ 请输入详细地址' })
@@ -233,8 +303,7 @@ export default function AddVenuePage() {
         return
       }
 
-      // 使用默认坐标（后续可以通过地址解析获取）
-      // 注意：后端API要求必须有 lng 和 lat，所以使用默认值
+      // 使用表单中的坐标（如果已有），否则使用默认坐标
       const defaultLng = 116.397428  // 北京天安门默认坐标
       const defaultLat = 39.90923
 
@@ -244,8 +313,8 @@ export default function AddVenuePage() {
         cityCode: formData.cityCode,
         districtCode: formData.districtCode || undefined,
         address: formData.address,
-        lng: defaultLng,
-        lat: defaultLat,
+        lng: formData.lng || defaultLng,
+        lat: formData.lat || defaultLat,
       }
       // 处理价格：如果选择免费，发送0；否则发送用户输入的价格
       if (formData.isFree) {
@@ -273,19 +342,26 @@ export default function AddVenuePage() {
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
       if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
 
-      const data = await fetchJson('/venues', {
-        method: 'POST',
+      const data = await fetchJson(`/venues/${venueId}`, {
+        method: 'PUT',
         body: JSON.stringify(payload),
       })
 
       if (data.error) {
-        const errorMsg = data.error.message || data.error.code || '添加失败，请检查输入'
+        let errorMsg = data.error.message || data.error.code || '更新失败，请检查输入'
+        // 处理常见的错误信息
+        if (errorMsg.includes('Unauthorized') || errorMsg.includes('未授权')) {
+          errorMsg = '未授权，请先登录'
+          setIsLoginModalOpen(true)
+        } else if (errorMsg.includes('Forbidden') || errorMsg.includes('禁止')) {
+          errorMsg = '权限不足，只有管理员可以编辑场地'
+        } else if (errorMsg.includes('Not Found') || errorMsg.includes('未找到')) {
+          errorMsg = '场地不存在'
+        }
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
         setLoading(false)
         return
       }
-      
-      const venueId = data.id
       
       // 如果有选中的图片，自动上传
       if (selectedImages.length > 0) {
@@ -294,7 +370,7 @@ export default function AddVenuePage() {
           const authState = getAuthState()
           if (!authState.isAuthenticated) {
             setIsLoginModalOpen(true)
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 请先登录后再上传图片。` })
           } else {
             // 上传所有选中的图片
             const uploadPromises = selectedImages.map(async (file) => {
@@ -307,40 +383,17 @@ export default function AddVenuePage() {
             })
             
             await Promise.all(uploadPromises)
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
+            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看场地。` })
             setSelectedImages([])
           }
         } catch (error: any) {
-          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看所有场地。` })
+          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看场地。` })
         } finally {
           setUploadingImages(false)
         }
       } else {
-        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
+        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n\n点击下方按钮查看场地。` })
       }
-      
-      // 清空表单
-      setFormData({
-        name: '',
-        sportType: 'basketball',
-        cityCode: '110000',
-        districtCode: '',
-        address: '',
-        lng: 0,
-        lat: 0,
-        priceMin: '',
-        priceMax: '',
-        isFree: false,
-        venueTypes: [],
-        contact: '',
-        isPublic: true,
-        courtCount: '',
-        floorType: [],
-        openHours: '',
-        hasLighting: false,
-        hasAirConditioning: false,
-        hasParking: false,
-      })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
       setMessage({ type: 'error', text: `❌ ${errorMsg}` })
@@ -349,10 +402,23 @@ export default function AddVenuePage() {
     }
   }
 
+  if (loadingData) {
+    return (
+      <div className="container-page py-12">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-display mb-8">编辑场地</h1>
+          <div className="text-center py-16 text-textSecondary">
+            加载中...
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container-page py-12">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-display mb-8">添加场地</h1>
+        <h1 className="text-display mb-8">编辑场地</h1>
 
         {message && (
           <div
@@ -367,18 +433,18 @@ export default function AddVenuePage() {
             {message.type === 'success' && (
               <div className="flex gap-3 mt-4">
                 <Link
-                  href="/admin/venues"
+                  href={`/venues/${venueId}`}
                   className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
                   style={{ borderRadius: '4px' }}
                 >
-                  📋 查看所有场地
+                  📋 查看场地详情
                 </Link>
                 <Link
-                  href="/map"
+                  href="/admin/venues"
                   className="bg-gray-200 text-black px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-300 transition-colors inline-block"
                   style={{ borderRadius: '4px' }}
                 >
-                  🗺️ 在地图上查看
+                  📋 返回场地列表
                 </Link>
               </div>
             )}
@@ -816,7 +882,7 @@ export default function AddVenuePage() {
               )}
               
               <p className="text-xs text-gray-600">
-                💡 提示：支持 JPG、PNG 格式，每张最大 10MB。添加场地成功后会自动上传。
+                💡 提示：支持 JPG、PNG 格式，每张最大 10MB。更新场地成功后会自动上传。
               </p>
             </div>
           </div>
@@ -827,7 +893,7 @@ export default function AddVenuePage() {
               disabled={loading || uploadingImages}
               className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '添加中...' : uploadingImages ? '上传图片中...' : '添加场地'}
+              {loading ? '更新中...' : uploadingImages ? '上传图片中...' : '更新场地'}
             </button>
             <button
               type="button"
