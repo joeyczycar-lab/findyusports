@@ -263,7 +263,19 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 {v.floorType && (
                   <div>
                     <div className="text-textSecondary uppercase tracking-wide mb-1">地板类型</div>
-                    <div className="font-medium">{v.floorType}</div>
+                    <div className="font-medium">
+                      {v.floorType.includes('、') ? (
+                        <div className="flex flex-wrap gap-1">
+                          {v.floorType.split('、').map((type: string, idx: number) => (
+                            <span key={idx} className="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs">
+                              {type}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        v.floorType
+                      )}
+                    </div>
                   </div>
                 )}
                 {v.openHours && (
