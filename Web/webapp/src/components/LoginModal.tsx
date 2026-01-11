@@ -85,12 +85,27 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
           role: data.user.role,
           nickname: data.user.nickname,
         })
+        console.log('💾 [LoginModal] Saving token to localStorage...')
         setAuthState(data.user, data.token)
+        
+        // 验证 token 是否已保存
+        const savedToken = localStorage.getItem('auth_token')
+        const savedUser = localStorage.getItem('auth_user')
+        console.log('✅ [LoginModal] Token saved verification:', {
+          tokenSaved: !!savedToken,
+          tokenMatches: savedToken === data.token,
+          userSaved: !!savedUser,
+          tokenPreview: savedToken ? savedToken.substring(0, 30) + '...' : 'none',
+        })
       } else {
         console.error('❌ [LoginModal] Missing user or token in response:', data)
+        throw new Error('登录响应缺少用户信息或 token')
       }
 
-      onSuccess(data.user, data.token)
+      // 确保 token 已保存后再调用 onSuccess
+      setTimeout(() => {
+        onSuccess(data.user, data.token)
+      }, 100)
       onClose()
       setFormData({ phone: '', password: '', nickname: '' })
     } catch (err: any) {

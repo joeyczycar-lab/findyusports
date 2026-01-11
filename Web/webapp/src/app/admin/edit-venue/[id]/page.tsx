@@ -1025,6 +1025,14 @@ export default function EditVenuePage() {
             })
             
             if (!newAuthState.isAuthenticated || !newAuthState.token) {
+              console.error('❌ [EditVenue] Token not found after login, checking localStorage...')
+              const rawToken = localStorage.getItem('auth_token')
+              const rawUser = localStorage.getItem('auth_user')
+              console.error('Raw localStorage check:', {
+                hasToken: !!rawToken,
+                hasUser: !!rawUser,
+                tokenValue: rawToken ? rawToken.substring(0, 30) + '...' : 'null',
+              })
               setMessage({ type: 'error', text: '❌ 登录失败：无法保存认证信息，请刷新页面后重试' })
               setPendingSubmit(false)
               return
@@ -1044,10 +1052,11 @@ export default function EditVenuePage() {
               // 延迟一下，确保 token 已经保存到 localStorage 并且状态已更新
               setTimeout(() => {
                 console.log('🔄 [EditVenue] Auto-submitting form after login...')
+                console.log('🔍 [EditVenue] Final auth state check before submit:', getAuthState())
                 handleSubmit()
               }, 500)
             }
-          }, 200)
+          }, 300)
         }}
       />
 
