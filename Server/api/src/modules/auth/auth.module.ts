@@ -11,20 +11,20 @@ import { JwtStrategy } from './jwt.strategy'
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'default-jwt-secret',
-      signOptions: { expiresIn: '7d' }
-    }),
-    // 添加日志以确认 JWT_SECRET 配置
-    {
-      provide: 'JWT_SECRET_CHECK',
+    JwtModule.registerAsync({
       useFactory: () => {
         const secret = process.env.JWT_SECRET || 'default-jwt-secret'
         console.log('🔐 [Auth Module] JWT_SECRET configured:', secret ? 'SET (length: ' + secret.length + ')' : 'NOT SET')
         console.log('🔐 [Auth Module] JWT_SECRET preview:', secret ? secret.substring(0, 20) + '...' : 'NOT SET')
-        return secret
+        if (!secret || secret === 'default-jwt-secret') {
+          console.error('⚠️ [Auth Module] WARNING: Using default JWT_SECRET! This is insecure!')
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '7d' }
+        }
       }
-    }
+    })
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

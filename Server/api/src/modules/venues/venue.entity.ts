@@ -29,11 +29,14 @@ export class VenueEntity {
   lat!: number
 
   // PostGIS geometry(Point, 4326)
+  // 注意：如果数据库中没有 geom 列，TypeORM 可能会报错
+  // 代码中已经有检查逻辑，如果 geom 列不存在，会使用原生 SQL 查询
   @Column({
     type: 'geometry',
     spatialFeatureType: 'Point',
     srid: 4326,
     nullable: true,
+    select: false, // 默认不选择此列，避免在查询时出错
   })
   geom?: any
 

@@ -625,8 +625,34 @@ export class VenuesService {
     try {
       console.log('📝 Updating venue:', venueId, dto)
       
+      // 检查 geom 列是否存在
+      let hasGeomColumn = false
+      try {
+        const tableName = this.repo.metadata.tableName
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 AND column_name = 'geom'
+        `, [tableName])
+        hasGeomColumn = columnCheck && columnCheck.length > 0
+        console.log('🔍 [updateVenue] geom column exists:', hasGeomColumn)
+      } catch (geomError) {
+        console.warn('⚠️ [updateVenue] Error checking geom column:', geomError instanceof Error ? geomError.message : String(geomError))
+        hasGeomColumn = false
+      }
+      
       // 检查场地是否存在
-      const venue = await this.repo.findOne({ where: { id: venueId } })
+      let venue: VenueEntity | null
+      if (!hasGeomColumn) {
+        // 如果 geom 列不存在，使用 QueryBuilder 明确指定要查询的列，排除 geom
+        venue = await this.repo
+          .createQueryBuilder('venue')
+          .where('venue.id = :id', { id: venueId })
+          .getOne()
+      } else {
+        venue = await this.repo.findOne({ where: { id: venueId } })
+      }
+      
       if (!venue) {
         return { error: { code: 'NotFound', message: '场地不存在' } }
       }
@@ -656,7 +682,103 @@ export class VenuesService {
       if (dto.hasAirConditioning !== undefined) venue.hasAirConditioning = dto.hasAirConditioning
       if (dto.hasParking !== undefined) venue.hasParking = dto.hasParking
       
-      const saved = await this.repo.save(venue)
+      // 如果 geom 列不存在，使用原生 SQL UPDATE 语句，明确指定要更新的列，排除 geom
+      let saved: VenueEntity
+      if (!hasGeomColumn) {
+        console.log('⚠️ [updateVenue] geom column not found, using native SQL UPDATE')
+        // 构建 UPDATE 语句，排除 geom 列
+        const updates: string[] = []
+        const values: any[] = []
+        let paramIndex = 1
+        
+        if (dto.name !== undefined) {
+          updates.push(`name = $${paramIndex++}`)
+          values.push(dto.name)
+        }
+        if (dto.sportType !== undefined) {
+          updates.push(`sport_type = $${paramIndex++}`)
+          values.push(dto.sportType)
+        }
+        if (dto.cityCode !== undefined) {
+          updates.push(`city_code = $${paramIndex++}`)
+          values.push(dto.cityCode)
+        }
+        if (dto.districtCode !== undefined) {
+          updates.push(`district_code = $${paramIndex++}`)
+          values.push(dto.districtCode)
+        }
+        if (dto.address !== undefined) {
+          updates.push(`address = $${paramIndex++}`)
+          values.push(dto.address)
+        }
+        if (dto.lng !== undefined) {
+          updates.push(`lng = $${paramIndex++}`)
+          values.push(dto.lng)
+        }
+        if (dto.lat !== undefined) {
+          updates.push(`lat = $${paramIndex++}`)
+          values.push(dto.lat)
+        }
+        if (dto.priceMin !== undefined) {
+          updates.push(`price_min = $${paramIndex++}`)
+          values.push(dto.priceMin)
+        }
+        if (dto.priceMax !== undefined) {
+          updates.push(`price_max = $${paramIndex++}`)
+          values.push(dto.priceMax)
+        }
+        if (dto.indoor !== undefined) {
+          updates.push(`indoor = $${paramIndex++}`)
+          values.push(dto.indoor)
+        }
+        if (dto.contact !== undefined) {
+          updates.push(`contact = $${paramIndex++}`)
+          values.push(dto.contact)
+        }
+        if (dto.isPublic !== undefined) {
+          updates.push(`is_public = $${paramIndex++}`)
+          values.push(dto.isPublic)
+        }
+        if (dto.courtCount !== undefined) {
+          updates.push(`court_count = $${paramIndex++}`)
+          values.push(dto.courtCount)
+        }
+        if (dto.floorType !== undefined) {
+          updates.push(`floor_type = $${paramIndex++}`)
+          values.push(dto.floorType)
+        }
+        if (dto.openHours !== undefined) {
+          updates.push(`open_hours = $${paramIndex++}`)
+          values.push(dto.openHours)
+        }
+        if (dto.hasLighting !== undefined) {
+          updates.push(`has_lighting = $${paramIndex++}`)
+          values.push(dto.hasLighting)
+        }
+        if (dto.hasAirConditioning !== undefined) {
+          updates.push(`has_air_conditioning = $${paramIndex++}`)
+          values.push(dto.hasAirConditioning)
+        }
+        if (dto.hasParking !== undefined) {
+          updates.push(`has_parking = $${paramIndex++}`)
+          values.push(dto.hasParking)
+        }
+        
+        if (updates.length > 0) {
+          updates.push(`updated_at = CURRENT_TIMESTAMP`)
+          values.push(venueId)
+          const sql = `UPDATE venue SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`
+          console.log('📝 [updateVenue] Executing SQL:', sql.substring(0, 200) + '...')
+          const result = await this.repo.query(sql, values)
+          saved = result[0] as VenueEntity
+        } else {
+          // 没有需要更新的字段，直接返回原对象
+          saved = venue
+        }
+      } else {
+        // geom 列存在，使用正常的 save 方法
+        saved = await this.repo.save(venue)
+      }
       
       console.log('✅ Venue updated successfully:', saved.id)
       
