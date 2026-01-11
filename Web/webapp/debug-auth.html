@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>认证诊断工具</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #0070f3;
+      padding-bottom: 10px;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      border-left: 4px solid #0070f3;
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #0070f3;
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #0051cc;
+    }
+    button.danger {
+      background: #dc3545;
+    }
+    button.danger:hover {
+      background: #c82333;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status.warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 认证诊断工具</h1>
+    
+    <div class="section">
+      <h2>1. Token 状态</h2>
+      <div id="tokenStatus"></div>
+      <button onclick="checkToken()">检查 Token</button>
+      <button onclick="clearToken()" class="danger">清除 Token</button>
+    </div>
+    
+    <div class="section">
+      <h2>2. 测试登录</h2>
+      <div id="loginStatus"></div>
+      <button onclick="testLogin()">测试登录</button>
+    </div>
+    
+    <div class="section">
+      <h2>3. 测试 API 请求</h2>
+      <div id="apiStatus"></div>
+      <button onclick="testAPI()">测试 API 连接</button>
+    </div>
+    
+    <div class="section">
+      <h2>4. 详细日志</h2>
+      <pre id="logs"></pre>
+      <button onclick="clearLogs()">清除日志</button>
+    </div>
+  </div>
+
+  <script>
+    const logs = []
+    
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString('zh-CN')
+      const logEntry = `[${timestamp}] ${message}`
+      logs.push(logEntry)
+      const logsEl = document.getElementById('logs')
+      logsEl.textContent = logs.join('\n')
+      logsEl.scrollTop = logsEl.scrollHeight
+      console.log(logEntry)
+    }
+    
+    function clearLogs() {
+      logs.length = 0
+      document.getElementById('logs').textContent = ''
+    }
+    
+    function checkToken() {
+      log('开始检查 Token...')
+      const token = localStorage.getItem('auth_token')
+      const userStr = localStorage.getItem('auth_user')
+      const statusEl = document.getElementById('tokenStatus')
+      
+      if (!token) {
+        statusEl.innerHTML = '<div class="status error">❌ 未找到 Token</div>'
+        log('未找到 Token')
+        return
+      }
+      
+      try {
+        const parts = token.split('.')
+        if (parts.length !== 3) {
+          statusEl.innerHTML = '<div class="status error">❌ Token 格式错误</div>'
+          log('Token 格式错误')
+          return
+        }
+        
+        const payload = JSON.parse(atob(parts[1]))
+        const now = Math.floor(Date.now() / 1000)
+        const isExpired = payload.exp < now
+        const user = userStr ? JSON.parse(userStr) : null
+        
+        let html = '<div class="status ' + (isExpired ? 'error' : 'success') + '">'
+        html += isExpired ? '⚠️ Token 已过期' : '✅ Token 有效'
+        html += '</div>'
+        html += '<pre>'
+        html += `用户ID: ${payload.sub}\n`
+        html += `手机号: ${payload.phone || 'N/A'}\n`
+        html += `角色: ${payload.role || 'N/A'}\n`
+        html += `签发时间: ${new Date(payload.iat * 1000).toLocaleString('zh-CN')}\n`
+        html += `过期时间: ${new Date(payload.exp * 1000).toLocaleString('zh-CN')}\n`
+        html += `是否过期: ${isExpired ? '是' : '否'}\n`
+        html += `剩余时间: ${isExpired ? '已过期' : Math.floor((payload.exp - now) / 3600) + ' 小时'}\n`
+        if (user) {
+          html += `\n存储的用户信息:\n`
+          html += `  ID: ${user.id}\n`
+          html += `  手机号: ${user.phone}\n`
+          html += `  角色: ${user.role}\n`
+        }
+        html += '</pre>'
+        
+        statusEl.innerHTML = html
+        log('Token 检查完成: ' + (isExpired ? '已过期' : '有效'))
+      } catch (error) {
+        statusEl.innerHTML = '<div class="status error">❌ 解析 Token 失败: ' + error.message + '</div>'
+        log('解析 Token 失败: ' + error.message)
+      }
+    }
+    
+    function clearToken() {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      document.getElementById('tokenStatus').innerHTML = '<div class="status success">✅ Token 已清除</div>'
+      log('Token 已清除')
+    }
+    
+    async function testLogin() {
+      log('开始测试登录...')
+      const statusEl = document.getElementById('loginStatus')
+      statusEl.innerHTML = '<div class="status warning">⏳ 正在测试登录...</div>'
+      
+      const phone = prompt('请输入手机号:')
+      if (!phone) {
+        statusEl.innerHTML = '<div class="status error">❌ 未输入手机号</div>'
+        return
+      }
+      
+      const password = prompt('请输入密码:')
+      if (!password) {
+        statusEl.innerHTML = '<div class="status error">❌ 未输入密码</div>'
+        return
+      }
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, password }),
+        })
+        
+        const text = await response.text()
+        log('登录响应状态: ' + response.status)
+        log('登录响应内容: ' + text.substring(0, 200))
+        
+        if (!response.ok) {
+          statusEl.innerHTML = '<div class="status error">❌ 登录失败: ' + response.status + '</div><pre>' + text + '</pre>'
+          return
+        }
+        
+        const data = JSON.parse(text)
+        if (data.user && data.token) {
+          localStorage.setItem('auth_token', data.token)
+          localStorage.setItem('auth_user', JSON.stringify(data.user))
+          statusEl.innerHTML = '<div class="status success">✅ 登录成功！</div><pre>' + JSON.stringify(data, null, 2) + '</pre>'
+          log('登录成功，Token 已保存')
+          checkToken()
+        } else {
+          statusEl.innerHTML = '<div class="status error">❌ 登录响应缺少 user 或 token</div><pre>' + JSON.stringify(data, null, 2) + '</pre>'
+        }
+      } catch (error) {
+        statusEl.innerHTML = '<div class="status error">❌ 登录请求失败: ' + error.message + '</div>'
+        log('登录请求失败: ' + error.message)
+      }
+    }
+    
+    async function testAPI() {
+      log('开始测试 API 连接...')
+      const statusEl = document.getElementById('apiStatus')
+      statusEl.innerHTML = '<div class="status warning">⏳ 正在测试 API 连接...</div>'
+      
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        statusEl.innerHTML = '<div class="status error">❌ 请先登录</div>'
+        return
+      }
+      
+      try {
+        const response = await fetch('/api/venues/1', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+          },
+        })
+        
+        const text = await response.text()
+        log('API 响应状态: ' + response.status)
+        log('API 响应内容: ' + text.substring(0, 200))
+        
+        if (response.status === 401) {
+          statusEl.innerHTML = '<div class="status error">❌ 未授权 (401) - Token 可能无效或过期</div><pre>' + text + '</pre>'
+        } else if (!response.ok) {
+          statusEl.innerHTML = '<div class="status error">❌ API 请求失败: ' + response.status + '</div><pre>' + text + '</pre>'
+        } else {
+          statusEl.innerHTML = '<div class="status success">✅ API 连接成功！</div><pre>' + text.substring(0, 500) + '</pre>'
+        }
+      } catch (error) {
+        statusEl.innerHTML = '<div class="status error">❌ API 请求失败: ' + error.message + '</div>'
+        log('API 请求失败: ' + error.message)
+      }
+    }
+    
+    // 页面加载时自动检查
+    window.onload = () => {
+      log('诊断工具已加载')
+      checkToken()
+    }
+  </script>
+</body>
+</html>
