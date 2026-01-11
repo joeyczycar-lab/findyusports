@@ -28,6 +28,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       role: payload.role,
       exp: payload.exp,
       iat: payload.iat,
+      expTime: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+      iatTime: payload.iat ? new Date(payload.iat * 1000).toISOString() : null,
+      isExpired: payload.exp ? Date.now() / 1000 > payload.exp : null,
     })
     
     if (!payload.sub) {

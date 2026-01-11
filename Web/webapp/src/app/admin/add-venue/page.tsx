@@ -255,14 +255,20 @@ export default function AddVenuePage() {
         if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
         if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       }
-      // 处理场地类型：如果只选了室内，发送 indoor: true；如果只选了室外，发送 indoor: false
-      // 如果两个都选了或都没选，不发送 indoor 字段（让后端使用默认值）
+      // 处理场地类型：
+      // - 如果只选了室内，发送 indoor: true
+      // - 如果只选了室外，发送 indoor: false
+      // - 如果两个都选了，发送 indoor: null（表示既有室内也有室外）
+      // - 如果都没选，不发送 indoor 字段（让后端使用默认值）
       if (formData.venueTypes.length === 1) {
         if (formData.venueTypes.includes('indoor')) {
           payload.indoor = true
         } else if (formData.venueTypes.includes('outdoor')) {
           payload.indoor = false
         }
+      } else if (formData.venueTypes.length === 2) {
+        // 两个都选了，发送 null 表示既有室内也有室外
+        payload.indoor = null
       }
       if (formData.contact) payload.contact = formData.contact
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
@@ -548,7 +554,10 @@ export default function AddVenuePage() {
                     checked={formData.venueTypes.includes('indoor')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'indoor'] })
+                        // 如果还没有包含，才添加
+                        if (!formData.venueTypes.includes('indoor')) {
+                          setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'indoor'] })
+                        }
                       } else {
                         setFormData({ ...formData, venueTypes: formData.venueTypes.filter(t => t !== 'indoor') })
                       }
@@ -564,7 +573,10 @@ export default function AddVenuePage() {
                     checked={formData.venueTypes.includes('outdoor')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'outdoor'] })
+                        // 如果还没有包含，才添加
+                        if (!formData.venueTypes.includes('outdoor')) {
+                          setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'outdoor'] })
+                        }
                       } else {
                         setFormData({ ...formData, venueTypes: formData.venueTypes.filter(t => t !== 'outdoor') })
                       }

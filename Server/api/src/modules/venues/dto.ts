@@ -120,7 +120,7 @@ export class CreateVenueDto {
   priceMax?: number
 
   @IsOptional()
-  indoor?: boolean
+  indoor?: boolean | null // null 表示既有室内也有室外
 
   @IsOptional()
   @IsString()
@@ -201,7 +201,7 @@ export class UpdateVenueDto {
   priceMax?: number
 
   @IsOptional()
-  indoor?: boolean
+  indoor?: boolean | null // null 表示既有室内也有室外
 
   @IsOptional()
   @IsString()

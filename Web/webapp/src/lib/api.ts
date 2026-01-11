@@ -21,20 +21,74 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
   try {
     // 如果是 FormData，不要设置 Content-Type，让浏览器自动设置
     const isFormData = options?.body instanceof FormData
+    const authHeader = getAuthHeader()
     const headers: HeadersInit = {
-      ...getAuthHeader(),
+      ...authHeader,
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options?.headers,
     }
     
-    const res = await fetch(url, { 
-      cache: 'no-store',
-      headers,
-      ...options,
+    // 调试信息：检查是否有认证header
+    if (authHeader.Authorization) {
+      console.log('✅ [fetchJson] Authorization header present:', authHeader.Authorization.substring(0, 30) + '...')
+    } else {
+      console.warn('⚠️ [fetchJson] No Authorization header found')
+    }
+    
+    console.log('🌐 [fetchJson] Making request:', {
+      url,
+      method: options?.method || 'GET',
+      hasAuthHeader: !!authHeader.Authorization,
+      authHeaderPreview: authHeader.Authorization ? authHeader.Authorization.substring(0, 30) + '...' : 'none'
+    })
+    
+    let res: Response
+    try {
+      res = await fetch(url, { 
+        cache: 'no-store',
+        headers,
+        ...options,
+      })
+    } catch (fetchError: any) {
+      // 处理网络错误（连接失败、超时等）
+      console.error('❌ [fetchJson] Network error:', {
+        message: fetchError.message,
+        name: fetchError.name,
+        url: url,
+        base: base,
+      })
+      
+      // 提供更友好的错误信息
+      if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
+        throw new Error(`无法连接到后端服务 (${url})。请确保：
+1. 后端服务正在运行
+2. 后端地址正确
+3. 没有防火墙阻止连接`)
+      }
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('请求超时，请稍后重试')
+      }
+      
+      throw new Error(`网络错误: ${fetchError.message || '无法连接到服务器'}`)
+    }
+    
+    console.log('📥 [fetchJson] Response received:', {
+      status: res.status,
+      statusText: res.statusText,
+      ok: res.ok,
+      contentType: res.headers.get('content-type')
     })
     
     if (!res.ok) {
       const errorText = await res.text()
+      console.error('❌ [fetchJson] Request failed:', {
+        status: res.status,
+        statusText: res.statusText,
+        url,
+        errorText: errorText.substring(0, 200)
+      })
+      
       let errorMessage = `请求失败: ${res.status}`
       try {
         if (errorText && errorText.trim().length > 0) {

@@ -20,6 +20,7 @@ export default function EditVenuePage() {
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const [loadingData, setLoadingData] = useState(true)
+  const [pendingSubmit, setPendingSubmit] = useState(false) // 标记是否有待提交的表单
   
   const [formData, setFormData] = useState({
     name: '',
@@ -230,6 +231,28 @@ export default function EditVenuePage() {
       return
     }
     
+    // 检查登录状态
+    const authState = getAuthState()
+    console.log('🔍 [EditVenue] Checking auth state on mount:', {
+      isAuthenticated: authState.isAuthenticated,
+      hasToken: !!authState.token,
+      role: authState.user?.role,
+      userId: authState.user?.id
+    })
+    
+    if (!authState.isAuthenticated || !authState.token) {
+      setMessage({ type: 'error', text: '❌ 请先登录后再编辑场地。正在打开登录窗口...' })
+      setIsLoginModalOpen(true)
+      setLoadingData(false)
+      return
+    }
+    
+    if (authState.user?.role !== 'admin') {
+      setMessage({ type: 'error', text: '❌ 只有管理员可以编辑场地。您的角色：' + (authState.user?.role || '未设置') })
+      setLoadingData(false)
+      return
+    }
+    
     async function loadVenueData() {
       try {
         setLoadingData(true)
@@ -254,7 +277,7 @@ export default function EditVenuePage() {
           priceMin: venue.priceMin?.toString() || '',
           priceMax: venue.priceMax?.toString() || '',
           isFree: venue.priceMin === 0 && venue.priceMax === 0,
-          venueTypes: venue.indoor === true ? ['indoor'] : venue.indoor === false ? ['outdoor'] : [],
+          venueTypes: venue.indoor === true ? ['indoor'] : venue.indoor === false ? ['outdoor'] : venue.indoor === null ? ['indoor', 'outdoor'] : [],
           contact: venue.contact || '',
           isPublic: venue.isPublic !== undefined ? venue.isPublic : true,
           courtCount: venue.courtCount?.toString() || '',
@@ -274,16 +297,19 @@ export default function EditVenuePage() {
     loadVenueData()
   }, [venueId])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+    }
     setLoading(true)
     setMessage(null)
 
     try {
-      // 检查用户是否已登录
+      // 检查用户是否已登录（每次都从 localStorage 重新读取，确保获取最新状态）
       const authState = getAuthState()
-      if (!authState.isAuthenticated) {
+      if (!authState.isAuthenticated || !authState.token) {
         setMessage({ type: 'error', text: '❌ 请先登录后再编辑场地' })
+        setPendingSubmit(true) // 标记有待提交的表单
         setIsLoginModalOpen(true)
         setLoading(false)
         return
@@ -324,14 +350,20 @@ export default function EditVenuePage() {
         if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
         if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       }
-      // 处理场地类型：如果只选了室内，发送 indoor: true；如果只选了室外，发送 indoor: false
-      // 如果两个都选了或都没选，不发送 indoor 字段（让后端使用默认值）
+      // 处理场地类型：
+      // - 如果只选了室内，发送 indoor: true
+      // - 如果只选了室外，发送 indoor: false
+      // - 如果两个都选了，发送 indoor: null（表示既有室内也有室外）
+      // - 如果都没选，不发送 indoor 字段（让后端使用默认值）
       if (formData.venueTypes.length === 1) {
         if (formData.venueTypes.includes('indoor')) {
           payload.indoor = true
         } else if (formData.venueTypes.includes('outdoor')) {
           payload.indoor = false
         }
+      } else if (formData.venueTypes.length === 2) {
+        // 两个都选了，发送 null 表示既有室内也有室外
+        payload.indoor = null
       }
       if (formData.contact) payload.contact = formData.contact
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
@@ -342,10 +374,31 @@ export default function EditVenuePage() {
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
       if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
 
+      console.log('📤 [EditVenue] Sending PUT request to:', `/venues/${venueId}`)
+      console.log('📤 [EditVenue] Payload:', payload)
+      console.log('📤 [EditVenue] Auth state:', { 
+        isAuthenticated: authState.isAuthenticated, 
+        hasToken: !!authState.token,
+        tokenPreview: authState.token ? authState.token.substring(0, 30) + '...' : 'none',
+        role: authState.user?.role,
+        userId: authState.user?.id
+      })
+      
+      // 再次检查token（可能在检查后过期了）
+      const currentAuthState = getAuthState()
+      if (!currentAuthState.token) {
+        setMessage({ type: 'error', text: '❌ Token已过期，请重新登录' })
+        setIsLoginModalOpen(true)
+        setLoading(false)
+        return
+      }
+      
       const data = await fetchJson(`/venues/${venueId}`, {
         method: 'PUT',
         body: JSON.stringify(payload),
       })
+      
+      console.log('📥 [EditVenue] Response:', data)
 
       if (data.error) {
         let errorMsg = data.error.message || data.error.code || '更新失败，请检查输入'
@@ -614,7 +667,10 @@ export default function EditVenuePage() {
                     checked={formData.venueTypes.includes('indoor')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'indoor'] })
+                        // 如果还没有包含，才添加
+                        if (!formData.venueTypes.includes('indoor')) {
+                          setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'indoor'] })
+                        }
                       } else {
                         setFormData({ ...formData, venueTypes: formData.venueTypes.filter(t => t !== 'indoor') })
                       }
@@ -630,7 +686,10 @@ export default function EditVenuePage() {
                     checked={formData.venueTypes.includes('outdoor')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'outdoor'] })
+                        // 如果还没有包含，才添加
+                        if (!formData.venueTypes.includes('outdoor')) {
+                          setFormData({ ...formData, venueTypes: [...formData.venueTypes, 'outdoor'] })
+                        }
                       } else {
                         setFormData({ ...formData, venueTypes: formData.venueTypes.filter(t => t !== 'outdoor') })
                       }
@@ -909,9 +968,42 @@ export default function EditVenuePage() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(user: any, token: string) => {
           setIsLoginModalOpen(false)
-          // 登录成功后，可以继续上传图片
+          // 登录成功后，刷新认证状态
+          setTimeout(() => {
+            const newAuthState = getAuthState()
+            console.log('✅ [EditVenue] Login success, auth state:', {
+              isAuthenticated: newAuthState.isAuthenticated,
+              role: newAuthState.user?.role,
+              hasToken: !!newAuthState.token,
+              tokenPreview: newAuthState.token ? newAuthState.token.substring(0, 30) + '...' : 'none',
+              tokenIssuedAt: newAuthState.token ? (() => {
+                try {
+                  const parts = newAuthState.token.split('.')
+                  if (parts.length === 3) {
+                    const payload = JSON.parse(atob(parts[1]))
+                    return new Date(payload.iat * 1000).toLocaleString('zh-CN')
+                  }
+                } catch {}
+                return null
+              })() : null
+            })
+            if (newAuthState.isAuthenticated && newAuthState.user?.role === 'admin') {
+              setMessage({ type: 'success', text: '✅ 登录成功！' + (pendingSubmit ? '正在自动提交表单...' : '您现在可以编辑场地了。') })
+              // 如果有待提交的表单，自动重新提交
+              if (pendingSubmit) {
+                setPendingSubmit(false)
+                // 延迟一下，确保 token 已经保存到 localStorage
+                setTimeout(() => {
+                  handleSubmit()
+                }, 300)
+              }
+            } else {
+              setMessage({ type: 'error', text: '❌ 登录成功，但您的账号不是管理员，无法编辑场地。当前角色：' + (newAuthState.user?.role || '未设置') })
+              setPendingSubmit(false)
+            }
+          }, 100)
         }}
       />
 

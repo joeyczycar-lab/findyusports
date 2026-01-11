@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Token 检查工具</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #0051cc;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Token 检查工具</h1>
+  <button onclick="checkToken()">检查 Token</button>
+  <button onclick="clearToken()">清除 Token</button>
+  <div id="result"></div>
+
+  <script>
+    function checkToken() {
+      const resultDiv = document.getElementById('result')
+      const token = localStorage.getItem('auth_token')
+      
+      if (!token) {
+        resultDiv.innerHTML = '<p class="error">❌ 未找到 token</p>'
+        return
+      }
+      
+      try {
+        const parts = token.split('.')
+        if (parts.length !== 3) {
+          resultDiv.innerHTML = '<p class="error">❌ Token 格式错误</p>'
+          return
+        }
+        
+        const payload = JSON.parse(atob(parts[1]))
+        const now = Math.floor(Date.now() / 1000)
+        const isExpired = payload.exp < now
+        
+        let html = '<h2>Token 信息</h2><pre>'
+        html += `用户ID: ${payload.sub}\n`
+        html += `手机号: ${payload.phone || 'N/A'}\n`
+        html += `角色: ${payload.role || 'N/A'}\n`
+        html += `签发时间: ${new Date(payload.iat * 1000).toLocaleString('zh-CN')}\n`
+        html += `过期时间: ${new Date(payload.exp * 1000).toLocaleString('zh-CN')}\n`
+        html += `是否过期: ${isExpired ? '是 ❌' : '否 ✅'}\n`
+        html += `剩余时间: ${isExpired ? '已过期' : Math.floor((payload.exp - now) / 3600) + ' 小时'}\n`
+        html += '</pre>'
+        
+        if (isExpired) {
+          html += '<p class="error">⚠️ Token 已过期，请重新登录</p>'
+        } else {
+          html += '<p class="success">✅ Token 有效</p>'
+        }
+        
+        resultDiv.innerHTML = html
+      } catch (error) {
+        resultDiv.innerHTML = `<p class="error">❌ 解析 Token 失败: ${error.message}</p>`
+      }
+    }
+    
+    function clearToken() {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      document.getElementById('result').innerHTML = '<p class="success">✅ Token 已清除</p>'
+    }
+    
+    // 页面加载时自动检查
+    window.onload = checkToken
+  </script>
+</body>
+</html>

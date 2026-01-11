@@ -97,17 +97,64 @@ export async function PUT(
     console.log('📡 [API Route] PUT /venues/[id], proxying to:', backendUrl)
     console.log('📡 [API Route] Request body:', JSON.stringify(body, null, 2))
     
-    // 获取认证token
-    const authHeader = req.headers.get('authorization')
+    // 获取认证token（检查多种可能的header名称）
+    // Next.js headers 是大小写不敏感的，但为了兼容性，我们检查多个变体
+    let authHeader = req.headers.get('authorization') || 
+                     req.headers.get('Authorization') ||
+                     req.headers.get('x-authorization') ||
+                     req.headers.get('X-Authorization')
+    
+    // 如果还是没有找到，尝试从 headers 对象中查找（不区分大小写）
+    if (!authHeader) {
+      const allHeaders = Array.from(req.headers.entries())
+      const authEntry = allHeaders.find(([key]) => 
+        key.toLowerCase() === 'authorization' || key.toLowerCase() === 'x-authorization'
+      )
+      if (authEntry) {
+        authHeader = authEntry[1]
+        console.log('✅ [API Route] Found auth header via case-insensitive search')
+      }
+    }
+    
+    console.log('🔍 [API Route] Checking auth header:', {
+      'authorization': req.headers.get('authorization') ? 'found' : 'not found',
+      'Authorization': req.headers.get('Authorization') ? 'found' : 'not found',
+      'authHeader value': authHeader ? authHeader.substring(0, 30) + '...' : 'null',
+      'allHeaderKeys': Array.from(req.headers.keys())
+    })
+    
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     }
     if (authHeader) {
       headers['Authorization'] = authHeader
+      console.log('✅ [API Route] Authorization header found, will forward to backend:', authHeader.substring(0, 30) + '...')
+    } else {
+      console.warn('⚠️ [API Route] No authorization header found in request')
+      console.log('📋 [API Route] All request headers:', Array.from(req.headers.entries()).map(([k, v]) => {
+        // 隐藏敏感信息
+        if (k.toLowerCase().includes('auth')) {
+          return `${k}: ${v.substring(0, 20)}...`
+        }
+        return `${k}: ${v}`
+      }).join(', '))
+      // 如果没有认证信息，返回401错误
+      return Response.json(
+        { error: { code: 'Unauthorized', message: '未授权，请先登录' } },
+        { status: 401 }
+      )
     }
     
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 30000) // 30秒超时
+    
+    console.log('📤 [API Route] Forwarding request to backend:', {
+      url: backendUrl,
+      method: 'PUT',
+      hasAuthHeader: !!headers['Authorization'],
+      authHeaderPreview: headers['Authorization'] ? (headers['Authorization'] as string).substring(0, 30) + '...' : 'none',
+      allHeaders: Object.keys(headers)
+    })
     
     let res: Response
     try {
@@ -131,10 +178,25 @@ export async function PUT(
       throw fetchError
     }
     
-    const data = await res.json()
+    const responseText = await res.text()
+    let data: any
+    try {
+      data = responseText ? JSON.parse(responseText) : {}
+    } catch (e) {
+      console.error('❌ [API Route] Failed to parse response:', responseText.substring(0, 200))
+      data = { error: { message: '后端返回了无效的JSON响应' } }
+    }
     
     if (!res.ok) {
-      console.error('❌ [API Route] Backend error:', res.status, data)
+      console.error('❌ [API Route] Backend returned error:', {
+        status: res.status,
+        statusText: res.statusText,
+        url: backendUrl,
+        headersSent: Object.keys(headers),
+        authHeaderPresent: !!headers['Authorization'],
+        authHeaderPreview: headers['Authorization'] ? (headers['Authorization'] as string).substring(0, 30) + '...' : 'none',
+        responseData: data
+      })
       return Response.json(data, { status: res.status })
     }
     

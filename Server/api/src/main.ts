@@ -2,8 +2,23 @@ import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './modules/app.module'
 import * as dotenv from 'dotenv'
+import * as path from 'path'
+import * as fs from 'fs'
 
-dotenv.config()
+// 确保从项目根目录加载 .env 文件
+// 在开发环境中，__dirname 指向 src/，在生产环境中指向 dist/
+const projectRoot = path.resolve(__dirname, '../..')
+const envPath = path.join(projectRoot, '.env')
+
+// 检查 .env 文件是否存在
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath })
+  console.log('✅ [Main] Loaded .env file from:', envPath)
+} else {
+  // 尝试从当前工作目录加载
+  dotenv.config()
+  console.log('⚠️ [Main] .env file not found at:', envPath, ', trying default location')
+}
 
 async function bootstrap() {
   try {
@@ -11,7 +26,9 @@ async function bootstrap() {
     console.log('📦 Environment variables:', {
       PORT: process.env.PORT,
       NODE_ENV: process.env.NODE_ENV,
-      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.substring(0, 50) + '...)' : 'NOT SET',
+      DB_SSL: process.env.DB_SSL,
+      JWT_SECRET: process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET',
     })
 
     const app = await NestFactory.create(AppModule, { cors: true })
