@@ -29,10 +29,21 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     try {
       // 使用 Next.js API 路由作为代理
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
+      console.log('🔐 [LoginModal] Sending request to:', endpoint)
+      console.log('🔐 [LoginModal] Request body:', { phone: formData.phone, password: '***' })
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+        cache: 'no-store',
+      })
+      
+      console.log('📥 [LoginModal] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url,
       })
 
       // 安全地解析 JSON
@@ -83,14 +94,27 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       onClose()
       setFormData({ phone: '', password: '', nickname: '' })
     } catch (err: any) {
+      console.error('❌ [LoginModal] Error:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack?.substring(0, 200),
+      })
+      
       let errorMsg = err.message || '网络错误，请检查后端服务是否正常运行'
       // 确保错误信息是中文
       if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch')) {
-        errorMsg = '无法连接到服务器，请检查网络连接'
+        errorMsg = '无法连接到服务器。请检查：\n1. 前端服务是否正常运行 (http://localhost:3000)\n2. 后端服务是否正常运行 (http://localhost:4000)\n3. 网络连接是否正常'
+        console.error('❌ [LoginModal] Failed to fetch - 可能的原因：')
+        console.error('  1. 前端服务未运行')
+        console.error('  2. 后端服务未运行')
+        console.error('  3. CORS 问题')
+        console.error('  4. 网络连接问题')
       } else if (errorMsg.includes('Unauthorized')) {
         errorMsg = '未授权，请先登录'
       } else if (errorMsg.includes('401')) {
         errorMsg = '登录失败，用户名或密码错误'
+      } else if (errorMsg.includes('手机号或密码错误')) {
+        errorMsg = '手机号或密码错误，请检查输入'
       }
       setError(errorMsg)
     } finally {
