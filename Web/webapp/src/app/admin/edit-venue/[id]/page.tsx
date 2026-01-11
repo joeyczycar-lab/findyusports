@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson, getApiBase } from '@/lib/api'
-import { getAuthState } from '@/lib/auth'
+import { getAuthState, isTokenExpired, clearAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
 
@@ -307,9 +307,28 @@ export default function EditVenuePage() {
     try {
       // 检查用户是否已登录（每次都从 localStorage 重新读取，确保获取最新状态）
       const authState = getAuthState()
+      console.log('🔍 [EditVenue] Checking auth state before submit:', {
+        isAuthenticated: authState.isAuthenticated,
+        hasToken: !!authState.token,
+        role: authState.user?.role,
+        tokenPreview: authState.token ? authState.token.substring(0, 30) + '...' : 'none',
+      })
+      
       if (!authState.isAuthenticated || !authState.token) {
+        console.warn('⚠️ [EditVenue] Not authenticated, opening login modal')
         setMessage({ type: 'error', text: '❌ 请先登录后再编辑场地' })
         setPendingSubmit(true) // 标记有待提交的表单
+        setIsLoginModalOpen(true)
+        setLoading(false)
+        return
+      }
+      
+      // 检查 token 是否过期
+      if (isTokenExpired()) {
+        console.warn('⚠️ [EditVenue] Token expired, clearing and opening login modal')
+        clearAuthState()
+        setMessage({ type: 'error', text: '❌ 登录已过期，请重新登录' })
+        setPendingSubmit(true)
         setIsLoginModalOpen(true)
         setLoading(false)
         return
@@ -969,14 +988,29 @@ export default function EditVenuePage() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         onSuccess={(user: any, token: string) => {
+          console.log('✅ [EditVenue] LoginModal onSuccess called:', {
+            hasUser: !!user,
+            hasToken: !!token,
+            userRole: user?.role,
+            tokenPreview: token ? token.substring(0, 30) + '...' : 'none',
+          })
+          
+          // 立即保存认证信息（LoginModal 已经保存了，但这里确保一下）
+          if (user && token) {
+            setAuthState(user, token)
+            console.log('✅ [EditVenue] Auth state saved to localStorage')
+          }
+          
           setIsLoginModalOpen(false)
-          // 登录成功后，刷新认证状态
+          
+          // 登录成功后，立即刷新认证状态并处理待提交的表单
           setTimeout(() => {
             const newAuthState = getAuthState()
-            console.log('✅ [EditVenue] Login success, auth state:', {
+            console.log('✅ [EditVenue] Login success, verifying auth state:', {
               isAuthenticated: newAuthState.isAuthenticated,
               role: newAuthState.user?.role,
               hasToken: !!newAuthState.token,
+              tokenMatches: newAuthState.token === token,
               tokenPreview: newAuthState.token ? newAuthState.token.substring(0, 30) + '...' : 'none',
               tokenIssuedAt: newAuthState.token ? (() => {
                 try {
@@ -989,21 +1023,31 @@ export default function EditVenuePage() {
                 return null
               })() : null
             })
-            if (newAuthState.isAuthenticated && newAuthState.user?.role === 'admin') {
-              setMessage({ type: 'success', text: '✅ 登录成功！' + (pendingSubmit ? '正在自动提交表单...' : '您现在可以编辑场地了。') })
-              // 如果有待提交的表单，自动重新提交
-              if (pendingSubmit) {
-                setPendingSubmit(false)
-                // 延迟一下，确保 token 已经保存到 localStorage
-                setTimeout(() => {
-                  handleSubmit()
-                }, 300)
-              }
-            } else {
+            
+            if (!newAuthState.isAuthenticated || !newAuthState.token) {
+              setMessage({ type: 'error', text: '❌ 登录失败：无法保存认证信息，请刷新页面后重试' })
+              setPendingSubmit(false)
+              return
+            }
+            
+            if (newAuthState.user?.role !== 'admin') {
               setMessage({ type: 'error', text: '❌ 登录成功，但您的账号不是管理员，无法编辑场地。当前角色：' + (newAuthState.user?.role || '未设置') })
               setPendingSubmit(false)
+              return
             }
-          }, 100)
+            
+            setMessage({ type: 'success', text: '✅ 登录成功！' + (pendingSubmit ? '正在自动提交表单...' : '您现在可以编辑场地了。') })
+            
+            // 如果有待提交的表单，自动重新提交
+            if (pendingSubmit) {
+              setPendingSubmit(false)
+              // 延迟一下，确保 token 已经保存到 localStorage 并且状态已更新
+              setTimeout(() => {
+                console.log('🔄 [EditVenue] Auto-submitting form after login...')
+                handleSubmit()
+              }, 500)
+            }
+          }, 200)
         }}
       />
 
