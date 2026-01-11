@@ -12,6 +12,7 @@
     "add-venue:csv": "ts-node src/add-venue-csv.ts",
     "view-data": "ts-node src/view-data.ts",
     "set-admin": "ts-node src/set-admin.ts",
+    "reset-password": "ts-node src/reset-password.ts",
     "migrate:page-view": "ts-node src/migrations/run-migration.ts",
     "migrate:alter-user-agent": "ts-node src/migrations/run-alter-migration.ts",
     "migrate:add-contact": "ts-node src/migrations/run-add-contact-migration.ts",
