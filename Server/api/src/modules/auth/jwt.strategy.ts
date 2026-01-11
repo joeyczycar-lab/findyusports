@@ -8,6 +8,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     const jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret'
     console.log('🔐 [JWT Strategy] Initializing with secret:', jwtSecret ? 'SET (length: ' + jwtSecret.length + ')' : 'NOT SET')
+    console.log('🔐 [JWT Strategy] Secret preview:', jwtSecret ? jwtSecret.substring(0, 20) + '...' : 'NOT SET')
+    
+    if (!jwtSecret || jwtSecret === 'default-jwt-secret') {
+      console.error('⚠️ [JWT Strategy] WARNING: Using default JWT_SECRET! This is insecure!')
+    }
     
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
