@@ -4,20 +4,29 @@ function getApiBase(): string {
   if (typeof window !== 'undefined') {
     return '/api'
   }
+  // 优先使用环境变量（开发和生产环境都支持）
+  const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
+  if (base && base.length > 0) {
+    console.log('🔧 [API Route] Using NEXT_PUBLIC_API_BASE:', base)
+    return base
+  }
+  // 在开发环境中，如果没有配置环境变量，使用本地后端地址
   if (process.env.NODE_ENV !== 'production') {
     return 'http://localhost:4000'
   }
-  return process.env.NEXT_PUBLIC_API_BASE || 'https://findyusports-api-production.up.railway.app'
+  return 'https://findyusports-api-production.up.railway.app'
 }
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    // 在服务器端，getApiBase 应该返回后端地址
-    const apiBase = process.env.NODE_ENV !== 'production' 
-      ? 'http://localhost:4000'
-      : (process.env.NEXT_PUBLIC_API_BASE || 'https://findyusports-api-production.up.railway.app')
+    // 在服务器端，优先使用环境变量
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE?.trim() && process.env.NEXT_PUBLIC_API_BASE.trim().length > 0
+      ? process.env.NEXT_PUBLIC_API_BASE.trim()
+      : (process.env.NODE_ENV !== 'production' 
+        ? 'http://localhost:4000'
+        : 'https://findyusports-api-production.up.railway.app')
     
     const searchParams = req.nextUrl.searchParams
     const queryString = searchParams.toString()

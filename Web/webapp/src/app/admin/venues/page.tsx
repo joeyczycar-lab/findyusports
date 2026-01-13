@@ -312,7 +312,7 @@ export default function VenuesListPage() {
                       {venue.price !== undefined && venue.price > 0 && (
                         <div className="flex items-center gap-1">
                           <span>💰</span>
-                          <span className="text-xs">¥{venue.price}/小时</span>
+                          <span className="text-xs">¥{venue.price.toFixed(2)}/小时</span>
                         </div>
                       )}
                       {venue.price === 0 && (

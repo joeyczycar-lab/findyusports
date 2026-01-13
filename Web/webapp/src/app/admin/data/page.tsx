@@ -253,7 +253,7 @@ export default function DataViewPage() {
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
                       <td className="py-3 text-body-sm">
-                        {(venue.priceMin ?? venue.price ?? 0) > 0 ? `¥${venue.priceMin ?? venue.price}` : '免费'}
+                        {(venue.priceMin ?? venue.price ?? 0) > 0 ? `¥${(venue.priceMin ?? venue.price).toFixed(2)}` : '免费'}
                       </td>
                       <td className="py-3 text-body-sm">
                         {venue.indoor ? '是' : '否'}

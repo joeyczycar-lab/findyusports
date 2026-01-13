@@ -8,10 +8,10 @@ export class VenueEntity {
   @Column({ length: 120 })
   name!: string
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 20, name: 'sportType' })
   sportType!: 'basketball' | 'football'
 
-  @Column({ type: 'varchar', length: 6 })
+  @Column({ type: 'varchar', length: 6, name: 'cityCode' })
   cityCode!: string
 
   @Column({ type: 'varchar', length: 6, nullable: true, name: 'district_code' })
@@ -40,10 +40,10 @@ export class VenueEntity {
   })
   geom?: any
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: true, name: 'priceMin' })
   priceMin?: number
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: true, name: 'priceMax' })
   priceMax?: number
 
   @Column({ type: 'boolean', nullable: true })
@@ -72,6 +72,15 @@ export class VenueEntity {
 
   @Column({ type: 'boolean', nullable: true, name: 'has_parking' })
   hasParking?: boolean // 是否有停车场
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_shower' })
+  hasShower?: boolean // 是否有沐浴间
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_locker' })
+  hasLocker?: boolean // 是否有储物柜
+
+  @Column({ type: 'boolean', nullable: true, name: 'has_shop' })
+  hasShop?: boolean // 是否有小卖部
 }
 
 

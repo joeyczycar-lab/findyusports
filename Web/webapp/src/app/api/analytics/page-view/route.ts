@@ -4,11 +4,17 @@ function getApiBase(): string {
   if (typeof window !== 'undefined') {
     return '/api'
   }
-  // 在服务器端，根据环境变量决定后端地址
+  // 优先使用环境变量（开发和生产环境都支持）
+  const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
+  if (base && base.length > 0) {
+    console.log('🔧 [API Route] Using NEXT_PUBLIC_API_BASE:', base)
+    return base
+  }
+  // 在开发环境中，如果没有配置环境变量，使用本地后端地址
   if (process.env.NODE_ENV !== 'production') {
     return 'http://localhost:4000'
   }
-  return process.env.NEXT_PUBLIC_API_BASE || 'https://findyusports-api-production.up.railway.app'
+  return 'https://findyusports-api-production.up.railway.app'
 }
 
 export const dynamic = 'force-dynamic'

@@ -194,7 +194,7 @@ export default async function HomePage() {
                     <div className="p-4">
                       <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
                       <div className="text-body-sm text-textSecondary uppercase tracking-wide">
-                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                        {venue.priceMin ? `¥${venue.priceMin.toFixed(2)}` : '免费'} · {venue.indoor ? '室内' : '室外'}
                       </div>
                     </div>
                   </Link>
@@ -241,7 +241,7 @@ export default async function HomePage() {
                     <div className="p-4">
                       <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
                       <div className="text-body-sm text-textSecondary uppercase tracking-wide">
-                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                        {venue.priceMin ? `¥${venue.priceMin.toFixed(2)}` : '免费'} · {venue.indoor ? '室内' : '室外'}
                       </div>
                     </div>
                   </Link>
@@ -294,7 +294,7 @@ export default async function HomePage() {
                       <div className="font-bold text-heading-sm mb-2 line-clamp-1">{venue.name}</div>
                       <div className="text-body-sm text-textSecondary uppercase tracking-wide">
                         {venue.rating ? `${venue.rating.toFixed(1)} · ` : ''}
-                        {venue.priceMin ? `¥${venue.priceMin}` : '免费'} · {venue.indoor ? '室内' : '室外'}
+                        {venue.priceMin ? `¥${venue.priceMin.toFixed(2)}` : '免费'} · {venue.indoor ? '室内' : '室外'}
                       </div>
                     </div>
                   </Link>

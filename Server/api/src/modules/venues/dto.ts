@@ -155,6 +155,18 @@ export class CreateVenueDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   hasParking?: boolean // 是否有停车场
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasShower?: boolean // 是否有沐浴间
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasLocker?: boolean // 是否有储物柜
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasShop?: boolean // 是否有小卖部
 }
 
 export class UpdateVenueDto {
@@ -236,6 +248,18 @@ export class UpdateVenueDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   hasParking?: boolean
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasShower?: boolean // 是否有沐浴间
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasLocker?: boolean // 是否有储物柜
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasShop?: boolean // 是否有小卖部
 }
 
 

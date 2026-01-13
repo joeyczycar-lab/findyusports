@@ -4,13 +4,14 @@ import { NextRequest } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 function getApiBase(): string {
-  // 在生产环境中，必须使用环境变量
+  // 优先使用环境变量（开发和生产环境都支持）
   const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
   if (base && base.length > 0) {
+    console.log('🔧 [API Route] Using NEXT_PUBLIC_API_BASE:', base)
     return base
   }
   
-  // 在开发环境中，使用本地后端地址
+  // 在开发环境中，如果没有配置环境变量，使用本地后端地址
   if (process.env.NODE_ENV !== 'production') {
     const localBackend = 'http://localhost:4000'
     console.log('🔧 [API Route] Development mode, using local backend:', localBackend)

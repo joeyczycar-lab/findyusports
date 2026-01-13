@@ -392,6 +392,9 @@ export class VenuesService {
           'v.hasLighting',
           'v.hasAirConditioning',
           'v.hasParking',
+          'v.hasShower',
+          'v.hasLocker',
+          'v.hasShop',
         ])
       }
 
@@ -417,6 +420,9 @@ export class VenuesService {
         hasLighting: v.hasLighting,
         hasAirConditioning: v.hasAirConditioning,
         hasParking: v.hasParking,
+        hasShower: v.hasShower,
+        hasLocker: v.hasLocker,
+        hasShop: v.hasShop,
         location: [v.lng, v.lat] as [number, number],
       }
     } catch (error) {
@@ -444,7 +450,7 @@ export class VenuesService {
       venue.lat = dto.lat
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
-      venue.indoor = dto.indoor
+      venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
       venue.contact = dto.contact
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       venue.courtCount = dto.courtCount
@@ -453,6 +459,9 @@ export class VenuesService {
       venue.hasLighting = dto.hasLighting
       venue.hasAirConditioning = dto.hasAirConditioning
       venue.hasParking = dto.hasParking
+      venue.hasShower = dto.hasShower
+      venue.hasLocker = dto.hasLocker
+      venue.hasShop = dto.hasShop
       
       // 检查数据库中是否存在 geom 列
       // 如果 PostGIS 不可用（如 Railway 默认 PostgreSQL），则跳过 geom 字段
@@ -490,7 +499,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -500,6 +509,9 @@ export class VenuesService {
         const hasLighting = existingColumns.includes('has_lighting')
         const hasAirConditioning = existingColumns.includes('has_air_conditioning')
         const hasParking = existingColumns.includes('has_parking')
+        const hasShower = existingColumns.includes('has_shower')
+        const hasLocker = existingColumns.includes('has_locker')
+        const hasShop = existingColumns.includes('has_shop')
         
         // 构建动态的 INSERT 语句
         const baseColumns = ['name', '"sportType"', '"cityCode"', 'district_code', 'address', 'lng', 'lat', '"priceMin"', '"priceMax"', 'indoor', 'contact', 'is_public']
@@ -552,6 +564,21 @@ export class VenuesService {
           values.push(venue.hasParking !== undefined ? venue.hasParking : null)
           paramIndex++
         }
+        if (hasShower) {
+          columns.push('has_shower')
+          values.push(venue.hasShower !== undefined ? venue.hasShower : null)
+          paramIndex++
+        }
+        if (hasLocker) {
+          columns.push('has_locker')
+          values.push(venue.hasLocker !== undefined ? venue.hasLocker : null)
+          paramIndex++
+        }
+        if (hasShop) {
+          columns.push('has_shop')
+          values.push(venue.hasShop !== undefined ? venue.hasShop : null)
+          paramIndex++
+        }
         
         const placeholders = values.map((_, i) => `$${i + 1}`).join(', ')
         const insertSql = `
@@ -588,6 +615,9 @@ export class VenuesService {
           hasLighting: hasLighting ? row.has_lighting : undefined,
           hasAirConditioning: hasAirConditioning ? row.has_air_conditioning : undefined,
           hasParking: hasParking ? row.has_parking : undefined,
+          hasShower: hasShower ? row.has_shower : undefined,
+          hasLocker: hasLocker ? row.has_locker : undefined,
+          hasShop: hasShop ? row.has_shop : undefined,
         } as VenueEntity
       } else {
         // geom 列存在，使用正常的 save 方法
@@ -672,7 +702,7 @@ export class VenuesService {
       if (dto.lat !== undefined) venue.lat = dto.lat
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
-      if (dto.indoor !== undefined) venue.indoor = dto.indoor
+      if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
       if (dto.contact !== undefined) venue.contact = dto.contact
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
       if (dto.courtCount !== undefined) venue.courtCount = dto.courtCount
@@ -681,6 +711,9 @@ export class VenuesService {
       if (dto.hasLighting !== undefined) venue.hasLighting = dto.hasLighting
       if (dto.hasAirConditioning !== undefined) venue.hasAirConditioning = dto.hasAirConditioning
       if (dto.hasParking !== undefined) venue.hasParking = dto.hasParking
+      if (dto.hasShower !== undefined) venue.hasShower = dto.hasShower
+      if (dto.hasLocker !== undefined) venue.hasLocker = dto.hasLocker
+      if (dto.hasShop !== undefined) venue.hasShop = dto.hasShop
       
       // 如果 geom 列不存在，使用原生 SQL UPDATE 语句，明确指定要更新的列，排除 geom
       let saved: VenueEntity
@@ -696,11 +729,11 @@ export class VenuesService {
           values.push(dto.name)
         }
         if (dto.sportType !== undefined) {
-          updates.push(`sport_type = $${paramIndex++}`)
+          updates.push(`"sportType" = $${paramIndex++}`)
           values.push(dto.sportType)
         }
         if (dto.cityCode !== undefined) {
-          updates.push(`city_code = $${paramIndex++}`)
+          updates.push(`"cityCode" = $${paramIndex++}`)
           values.push(dto.cityCode)
         }
         if (dto.districtCode !== undefined) {
@@ -720,14 +753,14 @@ export class VenuesService {
           values.push(dto.lat)
         }
         if (dto.priceMin !== undefined) {
-          updates.push(`price_min = $${paramIndex++}`)
+          updates.push(`"priceMin" = $${paramIndex++}`)
           values.push(dto.priceMin)
         }
         if (dto.priceMax !== undefined) {
-          updates.push(`price_max = $${paramIndex++}`)
+          updates.push(`"priceMax" = $${paramIndex++}`)
           values.push(dto.priceMax)
         }
-        if (dto.indoor !== undefined) {
+        if (dto.indoor !== undefined && dto.indoor !== null) {
           updates.push(`indoor = $${paramIndex++}`)
           values.push(dto.indoor)
         }
@@ -765,7 +798,6 @@ export class VenuesService {
         }
         
         if (updates.length > 0) {
-          updates.push(`updated_at = CURRENT_TIMESTAMP`)
           values.push(venueId)
           const sql = `UPDATE venue SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`
           console.log('📝 [updateVenue] Executing SQL:', sql.substring(0, 200) + '...')

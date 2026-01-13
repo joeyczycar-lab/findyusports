@@ -1,19 +1,23 @@
 import { NextRequest } from 'next/server'
 
 function getApiBase(): string {
-  // 在生产环境中，必须使用环境变量
+  // 优先使用环境变量（开发和生产环境都支持）
   const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
   if (base && base.length > 0) {
+    console.log('🔧 [API Route] Using NEXT_PUBLIC_API_BASE:', base)
     return base
   }
   
-  // 如果未配置，使用默认的 Railway 后端地址
-  const defaultBackend = 'https://findyusports-production.up.railway.app'
-  
-  // 只在开发环境显示警告
+  // 在开发环境中，如果没有配置环境变量，使用本地后端地址
   if (process.env.NODE_ENV !== 'production') {
-    console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set, using default:', defaultBackend)
+    const localBackend = 'http://localhost:4000'
+    console.log('🔧 [API Route] Development mode, using local backend:', localBackend)
+    return localBackend
   }
+  
+  // 在生产环境中，如果未配置，使用默认的 Railway 后端地址
+  const defaultBackend = 'https://findyusports-production.up.railway.app'
+  console.warn('⚠️ [API Route] NEXT_PUBLIC_API_BASE not set in production, using default:', defaultBackend)
   
   return defaultBackend
 }
@@ -78,20 +82,41 @@ export async function POST(
     
     if (!res.ok) {
       const errorText = await res.text()
-      console.error('❌ Backend returned error:', res.status, errorText)
-      let errorMessage = `Request failed: ${res.status}`
+      console.error('❌ [API Route] Backend returned error:', res.status, errorText)
+      console.error('❌ [API Route] Response headers:', Object.fromEntries(res.headers.entries()))
+      
+      let errorMessage = `请求失败: ${res.status}`
+      let errorCode = 'BackendError'
+      
       try {
         if (errorText && errorText.trim().length > 0) {
           const errorJson = JSON.parse(errorText)
           errorMessage = errorJson.error?.message || errorJson.message || errorMessage
+          errorCode = errorJson.error?.code || errorJson.code || errorCode
         }
       } catch {
         errorMessage = errorText || errorMessage
       }
+      
+      // 根据状态码提供更友好的错误信息
+      if (res.status === 401) {
+        errorMessage = '未授权，请先登录'
+        errorCode = 'Unauthorized'
+      } else if (res.status === 403) {
+        errorMessage = '权限不足，无法上传图片'
+        errorCode = 'Forbidden'
+      } else if (res.status === 400) {
+        errorMessage = errorMessage || '请求参数错误'
+        errorCode = 'BadRequest'
+      } else if (res.status >= 500) {
+        errorMessage = errorMessage || '服务器内部错误，请稍后重试'
+        errorCode = 'InternalServerError'
+      }
+      
       return Response.json(
         {
           error: {
-            code: 'InternalServerError',
+            code: errorCode,
             message: errorMessage,
           },
         },

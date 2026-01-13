@@ -1,0 +1,4 @@
+-- 添加场地设施相关字段到 venue 表（第二部分）
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_shower BOOLEAN;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_locker BOOLEAN;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_shop BOOLEAN;

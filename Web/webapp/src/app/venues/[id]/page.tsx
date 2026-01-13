@@ -50,12 +50,15 @@ export default async function VenueDetailPage({ params }: { params: { id: string
         <div>
           <div className="mb-8">
             <Gallery urls={imageItems} venueId={venueId} />
+            <p className="text-xs text-textSecondary mt-2 text-center">
+              所有图片大多来自网友上传，如有侵权请联系删除。
+            </p>
           </div>
           <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : '加载中…'}</h1>
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
             {v ? (
               <>
-                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {v.priceMin ? `¥${v.priceMin}` : '免费'}
+                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {v.priceMin ? `¥${v.priceMin.toFixed(2)}` : '免费'}
                 {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
               </>
             ) : '加载中…'}
@@ -130,9 +133,9 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 <div className="font-medium">
                   {v?.priceMin !== undefined && v?.priceMin !== null ? (
                     v.priceMax && v.priceMax !== v.priceMin ? (
-                      `¥${v.priceMin} - ¥${v.priceMax}/小时`
+                      `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
                     ) : (
-                      `¥${v.priceMin}/小时`
+                      `¥${v.priceMin.toFixed(2)}/小时`
                     )
                   ) : (
                     '免费'
@@ -184,7 +187,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             </div>
           </section>
 
-          {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined) && (
+          {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined || 
+            v?.hasShower !== undefined || v?.hasLocker !== undefined || v?.hasShop !== undefined) && (
             <section className="border-t border-border pt-8 mb-8">
               <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -204,6 +208,24 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="flex items-center space-x-2">
                     <span className="text-xl">{v.hasParking ? '✅' : '❌'}</span>
                     <span className="text-body-sm font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                  </div>
+                )}
+                {v?.hasShower !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasShower ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasShower ? '有沐浴间' : '无沐浴间'}</span>
+                  </div>
+                )}
+                {v?.hasLocker !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasLocker ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasLocker ? '有储物柜' : '无储物柜'}</span>
+                  </div>
+                )}
+                {v?.hasShop !== undefined && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">{v.hasShop ? '✅' : '❌'}</span>
+                    <span className="text-body-sm font-medium">{v.hasShop ? '有小卖部' : '无小卖部'}</span>
                   </div>
                 )}
               </div>
@@ -239,9 +261,9 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="font-medium">
                     {v.priceMin !== undefined && v.priceMin !== null ? (
                       v.priceMax && v.priceMax !== v.priceMin ? (
-                        `¥${v.priceMin} - ¥${v.priceMax}/小时`
+                        `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
                       ) : (
-                        `¥${v.priceMin}/小时`
+                        `¥${v.priceMin.toFixed(2)}/小时`
                       )
                     ) : (
                       '免费'
@@ -287,7 +309,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   </div>
                 )}
               </div>
-              {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined) && (
+              {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined || 
+                v?.hasShower !== undefined || v?.hasLocker !== undefined || v?.hasShop !== undefined) && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <h4 className="text-body-sm font-bold mb-3 uppercase tracking-wide">设施信息</h4>
                   <div className="space-y-2 text-body-sm">
@@ -307,6 +330,24 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{v.hasParking ? '✅' : '❌'}</span>
                         <span className="font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                      </div>
+                    )}
+                    {v?.hasShower !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasShower ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasShower ? '有沐浴间' : '无沐浴间'}</span>
+                      </div>
+                    )}
+                    {v?.hasLocker !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasLocker ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasLocker ? '有储物柜' : '无储物柜'}</span>
+                      </div>
+                    )}
+                    {v?.hasShop !== undefined && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">{v.hasShop ? '✅' : '❌'}</span>
+                        <span className="font-medium">{v.hasShop ? '有小卖部' : '无小卖部'}</span>
                       </div>
                     )}
                   </div>
