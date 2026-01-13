@@ -29,6 +29,10 @@ async function bootstrap() {
       DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.substring(0, 50) + '...)' : 'NOT SET',
       DB_SSL: process.env.DB_SSL,
       JWT_SECRET: process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET',
+      OSS_REGION: process.env.OSS_REGION || 'NOT SET',
+      OSS_ACCESS_KEY_ID: process.env.OSS_ACCESS_KEY_ID ? 'SET (length: ' + process.env.OSS_ACCESS_KEY_ID.length + ')' : 'NOT SET',
+      OSS_ACCESS_KEY_SECRET: process.env.OSS_ACCESS_KEY_SECRET ? 'SET' : 'NOT SET',
+      OSS_BUCKET: process.env.OSS_BUCKET || 'NOT SET',
     })
 
     const app = await NestFactory.create(AppModule, { cors: true })
