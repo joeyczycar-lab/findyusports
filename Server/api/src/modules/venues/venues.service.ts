@@ -1022,31 +1022,35 @@ export class VenuesService {
         try {
           // 使用正确的 key 生成预签名URL
           const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg', key)
-        
-        console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
-        // 直传处理后的图片
-        // 将 Buffer 转换为 Uint8Array 以兼容 fetch API
-        const body = new Uint8Array(imageBuffer)
-        const response = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'image/jpeg' },
-          body: body
-        })
-        
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error(`❌ [Upload] Failed to upload ${size} size:`, response.status, errorText)
-          throw new Error(`上传${size}尺寸失败: ${response.status} ${errorText}`)
-        }
-        
-        const finalUrl = publicUrl || `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
-        console.log(`✅ [Upload] Successfully uploaded ${size} size, key: ${key}, URL: ${finalUrl}`)
-        
-        return {
-          size,
-          key,
-          url: finalUrl,
-          sizeBytes: imageBuffer.length
+          
+          console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
+          // 直传处理后的图片
+          // 将 Buffer 转换为 Uint8Array 以兼容 fetch API
+          const body = new Uint8Array(imageBuffer)
+          const response = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'image/jpeg' },
+            body: body
+          })
+          
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error(`❌ [Upload] Failed to upload ${size} size:`, response.status, errorText)
+            throw new Error(`上传${size}尺寸失败: ${response.status} ${errorText}`)
+          }
+          
+          const finalUrl = publicUrl || `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
+          console.log(`✅ [Upload] Successfully uploaded ${size} size, key: ${key}, URL: ${finalUrl}`)
+          
+          return {
+            size,
+            key,
+            url: finalUrl,
+            sizeBytes: imageBuffer.length
+          }
+        } catch (error) {
+          console.error(`❌ [Upload] Error uploading ${size} size:`, error)
+          throw error
         }
       })
       
