@@ -24,14 +24,29 @@ export class OssService {
     if (accessKeyId && accessKeySecret) {
       try {
         console.log('🔐 [OSS] 开始创建 OSS 客户端实例...')
+        console.log('🔐 [OSS] 配置参数:', {
+          region,
+          bucket,
+          accessKeyIdLength: accessKeyId.length,
+          accessKeySecretLength: accessKeySecret.length
+        })
+        
         this.client = new OSS({
           region,
           accessKeyId,
           accessKeySecret,
           bucket,
         })
-        console.log('✅ [OSS] OSS 客户端初始化成功')
-        console.log('✅ [OSS] OSS 客户端状态:', this.client ? '已创建' : '未创建')
+        
+        // 验证客户端是否真的创建成功
+        if (this.client) {
+          console.log('✅ [OSS] OSS 客户端初始化成功')
+          console.log('✅ [OSS] OSS 客户端类型:', typeof this.client)
+          console.log('✅ [OSS] OSS 客户端方法:', Object.keys(this.client).slice(0, 5).join(', '))
+        } else {
+          console.error('❌ [OSS] OSS 客户端创建失败：返回值为 null 或 undefined')
+          this.client = null
+        }
       } catch (error) {
         console.error('❌ [OSS] OSS 客户端初始化失败:', error)
         if (error instanceof Error) {
@@ -42,9 +57,12 @@ export class OssService {
       }
     } else {
       console.warn('⚠️ [OSS] OSS 未配置：缺少 OSS_ACCESS_KEY_ID 或 OSS_ACCESS_KEY_SECRET')
-      console.warn('⚠️ [OSS] accessKeyId:', accessKeyId ? '存在' : '不存在')
-      console.warn('⚠️ [OSS] accessKeySecret:', accessKeySecret ? '存在' : '不存在')
+      console.warn('⚠️ [OSS] accessKeyId:', accessKeyId ? `存在 (长度: ${accessKeyId.length})` : '不存在')
+      console.warn('⚠️ [OSS] accessKeySecret:', accessKeySecret ? `存在 (长度: ${accessKeySecret.length})` : '不存在')
     }
+    
+    // 最终状态检查
+    console.log('🔐 [OSS] 初始化完成，客户端状态:', this.client ? '✅ 已初始化' : '❌ 未初始化')
   }
 
   async generatePresignedUrl(mime: string, ext: string, key?: string) {

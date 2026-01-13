@@ -312,12 +312,31 @@ export default function AddVenuePage() {
               })
             })
             
-            await Promise.all(uploadPromises)
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
+            const uploadResults = await Promise.all(uploadPromises)
+            const successCount = uploadResults.filter(r => !r.error).length
+            const failCount = uploadResults.length - successCount
+            
+            if (failCount === 0) {
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
+            } else {
+              const errorMessages = uploadResults
+                .filter(r => r.error)
+                .map(r => r.error?.message || '上传失败')
+                .join('\n')
+              setMessage({ 
+                type: 'error', 
+                text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败 (${failCount}/${selectedImages.length}):\n${errorMessages}\n\n请稍后在场地详情页面上传图片。` 
+              })
+            }
             setSelectedImages([])
           }
         } catch (error: any) {
-          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看所有场地。` })
+          console.error('❌ [AddVenue] 图片上传错误:', error)
+          const errorMsg = error.message || '请稍后在场地详情页面上传图片。'
+          setMessage({ 
+            type: 'error', 
+            text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败：${errorMsg}\n\n请稍后在场地详情页面上传图片。` 
+          })
         } finally {
           setUploadingImages(false)
         }
