@@ -37,39 +37,52 @@ export class VenuesService {
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
 
-      // 先检查数据库中是否实际存在 geom 列（在构建查询之前）
+      // 先检查数据库中是否实际存在 geom 列和新设施字段（在构建查询之前）
+      const tableName = this.repo.metadata.tableName
       let hasGeomColumn = false
+      let hasShower = false
+      let hasLocker = false
+      let hasShop = false
+      
       try {
-        const tableName = this.repo.metadata.tableName
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
-          WHERE table_name = $1 AND column_name = 'geom'
-          LIMIT 1
+          WHERE table_name = $1 
+          AND column_name IN ('geom', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
-        hasGeomColumn = Array.isArray(columnCheck) && columnCheck.length > 0 && columnCheck[0]?.column_name === 'geom'
+        const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasGeomColumn = existingColumns.includes('geom')
+        hasShower = existingColumns.includes('has_shower')
+        hasLocker = existingColumns.includes('has_locker')
+        hasShop = existingColumns.includes('has_shop')
       } catch (error) {
-        console.warn('⚠️  Error checking geom column:', error instanceof Error ? error.message : String(error))
+        console.warn('⚠️  Error checking columns:', error instanceof Error ? error.message : String(error))
         hasGeomColumn = false
       }
     
       const qb = this.repo.createQueryBuilder('v')
     
-      // 明确指定要选择的列，排除 geom（如果不存在）
-      if (!hasGeomColumn) {
-        qb.select([
-          'v.id',
-          'v.name',
-          'v.sportType',
-          'v.cityCode',
-          'v.address',
-          'v.lng',
-          'v.lat',
-          'v.priceMin',
-          'v.priceMax',
-          'v.indoor',
-        ])
-      }
+      // 明确指定要选择的列，排除不存在的列
+      const selectColumns = [
+        'v.id',
+        'v.name',
+        'v.sportType',
+        'v.cityCode',
+        'v.address',
+        'v.lng',
+        'v.lat',
+        'v.priceMin',
+        'v.priceMax',
+        'v.indoor',
+      ]
+      
+      // 只添加存在的列
+      if (hasShower) selectColumns.push('v.hasShower')
+      if (hasLocker) selectColumns.push('v.hasLocker')
+      if (hasShop) selectColumns.push('v.hasShop')
+      
+      qb.select(selectColumns)
     
       // 筛选条件
       if (sport) qb.andWhere('v.sportType = :sport', { sport })
