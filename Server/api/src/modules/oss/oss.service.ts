@@ -11,15 +11,31 @@ export class OssService {
   constructor() {
     const accessKeyId = process.env.OSS_ACCESS_KEY_ID
     const accessKeySecret = process.env.OSS_ACCESS_KEY_SECRET
+    const region = process.env.OSS_REGION || 'oss-cn-hangzhou'
+    const bucket = process.env.OSS_BUCKET || 'venues-images'
+    
+    console.log('🔐 [OSS] 初始化 OSS 服务...')
+    console.log('🔐 [OSS] OSS_ACCESS_KEY_ID:', accessKeyId ? `${accessKeyId.substring(0, 8)}...` : '未设置')
+    console.log('🔐 [OSS] OSS_ACCESS_KEY_SECRET:', accessKeySecret ? '已设置' : '未设置')
+    console.log('🔐 [OSS] OSS_REGION:', region)
+    console.log('🔐 [OSS] OSS_BUCKET:', bucket)
     
     // 只有在配置了 OSS 密钥时才初始化客户端
     if (accessKeyId && accessKeySecret) {
-      this.client = new OSS({
-        region: process.env.OSS_REGION || 'oss-cn-hangzhou',
-        accessKeyId,
-        accessKeySecret,
-        bucket: process.env.OSS_BUCKET || 'venues-images',
-      })
+      try {
+        this.client = new OSS({
+          region,
+          accessKeyId,
+          accessKeySecret,
+          bucket,
+        })
+        console.log('✅ [OSS] OSS 客户端初始化成功')
+      } catch (error) {
+        console.error('❌ [OSS] OSS 客户端初始化失败:', error)
+        this.client = null
+      }
+    } else {
+      console.warn('⚠️ [OSS] OSS 未配置：缺少 OSS_ACCESS_KEY_ID 或 OSS_ACCESS_KEY_SECRET')
     }
   }
 
