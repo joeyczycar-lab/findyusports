@@ -23,6 +23,7 @@ export class OssService {
     // 只有在配置了 OSS 密钥时才初始化客户端
     if (accessKeyId && accessKeySecret) {
       try {
+        console.log('🔐 [OSS] 开始创建 OSS 客户端实例...')
         this.client = new OSS({
           region,
           accessKeyId,
@@ -30,12 +31,19 @@ export class OssService {
           bucket,
         })
         console.log('✅ [OSS] OSS 客户端初始化成功')
+        console.log('✅ [OSS] OSS 客户端状态:', this.client ? '已创建' : '未创建')
       } catch (error) {
         console.error('❌ [OSS] OSS 客户端初始化失败:', error)
+        if (error instanceof Error) {
+          console.error('❌ [OSS] 错误信息:', error.message)
+          console.error('❌ [OSS] 错误堆栈:', error.stack)
+        }
         this.client = null
       }
     } else {
       console.warn('⚠️ [OSS] OSS 未配置：缺少 OSS_ACCESS_KEY_ID 或 OSS_ACCESS_KEY_SECRET')
+      console.warn('⚠️ [OSS] accessKeyId:', accessKeyId ? '存在' : '不存在')
+      console.warn('⚠️ [OSS] accessKeySecret:', accessKeySecret ? '存在' : '不存在')
     }
   }
 
