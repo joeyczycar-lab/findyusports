@@ -367,12 +367,32 @@ export class VenuesService {
         hasGeomColumn = false
       }
 
+      // 检查新设施字段是否存在
+      const tableName = this.repo.metadata.tableName
+      let hasShower = false
+      let hasLocker = false
+      let hasShop = false
+      try {
+        const columnCheck = await this.repo.query(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = $1 
+          AND column_name IN ('has_shower', 'has_locker', 'has_shop')
+        `, [tableName])
+        const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasShower = existingColumns.includes('has_shower')
+        hasLocker = existingColumns.includes('has_locker')
+        hasShop = existingColumns.includes('has_shop')
+      } catch (error) {
+        console.warn('⚠️ Error checking facility columns in detail:', error instanceof Error ? error.message : String(error))
+      }
+
       // 使用 QueryBuilder 明确指定要选择的列
       const qb = this.repo.createQueryBuilder('v').where('v.id = :id', { id })
       
       if (!hasGeomColumn) {
         // 如果 geom 列不存在，明确指定要查询的列
-        qb.select([
+        const selectColumns = [
           'v.id',
           'v.name',
           'v.sportType',
@@ -392,17 +412,21 @@ export class VenuesService {
           'v.hasLighting',
           'v.hasAirConditioning',
           'v.hasParking',
-          'v.hasShower',
-          'v.hasLocker',
-          'v.hasShop',
-        ])
+        ]
+        
+        // 只添加存在的列
+        if (hasShower) selectColumns.push('v.hasShower')
+        if (hasLocker) selectColumns.push('v.hasLocker')
+        if (hasShop) selectColumns.push('v.hasShop')
+        
+        qb.select(selectColumns)
       }
 
       const v = await qb.getOne()
       
       if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
       
-      return {
+      const result: any = {
         id: String(v.id),
         name: v.name,
         sportType: v.sportType,
@@ -420,11 +444,15 @@ export class VenuesService {
         hasLighting: v.hasLighting,
         hasAirConditioning: v.hasAirConditioning,
         hasParking: v.hasParking,
-        hasShower: v.hasShower,
-        hasLocker: v.hasLocker,
-        hasShop: v.hasShop,
         location: [v.lng, v.lat] as [number, number],
       }
+      
+      // 只添加存在的列
+      if (hasShower) result.hasShower = v.hasShower
+      if (hasLocker) result.hasLocker = v.hasLocker
+      if (hasShop) result.hasShop = v.hasShop
+      
+      return result
     } catch (error) {
       console.error('❌ Error in detail:', error)
       if (error instanceof Error) {
