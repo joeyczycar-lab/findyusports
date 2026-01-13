@@ -66,7 +66,15 @@ export class OssService {
   }
 
   async generatePresignedUrl(mime: string, ext: string, key?: string) {
+    console.log('🔐 [OSS] generatePresignedUrl 被调用')
+    console.log('🔐 [OSS] 当前客户端状态:', this.client ? '✅ 已初始化' : '❌ 未初始化')
+    console.log('🔐 [OSS] 客户端类型:', typeof this.client)
+    
     if (!this.client) {
+      console.error('❌ [OSS] 客户端为 null，无法生成预签名 URL')
+      console.error('❌ [OSS] 环境变量检查:')
+      console.error('❌ [OSS] OSS_ACCESS_KEY_ID:', process.env.OSS_ACCESS_KEY_ID ? '存在' : '不存在')
+      console.error('❌ [OSS] OSS_ACCESS_KEY_SECRET:', process.env.OSS_ACCESS_KEY_SECRET ? '存在' : '不存在')
       throw new Error('OSS未配置，请设置 OSS_ACCESS_KEY_ID 和 OSS_ACCESS_KEY_SECRET')
     }
     

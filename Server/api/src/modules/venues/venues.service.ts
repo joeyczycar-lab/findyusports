@@ -1014,11 +1014,14 @@ export class VenuesService {
       const keys = this.imageProcessing.generateKeys(baseKey)
       
       // 2. 上传所有尺寸到OSS
+      console.log('📤 [Upload] 开始上传图片到 OSS...')
+      console.log('📤 [Upload] OSS 服务状态检查...')
       const uploadPromises = Object.entries(processedImages).map(async ([size, imageBuffer]) => {
         const key = keys[size]
         console.log(`📤 [Upload] Generating presigned URL for ${size} size, key: ${key}`)
-        // 使用正确的 key 生成预签名URL
-        const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg', key)
+        try {
+          // 使用正确的 key 生成预签名URL
+          const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg', key)
         
         console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
         // 直传处理后的图片
