@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson, getApiBase } from '@/lib/api'
-import { getAuthState, isTokenExpired, clearAuthState } from '@/lib/auth'
+import { getAuthState, setAuthState, isTokenExpired, clearAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
 
