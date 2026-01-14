@@ -13,7 +13,7 @@ export default function EditVenuePage() {
   const params = useParams()
   const venueId = params?.id as string
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -444,21 +444,47 @@ export default function EditVenuePage() {
             setIsLoginModalOpen(true)
             setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 请先登录后再上传图片。` })
           } else {
+            console.log(`📤 [EditVenue] 开始上传 ${selectedImages.length} 张图片...`)
             // 上传所有选中的图片
-            const uploadPromises = selectedImages.map(async (file) => {
-              const formData = new FormData()
-              formData.append('file', file)
-              return fetchJson(`/venues/${venueId}/upload`, {
-                method: 'POST',
-                body: formData
+            const uploadResults = await Promise.allSettled(
+              selectedImages.map(async (file, index) => {
+                console.log(`📤 [EditVenue] 上传第 ${index + 1} 张图片: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
+                const formData = new FormData()
+                formData.append('file', file)
+                const result = await fetchJson(`/venues/${venueId}/upload`, {
+                  method: 'POST',
+                  body: formData
+                })
+                console.log(`✅ [EditVenue] 第 ${index + 1} 张图片上传成功:`, result.url || result.id)
+                return result
               })
+            )
+            
+            // 统计成功和失败的数量
+            const successful = uploadResults.filter(r => r.status === 'fulfilled').length
+            const failed = uploadResults.filter(r => r.status === 'rejected').length
+            
+            // 记录失败的详细信息
+            const failures: string[] = []
+            uploadResults.forEach((result, index) => {
+              if (result.status === 'rejected') {
+                const reason = result.reason?.message || result.reason || '未知错误'
+                console.error(`❌ [EditVenue] 第 ${index + 1} 张图片上传失败:`, reason)
+                failures.push(`第 ${index + 1} 张: ${reason}`)
+              }
             })
             
-            await Promise.all(uploadPromises)
-            setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看场地。` })
+            if (failed === 0) {
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 已成功上传 ${successful} 张图片。\n\n点击下方按钮查看场地。` })
+            } else if (successful > 0) {
+              setMessage({ type: 'warning', text: `✅ 场地 "${formData.name}" 更新成功！\n📸 已上传 ${successful} 张图片，${failed} 张失败：\n${failures.join('\n')}\n\n点击下方按钮查看场地。` })
+            } else {
+              setMessage({ type: 'error', text: `✅ 场地 "${formData.name}" 更新成功！\n❌ 图片上传全部失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传图片。` })
+            }
             setSelectedImages([])
           }
         } catch (error: any) {
+          console.error('❌ [EditVenue] 图片上传异常:', error)
           setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看场地。` })
         } finally {
           setUploadingImages(false)
@@ -497,12 +523,14 @@ export default function EditVenuePage() {
             className={`mb-6 p-4 border ${
               message.type === 'success'
                 ? 'bg-gray-100 border-gray-900 text-gray-900'
+                : message.type === 'warning'
+                ? 'bg-yellow-50 border-yellow-500 text-yellow-900'
                 : 'bg-red-50 border-red-500 text-red-900'
             }`}
             style={{ borderRadius: '4px' }}
           >
             <div className="whitespace-pre-line mb-3">{message.text}</div>
-            {message.type === 'success' && (
+            {(message.type === 'success' || message.type === 'warning') && (
               <div className="flex gap-3 mt-4">
                 <Link
                   href={`/venues/${venueId}`}
