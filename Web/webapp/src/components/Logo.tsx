@@ -35,6 +35,9 @@ export default function Logo() {
           maxWidth: '200px',
           display: 'block',
           backgroundColor: 'transparent',
+          background: 'transparent',
+          border: 'none',
+          outline: 'none',
         }}
       />
     </Link>

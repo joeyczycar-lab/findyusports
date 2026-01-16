@@ -106,9 +106,14 @@ export default async function HomePage() {
               top: 2rem !important;
               left: 2rem !important;
               z-index: 100 !important;
+              background: transparent !important;
+              background-color: transparent !important;
             }
+            .logo-container img,
             .logo-container svg {
               display: block !important;
+              background: transparent !important;
+              background-color: transparent !important;
             }
             @media (max-width: 768px) {
               .logo-container {

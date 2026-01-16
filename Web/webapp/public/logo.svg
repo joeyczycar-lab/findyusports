@@ -1,4 +1,4 @@
-<svg width="200" height="120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="200" height="120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="background-color: transparent;">
   <defs>
     <!-- FY字母渐变 -->
     <linearGradient id="fyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
