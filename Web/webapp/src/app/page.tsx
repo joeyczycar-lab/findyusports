@@ -111,7 +111,6 @@ export default async function HomePage() {
               .logo-container {
                 top: 1rem !important;
                 left: 1rem !important;
-                padding: 0.75rem 1rem !important;
               }
               .logo-fy {
                 font-size: 48px !important;
@@ -130,7 +129,6 @@ export default async function HomePage() {
               .logo-container {
                 top: 0.75rem !important;
                 left: 0.75rem !important;
-                padding: 0.5rem 0.75rem !important;
               }
               .logo-fy {
                 font-size: 36px !important;

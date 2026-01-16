@@ -16,21 +16,13 @@ export default function Logo() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
-        transition: 'all 0.3s ease',
-        padding: '1rem 1.5rem',
-        borderRadius: '8px',
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        transition: 'opacity 0.3s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)'
-        e.currentTarget.style.transform = 'scale(1.02)'
+        e.currentTarget.style.opacity = '0.9'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)'
-        e.currentTarget.style.transform = 'scale(1)'
+        e.currentTarget.style.opacity = '1'
       }}
     >
       {/* 大号 FY 字母 */}
@@ -40,7 +32,6 @@ export default function Logo() {
           fontSize: '72px',
           fontWeight: 'bold',
           fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: '#1a237e', // 深蓝色
           lineHeight: '1',
           letterSpacing: '-2px',
           background: 'linear-gradient(135deg, #1a237e 0%, #283593 100%)',
@@ -48,6 +39,7 @@ export default function Logo() {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
           position: 'relative',
+          textShadow: 'none',
         }}
       >
         FY
@@ -61,7 +53,7 @@ export default function Logo() {
           fontSize: '24px',
           fontStyle: 'italic',
           fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: '#283593', // 稍浅的深蓝色
+          color: '#283593',
           lineHeight: '1.2',
           position: 'relative',
           display: 'flex',
@@ -81,7 +73,7 @@ export default function Logo() {
           fontSize: '24px',
           fontStyle: 'italic',
           fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: 'rgba(40, 53, 147, 0.15)', // 非常淡的蓝色
+          color: 'rgba(40, 53, 147, 0.15)',
           lineHeight: '1.2',
           transform: 'scaleY(-1)',
           transformOrigin: 'top',
