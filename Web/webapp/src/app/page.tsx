@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
 import dynamic from 'next/dynamic'
+import Logo from '@/components/Logo'
 
 // 使用动态导入加载客户端组件，避免 SSR 问题
 const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
@@ -72,6 +73,9 @@ export default async function HomePage() {
       
       {/* Hero Section - Nike 风格大图 */}
       <section className="relative text-white min-h-[600px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
+        {/* Logo - 左上角 */}
+        <Logo />
+        
         {/* 强制样式 - 确保背景图片显示 */}
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -95,6 +99,50 @@ export default async function HomePage() {
               visibility: visible !important;
               display: block !important;
               pointer-events: none !important;
+            }
+            .logo-container {
+              position: absolute !important;
+              top: 2rem !important;
+              left: 2rem !important;
+              z-index: 10 !important;
+            }
+            @media (max-width: 768px) {
+              .logo-container {
+                top: 1rem !important;
+                left: 1rem !important;
+                padding: 0.75rem 1rem !important;
+              }
+              .logo-fy {
+                font-size: 48px !important;
+              }
+              .logo-text {
+                font-size: 18px !important;
+                margin-top: 6px !important;
+              }
+              .logo-reflection {
+                font-size: 18px !important;
+                height: 16px !important;
+                margin-top: 2px !important;
+              }
+            }
+            @media (max-width: 480px) {
+              .logo-container {
+                top: 0.75rem !important;
+                left: 0.75rem !important;
+                padding: 0.5rem 0.75rem !important;
+              }
+              .logo-fy {
+                font-size: 36px !important;
+              }
+              .logo-text {
+                font-size: 16px !important;
+                margin-top: 4px !important;
+              }
+              .logo-reflection {
+                font-size: 16px !important;
+                height: 14px !important;
+                margin-top: 2px !important;
+              }
             }
           `
         }} />
