@@ -112,17 +112,8 @@ export default async function HomePage() {
                 top: 1rem !important;
                 left: 1rem !important;
               }
-              .logo-fy {
-                font-size: 48px !important;
-              }
-              .logo-text {
-                font-size: 18px !important;
-                margin-top: 6px !important;
-              }
-              .logo-reflection {
-                font-size: 18px !important;
-                height: 16px !important;
-                margin-top: 2px !important;
+              .logo-container img {
+                width: 150px !important;
               }
             }
             @media (max-width: 480px) {
@@ -130,17 +121,8 @@ export default async function HomePage() {
                 top: 0.75rem !important;
                 left: 0.75rem !important;
               }
-              .logo-fy {
-                font-size: 36px !important;
-              }
-              .logo-text {
-                font-size: 16px !important;
-                margin-top: 4px !important;
-              }
-              .logo-reflection {
-                font-size: 16px !important;
-                height: 14px !important;
-                margin-top: 2px !important;
+              .logo-container img {
+                width: 120px !important;
               }
             }
           `

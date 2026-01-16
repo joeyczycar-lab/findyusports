@@ -27,6 +27,7 @@ export default function Logo() {
       <img
         src="/logo.svg"
         alt="Find遇 Logo"
+        className="logo-image"
         style={{
           width: '200px',
           height: 'auto',
