@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 export default function Logo() {
-  // 优先使用logo.png（手写风格），如果不存在则使用logo.svg
-  const [imgSrc, setImgSrc] = useState('/logo.png')
+  // 使用logo.png（手写风格的FY logo）
+  const [imgSrc] = useState('/logo.png')
 
   return (
     <Link 
@@ -43,11 +43,8 @@ export default function Logo() {
           border: 'none',
           outline: 'none',
         }}
-        onError={() => {
-          // 如果logo.png不存在，回退到logo.svg
-          if (imgSrc === '/logo.png') {
-            setImgSrc('/logo.svg')
-          }
+        onError={(e) => {
+          console.error('Logo image failed to load:', e)
         }}
       />
     </Link>
