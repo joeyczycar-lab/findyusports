@@ -105,14 +105,17 @@ export default async function HomePage() {
               position: absolute !important;
               top: 2rem !important;
               left: 2rem !important;
-              z-index: 10 !important;
+              z-index: 100 !important;
+            }
+            .logo-container svg {
+              display: block !important;
             }
             @media (max-width: 768px) {
               .logo-container {
                 top: 1rem !important;
                 left: 1rem !important;
               }
-              .logo-container img {
+              .logo-container svg {
                 width: 150px !important;
               }
             }
@@ -121,7 +124,7 @@ export default async function HomePage() {
                 top: 0.75rem !important;
                 left: 0.75rem !important;
               }
-              .logo-container img {
+              .logo-container svg {
                 width: 120px !important;
               }
             }
