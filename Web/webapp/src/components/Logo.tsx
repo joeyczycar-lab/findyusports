@@ -14,7 +14,6 @@ export default function Logo() {
         zIndex: 10,
         textDecoration: 'none',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'flex-start',
         transition: 'opacity 0.3s ease',
       }}
@@ -25,69 +24,16 @@ export default function Logo() {
         e.currentTarget.style.opacity = '1'
       }}
     >
-      {/* 大号 FY 字母 */}
-      <div 
-        className="logo-fy"
+      <img
+        src="/logo.svg"
+        alt="Find遇 Logo"
         style={{
-          fontSize: '72px',
-          fontWeight: 'bold',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          lineHeight: '1',
-          letterSpacing: '-2px',
-          background: 'linear-gradient(135deg, #1a237e 0%, #283593 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          position: 'relative',
-          textShadow: 'none',
+          width: '200px',
+          height: 'auto',
+          maxWidth: '200px',
+          display: 'block',
         }}
-      >
-        FY
-      </div>
-      
-      {/* Find遇 文字 */}
-      <div 
-        className="logo-text"
-        style={{
-          marginTop: '8px',
-          fontSize: '24px',
-          fontStyle: 'italic',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: '#283593',
-          lineHeight: '1.2',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-        }}
-      >
-        <span style={{ fontWeight: '600' }}>Find</span>
-        <span style={{ fontWeight: '500' }}>遇</span>
-      </div>
-      
-      {/* 淡色反射效果 */}
-      <div 
-        className="logo-reflection"
-        style={{
-          marginTop: '4px',
-          fontSize: '24px',
-          fontStyle: 'italic',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          color: 'rgba(40, 53, 147, 0.15)',
-          lineHeight: '1.2',
-          transform: 'scaleY(-1)',
-          transformOrigin: 'top',
-          opacity: 0.4,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          height: '20px',
-          overflow: 'hidden',
-        }}
-      >
-        <span style={{ fontWeight: '600' }}>Find</span>
-        <span style={{ fontWeight: '500' }}>遇</span>
-      </div>
+      />
     </Link>
   )
 }
