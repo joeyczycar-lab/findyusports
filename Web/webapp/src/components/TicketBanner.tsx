@@ -8,15 +8,24 @@ export default function TicketBanner() {
         padding: 0,
       }}
     >
-      {/* 橙色背景 - 使用hero-background.jpg作为背景，如果不存在则使用渐变 */}
+      {/* 背景图片层 */}
       <div 
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/hero-background.jpg'), linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)",
+          backgroundImage: "url('/hero-background.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           zIndex: 0,
+        }}
+      />
+      {/* 如果背景图片加载失败，显示橙色渐变作为后备 */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
+          zIndex: 0,
+          opacity: 0.3,
         }}
       />
       
@@ -47,9 +56,9 @@ export default function TicketBanner() {
           }}
         >
           <h3 
-            className="text-xl sm:text-2xl font-bold mb-2"
+            className="text-lg sm:text-xl font-bold mb-2"
             style={{
-              fontSize: 'clamp(0.875rem, 2vw, 1.125rem)',
+              fontSize: 'clamp(0.625rem, 2vw, 0.9375rem)',
               fontWeight: 'bold',
               marginBottom: '0.5rem',
               lineHeight: '1.2',
@@ -58,9 +67,9 @@ export default function TicketBanner() {
             实体店在线打票
           </h3>
           <p 
-            className="text-base sm:text-lg"
+            className="text-sm sm:text-base"
             style={{
-              fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)',
+              fontSize: 'clamp(0.5rem, 1.5vw, 0.625rem)',
               lineHeight: '1.5',
               opacity: 0.95,
             }}
