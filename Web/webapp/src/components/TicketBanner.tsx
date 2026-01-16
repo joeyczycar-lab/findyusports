@@ -8,13 +8,11 @@ export default function TicketBanner() {
         padding: 0,
       }}
     >
-      {/* 橙色背景 - 可以后续替换为足球运动员图片 */}
+      {/* 橙色背景 - 如果 football-player-bg.jpg 存在则使用，否则使用渐变 */}
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-          // 如果后续有足球运动员图片，可以取消注释下面这行
-          // backgroundImage: "url('/football-player-bg.jpg')",
+          backgroundImage: "url('/football-player-bg.jpg'), linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
