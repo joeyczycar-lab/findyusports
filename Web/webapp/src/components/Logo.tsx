@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 export default function Logo() {
+  // 优先使用logo.png（手写风格），如果不存在则使用logo.svg
   const [imgSrc, setImgSrc] = useState('/logo.png')
 
   return (
