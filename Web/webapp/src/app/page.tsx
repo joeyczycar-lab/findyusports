@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
 import dynamic from 'next/dynamic'
 import Logo from '@/components/Logo'
+import TicketBanner from '@/components/TicketBanner'
 
 // 使用动态导入加载客户端组件，避免 SSR 问题
 const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
@@ -206,6 +207,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 在线打票横幅 - 在场地列表上方 */}
+      <TicketBanner />
 
       {/* Sport Categories Section - 在搜索栏下面 */}
       <section className="container-page py-16 bg-gray-50">
