@@ -1,8 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 
 export default function Logo() {
+  const [imgSrc, setImgSrc] = useState('/logo.png')
+
   return (
     <Link 
       href="/" 
@@ -26,7 +29,7 @@ export default function Logo() {
       }}
     >
       <img
-        src="/logo.png"
+        src={imgSrc}
         alt="Find遇 Logo"
         className="logo-image"
         style={{
@@ -39,11 +42,10 @@ export default function Logo() {
           border: 'none',
           outline: 'none',
         }}
-        onError={(e) => {
+        onError={() => {
           // 如果logo.png不存在，回退到logo.svg
-          const target = e.target as HTMLImageElement;
-          if (target.src && !target.src.includes('logo.svg')) {
-            target.src = '/logo.svg';
+          if (imgSrc === '/logo.png') {
+            setImgSrc('/logo.svg')
           }
         }}
       />
