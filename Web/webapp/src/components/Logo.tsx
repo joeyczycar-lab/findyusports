@@ -26,7 +26,7 @@ export default function Logo() {
       }}
     >
       <img
-        src="/logo.svg"
+        src="/logo.png"
         alt="Find遇 Logo"
         className="logo-image"
         style={{
@@ -38,6 +38,13 @@ export default function Logo() {
           background: 'transparent',
           border: 'none',
           outline: 'none',
+        }}
+        onError={(e) => {
+          // 如果logo.png不存在，回退到logo.svg
+          const target = e.target as HTMLImageElement;
+          if (target.src && !target.src.includes('logo.svg')) {
+            target.src = '/logo.svg';
+          }
         }}
       />
     </Link>
