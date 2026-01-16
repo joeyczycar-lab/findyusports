@@ -8,24 +8,24 @@ export default function TicketBanner() {
         padding: 0,
       }}
     >
-      {/* 背景图片层 */}
+      {/* 足球运动员橙色背景图片层 */}
       <div 
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/hero-background.jpg')",
+          backgroundImage: "url('/football-player-bg.jpg'), url('/hero-background.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           zIndex: 0,
         }}
       />
-      {/* 如果背景图片加载失败，显示橙色渐变作为后备 */}
+      {/* 橙色渐变遮罩层 - 如果图片不存在则显示，如果图片存在则作为轻微遮罩增强对比度 */}
       <div 
         className="absolute inset-0"
         style={{
           background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
           zIndex: 0,
-          opacity: 0.3,
+          opacity: 0.15,
         }}
       />
       
