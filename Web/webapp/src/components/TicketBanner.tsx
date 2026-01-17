@@ -12,20 +12,20 @@ export default function TicketBanner() {
       <div 
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/football-player-bg.jpg'), url('/hero-background.jpg')",
+          backgroundImage: "url('/football-player-bg.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           zIndex: 0,
         }}
       />
-      {/* 橙色渐变遮罩层 - 如果图片不存在则显示，如果图片存在则作为轻微遮罩增强对比度 */}
+      {/* 如果football-player-bg.jpg不存在，显示橙色渐变作为后备 */}
       <div 
         className="absolute inset-0"
         style={{
           background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
           zIndex: 0,
-          opacity: 0.15,
+          opacity: 0.3,
         }}
       />
       
