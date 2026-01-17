@@ -73,7 +73,7 @@ export default async function HomePage() {
       {/* 首页 Hero 区域不需要额外的 padding-top，因为 body 已经有了 */}
       
       {/* Hero Section - Nike 风格大图 */}
-      <section className="relative text-white min-h-[400px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
+      <section className="relative text-white min-h-[600px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
         {/* Logo - 左上角 */}
         <Logo />
         
