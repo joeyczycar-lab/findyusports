@@ -73,7 +73,7 @@ export default async function HomePage() {
       {/* 首页 Hero 区域不需要额外的 padding-top，因为 body 已经有了 */}
       
       {/* Hero Section - Nike 风格大图 */}
-      <section className="relative text-white min-h-[600px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
+      <section className="relative text-white min-h-[400px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
         {/* Logo - 左上角 */}
         <Logo />
         
@@ -165,36 +165,37 @@ export default async function HomePage() {
         />
         {/* 半透明遮罩层 - 降低透明度让图片更明显 */}
         <div className="absolute inset-0" style={{ zIndex: 1, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}></div>
-        <div className="container-page relative z-10 py-20" style={{ zIndex: 2 }}>
-          <h1 className="text-display sm:text-[64px] font-bold mb-8 tracking-tight max-w-2xl">
+        <div className="container-page relative z-10 py-13" style={{ zIndex: 2, paddingTop: '3.25rem', paddingBottom: '3.25rem' }}>
+          <h1 className="text-display sm:text-[43px] font-bold mb-5 tracking-tight max-w-2xl" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.67rem)' }}>
             发现与分享<br />篮球与足球好场地
           </h1>
-          <div className="max-w-xl space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
+          <div className="max-w-xl space-y-3" style={{ maxWidth: '28rem' }}>
+            <div className="flex flex-col sm:flex-row gap-2">
               <input 
-                className="flex-1 bg-white text-black px-6 py-4 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white" 
+                className="flex-1 bg-white text-black px-4 py-3 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white" 
                 placeholder="搜索城市、关键词…" 
+                style={{ fontSize: '0.875rem', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
               />
-              <Link href="/map" className="btn-primary whitespace-nowrap flex items-center justify-center" style={{ borderRadius: '4px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '12px', paddingBottom: '12px' }}>
+              <Link href="/map" className="btn-primary whitespace-nowrap flex items-center justify-center" style={{ borderRadius: '4px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '8px', paddingBottom: '8px', fontSize: '0.875rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
                 开始探索
               </Link>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <Link 
                 href="/map?sport=basketball" 
                 className="btn-secondary text-white hover:bg-white hover:text-black" 
-                style={{ borderRadius: '4px', border: 'none', borderWidth: 0 }}
+                style={{ borderRadius: '4px', border: 'none', borderWidth: 0, padding: '0.5rem 1rem', fontSize: '0.875rem' }}
               >
                 篮球
               </Link>
               <Link 
                 href="/map?sport=football" 
                 className="btn-secondary text-white hover:bg-white hover:text-black" 
-                style={{ borderRadius: '4px', border: 'none', borderWidth: 0 }}
+                style={{ borderRadius: '4px', border: 'none', borderWidth: 0, padding: '0.5rem 1rem', fontSize: '0.875rem' }}
               >
                 足球
               </Link>
-              <Link href="/admin/add-venue" className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[140px]" style={{ borderRadius: '4px' }}>
+              <Link href="/admin/add-venue" className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[93px]" style={{ borderRadius: '4px' }}>
                 ➕ 添加场地
               </Link>
             </div>
