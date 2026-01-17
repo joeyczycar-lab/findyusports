@@ -8,7 +8,7 @@ export default function TicketBanner() {
         padding: 0,
       }}
     >
-      {/* 足球运动员橙色背景图片层 */}
+      {/* 足球运动员橙色背景图片层 - 使用内联样式确保SSR和CSR一致 */}
       <div 
         className="absolute inset-0"
         style={{
@@ -17,6 +17,11 @@ export default function TicketBanner() {
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           zIndex: 0,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
         }}
       />
       {/* 如果football-player-bg.jpg不存在，显示橙色渐变作为后备 */}
@@ -26,6 +31,11 @@ export default function TicketBanner() {
           background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
           zIndex: 0,
           opacity: 0.3,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
         }}
       />
       
@@ -42,6 +52,8 @@ export default function TicketBanner() {
           justifyContent: 'space-between',
           gap: '2rem',
           flexWrap: 'wrap',
+          position: 'relative',
+          zIndex: 10,
         }}
       >
         {/* 左侧文字 */}
