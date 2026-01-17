@@ -114,12 +114,15 @@ export default async function HomePage() {
               display: block !important;
               background: transparent !important;
               background-color: transparent !important;
+              visibility: visible !important;
+              opacity: 1 !important;
             }
             @media (max-width: 768px) {
               .logo-container {
                 top: 1rem !important;
                 left: 1rem !important;
               }
+              .logo-container img,
               .logo-container svg {
                 width: 150px !important;
               }
@@ -129,6 +132,7 @@ export default async function HomePage() {
                 top: 0.75rem !important;
                 left: 0.75rem !important;
               }
+              .logo-container img,
               .logo-container svg {
                 width: 120px !important;
               }

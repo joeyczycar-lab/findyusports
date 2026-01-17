@@ -42,9 +42,14 @@ export default function Logo() {
           background: 'transparent',
           border: 'none',
           outline: 'none',
+          visibility: 'visible',
+          opacity: 1,
         }}
         onError={(e) => {
           console.error('Logo image failed to load:', e)
+        }}
+        onLoad={() => {
+          console.log('Logo image loaded successfully')
         }}
       />
     </Link>
