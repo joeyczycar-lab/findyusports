@@ -15,7 +15,7 @@ export default function Logo() {
         position: 'absolute',
         top: '2rem',
         left: '2rem',
-        zIndex: 100,
+        zIndex: 1000,
         textDecoration: 'none',
         display: 'flex',
         alignItems: 'flex-start',

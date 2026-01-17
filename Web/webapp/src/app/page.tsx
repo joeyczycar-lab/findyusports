@@ -105,9 +105,11 @@ export default async function HomePage() {
               position: absolute !important;
               top: 2rem !important;
               left: 2rem !important;
-              z-index: 100 !important;
+              z-index: 1000 !important;
               background: transparent !important;
               background-color: transparent !important;
+              visibility: visible !important;
+              opacity: 1 !important;
             }
             .logo-container img,
             .logo-container svg {
