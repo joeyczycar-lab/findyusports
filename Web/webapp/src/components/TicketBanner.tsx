@@ -6,6 +6,8 @@ export default function TicketBanner() {
         width: '100%',
         margin: 0,
         padding: 0,
+        minHeight: '200px',
+        position: 'relative',
       }}
     >
       {/* 足球运动员橙色背景图片层 - 使用内联样式确保SSR和CSR一致 */}
@@ -116,6 +118,8 @@ export default function TicketBanner() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              minWidth: '120px',
+              minHeight: '120px',
             }}
           >
             <img 
@@ -128,9 +132,12 @@ export default function TicketBanner() {
                 display: 'block',
                 maxWidth: '100%',
                 maxHeight: '100%',
+                aspectRatio: '1 / 1',
               }}
               onError={(e) => {
                 console.error('二维码图片加载失败:', e)
+                const target = e.target as HTMLImageElement
+                target.style.display = 'none'
               }}
               onLoad={() => {
                 console.log('二维码图片加载成功')
