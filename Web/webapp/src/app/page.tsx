@@ -1,12 +1,7 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
-import dynamic from 'next/dynamic'
 import Logo from '@/components/Logo'
-
-// 使用动态导入加载客户端组件，避免 SSR 问题
-const LotteryAd = dynamic(() => import('@/components/LotteryAd'), {
-  ssr: false
-})
+import TicketBanner from '@/components/TicketBanner'
 
 async function getFeaturedVenues() {
   try {
@@ -202,6 +197,9 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* 在线打票横幅 - 在场地列表上方 */}
+      <TicketBanner />
+
       {/* Sport Categories Section - 在搜索栏下面 */}
       <section className="container-page py-16 bg-gray-50">
         {/* 篮球场地分类 */}
@@ -350,17 +348,6 @@ export default async function HomePage() {
             )}
           </div>
           
-          {/* 广告区域 - 桌面端显示 */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <LotteryAd />
-            </div>
-          </aside>
-        </div>
-        
-        {/* 广告区域 - 移动端显示 */}
-        <div className="lg:hidden mt-8">
-          <LotteryAd />
         </div>
       </section>
 
