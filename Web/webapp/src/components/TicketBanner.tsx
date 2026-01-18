@@ -54,22 +54,6 @@ export default function TicketBanner() {
           display: 'block',
         }}
       />
-      {/* 轻微遮罩层增强文字可读性 - 降低透明度让背景更明显 */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.05)',
-          zIndex: 1,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: '100%',
-          pointerEvents: 'none',
-        }}
-      />
       
       {/* 内容容器 - 与 container-page 对齐，但横向拉满 */}
       <div 
