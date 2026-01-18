@@ -26,6 +26,10 @@ export default function TicketBanner() {
           bottom: 0,
           width: '100%',
           height: '100%',
+          minHeight: '200px',
+        }}
+        onError={(e) => {
+          console.error('背景图片加载失败')
         }}
       />
       {/* 轻微遮罩层增强文字可读性 */}
