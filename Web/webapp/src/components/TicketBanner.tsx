@@ -22,20 +22,23 @@ export default function TicketBanner() {
           left: 0,
           right: 0,
           bottom: 0,
+          width: '100%',
+          height: '100%',
         }}
       />
-      {/* 如果football-player-bg.jpg不存在，显示橙色渐变作为后备 */}
+      {/* 轻微遮罩层增强文字可读性 */}
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
-          zIndex: 0,
-          opacity: 0.3,
+          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          zIndex: 1,
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
+          width: '100%',
+          height: '100%',
         }}
       />
       
@@ -123,6 +126,14 @@ export default function TicketBanner() {
                 height: '100%',
                 objectFit: 'contain',
                 display: 'block',
+                maxWidth: '100%',
+                maxHeight: '100%',
+              }}
+              onError={(e) => {
+                console.error('二维码图片加载失败:', e)
+              }}
+              onLoad={() => {
+                console.log('二维码图片加载成功')
               }}
             />
           </div>
