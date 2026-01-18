@@ -385,17 +385,19 @@ export class VenuesService {
       let hasShower = false
       let hasLocker = false
       let hasShop = false
+      let hasRestArea = false
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
+        hasRestArea = existingColumns.includes('has_rest_area')
       } catch (error) {
         console.warn('⚠️ Error checking facility columns in detail:', error instanceof Error ? error.message : String(error))
       }
@@ -428,6 +430,7 @@ export class VenuesService {
         ]
         
         // 只添加存在的列
+        if (hasRestArea) selectColumns.push('v.hasRestArea')
         if (hasShower) selectColumns.push('v.hasShower')
         if (hasLocker) selectColumns.push('v.hasLocker')
         if (hasShop) selectColumns.push('v.hasShop')
@@ -461,6 +464,7 @@ export class VenuesService {
       }
       
       // 只添加存在的列
+      if (hasRestArea) result.hasRestArea = v.hasRestArea
       if (hasShower) result.hasShower = v.hasShower
       if (hasLocker) result.hasLocker = v.hasLocker
       if (hasShop) result.hasShop = v.hasShop
@@ -500,6 +504,7 @@ export class VenuesService {
       venue.hasLighting = dto.hasLighting
       venue.hasAirConditioning = dto.hasAirConditioning
       venue.hasParking = dto.hasParking
+      venue.hasRestArea = dto.hasRestArea
       venue.hasShower = dto.hasShower
       venue.hasLocker = dto.hasLocker
       venue.hasShop = dto.hasShop
@@ -540,7 +545,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -550,6 +555,7 @@ export class VenuesService {
         const hasLighting = existingColumns.includes('has_lighting')
         const hasAirConditioning = existingColumns.includes('has_air_conditioning')
         const hasParking = existingColumns.includes('has_parking')
+        const hasRestArea = existingColumns.includes('has_rest_area')
         const hasShower = existingColumns.includes('has_shower')
         const hasLocker = existingColumns.includes('has_locker')
         const hasShop = existingColumns.includes('has_shop')
@@ -605,6 +611,11 @@ export class VenuesService {
           values.push(venue.hasParking !== undefined ? venue.hasParking : null)
           paramIndex++
         }
+        if (hasRestArea) {
+          columns.push('has_rest_area')
+          values.push(venue.hasRestArea !== undefined ? venue.hasRestArea : null)
+          paramIndex++
+        }
         if (hasShower) {
           columns.push('has_shower')
           values.push(venue.hasShower !== undefined ? venue.hasShower : null)
@@ -656,6 +667,7 @@ export class VenuesService {
           hasLighting: hasLighting ? row.has_lighting : undefined,
           hasAirConditioning: hasAirConditioning ? row.has_air_conditioning : undefined,
           hasParking: hasParking ? row.has_parking : undefined,
+          hasRestArea: hasRestArea ? row.has_rest_area : undefined,
           hasShower: hasShower ? row.has_shower : undefined,
           hasLocker: hasLocker ? row.has_locker : undefined,
           hasShop: hasShop ? row.has_shop : undefined,
@@ -836,6 +848,10 @@ export class VenuesService {
         if (dto.hasParking !== undefined) {
           updates.push(`has_parking = $${paramIndex++}`)
           values.push(dto.hasParking)
+        }
+        if (dto.hasRestArea !== undefined) {
+          updates.push(`has_rest_area = $${paramIndex++}`)
+          values.push(dto.hasRestArea)
         }
         
         if (updates.length > 0) {

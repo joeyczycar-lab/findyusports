@@ -158,6 +158,10 @@ export class CreateVenueDto {
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
+  hasRestArea?: boolean // 是否有休息区
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
   hasShower?: boolean // 是否有沐浴间
 
   @IsOptional()
@@ -248,6 +252,10 @@ export class UpdateVenueDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   hasParking?: boolean
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  hasRestArea?: boolean // 是否有休息区
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)

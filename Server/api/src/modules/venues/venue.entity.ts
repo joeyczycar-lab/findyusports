@@ -73,6 +73,9 @@ export class VenueEntity {
   @Column({ type: 'boolean', nullable: true, name: 'has_parking' })
   hasParking?: boolean // 是否有停车场
 
+  @Column({ type: 'boolean', nullable: true, name: 'has_rest_area' })
+  hasRestArea?: boolean // 是否有休息区
+
   @Column({ type: 'boolean', nullable: true, name: 'has_shower', select: false })
   hasShower?: boolean // 是否有沐浴间
 
