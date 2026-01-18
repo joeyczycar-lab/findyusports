@@ -38,6 +38,7 @@ export default function AddVenuePage() {
     hasLighting: false,
     hasAirConditioning: false,
     hasParking: false,
+    hasRestArea: false,
   })
 
   const cityOptions = [
@@ -278,6 +279,7 @@ export default function AddVenuePage() {
       if (formData.hasLighting !== undefined) payload.hasLighting = formData.hasLighting
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
       if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
+      if (formData.hasRestArea !== undefined) payload.hasRestArea = formData.hasRestArea
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -365,6 +367,7 @@ export default function AddVenuePage() {
         hasLighting: false,
         hasAirConditioning: false,
         hasParking: false,
+        hasRestArea: false,
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -750,6 +753,16 @@ export default function AddVenuePage() {
                   style={{ borderRadius: '4px' }}
                 />
                 <span className="text-body-sm font-bold uppercase tracking-wide">有停车场</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasRestArea}
+                  onChange={(e) => setFormData({ ...formData, hasRestArea: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有休息区</span>
               </label>
             </div>
           </div>
