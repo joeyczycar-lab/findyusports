@@ -1,18 +1,40 @@
 export default function TicketBanner() {
   return (
-    <section 
-      className="relative w-full overflow-hidden"
-      style={{
-        width: '100%',
-        margin: 0,
-        padding: 0,
-        minHeight: '200px',
-        position: 'relative',
-      }}
-    >
-      {/* 足球运动员橙色背景图片层 - 使用内联样式确保SSR和CSR一致 */}
+    <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .ticket-banner-bg {
+            background-image: url('/football-player-bg.jpg') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 0 !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+          }
+        `
+      }} />
+      <section 
+        className="relative w-full overflow-hidden"
+        style={{
+          width: '100%',
+          margin: 0,
+          padding: 0,
+          minHeight: '200px',
+          position: 'relative',
+        }}
+      >
+      {/* 足球运动员橙色背景图片层 - 使用CSS类和内联样式双重保障 */}
       <div 
-        className="absolute inset-0"
+        className="ticket-banner-bg absolute inset-0"
         style={{
           backgroundImage: "url('/football-player-bg.jpg')",
           backgroundSize: 'cover',
@@ -29,13 +51,14 @@ export default function TicketBanner() {
           minHeight: '200px',
           opacity: 1,
           visibility: 'visible',
+          display: 'block',
         }}
       />
-      {/* 轻微遮罩层增强文字可读性 */}
+      {/* 轻微遮罩层增强文字可读性 - 降低透明度让背景更明显 */}
       <div 
         className="absolute inset-0"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'rgba(0, 0, 0, 0.05)',
           zIndex: 1,
           position: 'absolute',
           top: 0,
@@ -44,6 +67,7 @@ export default function TicketBanner() {
           bottom: 0,
           width: '100%',
           height: '100%',
+          pointerEvents: 'none',
         }}
       />
       
@@ -161,5 +185,6 @@ export default function TicketBanner() {
         </div>
       </div>
     </section>
+    </>
   )
 }
