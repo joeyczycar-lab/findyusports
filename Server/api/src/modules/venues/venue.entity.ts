@@ -49,8 +49,14 @@ export class VenueEntity {
   @Column({ type: 'boolean', nullable: true, name: 'supports_walk_in' })
   supportsWalkIn?: boolean // 是否支持散客
 
+  @Column({ type: 'int', nullable: true, name: 'walk_in_price' })
+  walkInPrice?: number // 散客价格（元/小时）
+
   @Column({ type: 'boolean', nullable: true, name: 'supports_full_court' })
   supportsFullCourt?: boolean // 是否支持包场
+
+  @Column({ type: 'int', nullable: true, name: 'full_court_price' })
+  fullCourtPrice?: number // 包场价格（元/小时）
 
   @Column({ type: 'boolean', nullable: true })
   indoor?: boolean

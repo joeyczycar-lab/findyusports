@@ -30,7 +30,9 @@ export default function AddVenuePage() {
     priceMax: '',
     isFree: false, // 是否免费
     supportsWalkIn: false, // 是否支持散客
+    walkInPrice: '', // 散客价格
     supportsFullCourt: false, // 是否支持包场
+    fullCourtPrice: '', // 包场价格
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
     isPublic: true,
@@ -262,8 +264,14 @@ export default function AddVenuePage() {
       if (formData.supportsWalkIn !== undefined) {
         payload.supportsWalkIn = formData.supportsWalkIn
       }
+      if (formData.walkInPrice && formData.supportsWalkIn) {
+        payload.walkInPrice = parseInt(formData.walkInPrice)
+      }
       if (formData.supportsFullCourt !== undefined) {
         payload.supportsFullCourt = formData.supportsFullCourt
+      }
+      if (formData.fullCourtPrice && formData.supportsFullCourt) {
+        payload.fullCourtPrice = parseInt(formData.fullCourtPrice)
       }
       // 处理场地类型：
       // - 如果只选了室内，发送 indoor: true
@@ -368,7 +376,9 @@ export default function AddVenuePage() {
         priceMax: '',
         isFree: false,
         supportsWalkIn: false,
+        walkInPrice: '',
         supportsFullCourt: false,
+        fullCourtPrice: '',
         venueTypes: [],
         contact: '',
         isPublic: true,
@@ -540,27 +550,57 @@ export default function AddVenuePage() {
               </label>
             </div>
             {/* 收费方式：散客 / 包场（可选，可多选） */}
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.supportsWalkIn}
-                  onChange={(e) => setFormData({ ...formData, supportsWalkIn: e.target.checked })}
-                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
-                  style={{ borderRadius: '4px' }}
-                />
-                <span className="text-body-sm font-bold uppercase tracking-wide">散客（走场）</span>
-              </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.supportsFullCourt}
-                  onChange={(e) => setFormData({ ...formData, supportsFullCourt: e.target.checked })}
-                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
-                  style={{ borderRadius: '4px' }}
-                />
-                <span className="text-body-sm font-bold uppercase tracking-wide">包场</span>
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.supportsWalkIn}
+                    onChange={(e) => setFormData({ ...formData, supportsWalkIn: e.target.checked })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">散客</span>
+                </label>
+                {formData.supportsWalkIn && (
+                  <div className="flex-1 max-w-[200px]">
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.walkInPrice}
+                      onChange={(e) => setFormData({ ...formData, walkInPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="价格 (元/小时)"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.supportsFullCourt}
+                    onChange={(e) => setFormData({ ...formData, supportsFullCourt: e.target.checked })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">包场</span>
+                </label>
+                {formData.supportsFullCourt && (
+                  <div className="flex-1 max-w-[200px]">
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.fullCourtPrice}
+                      onChange={(e) => setFormData({ ...formData, fullCourtPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="价格 (元/小时)"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

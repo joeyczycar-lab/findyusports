@@ -28,11 +28,11 @@ export default function TicketBanner() {
           width: '100%',
           margin: 0,
           padding: 0,
-          minHeight: '200px',
+          minHeight: '300px',
           position: 'relative',
         }}
       >
-      {/* 足球运动员橙色背景图片层 - 使用CSS类和内联样式双重保障 */}
+      {/* 背景图片层 */}
       <div 
         className="ticket-banner-bg absolute inset-0"
         style={{
@@ -48,73 +48,38 @@ export default function TicketBanner() {
           bottom: 0,
           width: '100%',
           height: '100%',
-          minHeight: '200px',
+          minHeight: '300px',
           opacity: 1,
           visibility: 'visible',
           display: 'block',
         }}
       />
       
-      {/* 内容容器 - 与 container-page 对齐，但横向拉满 */}
+      {/* 内容容器 - 居中显示二维码 */}
       <div 
         className="relative z-10 px-4 sm:px-6 lg:px-8"
         style={{
           maxWidth: '1280px',
           margin: '0 auto',
-          paddingTop: '2rem',
-          paddingBottom: '2rem',
+          paddingTop: '3rem',
+          paddingBottom: '3rem',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '2rem',
-          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '1.5rem',
           position: 'relative',
           zIndex: 10,
+          textAlign: 'center',
         }}
       >
-        {/* 左侧文字 */}
+        {/* 二维码 - 居中显示 */}
         <div 
-          className="flex-1 min-w-[200px]"
-          style={{
-            color: '#ffffff',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            flex: '1 1 300px',
-          }}
-        >
-          <h3 
-            className="text-lg sm:text-xl font-bold mb-2"
-            style={{
-              fontSize: 'clamp(0.625rem, 2vw, 0.9375rem)',
-              fontWeight: 'bold',
-              marginBottom: '0.5rem',
-              lineHeight: '1.2',
-            }}
-          >
-            实体店在线打票
-          </h3>
-          <p 
-            className="text-sm sm:text-base"
-            style={{
-              fontSize: 'clamp(0.5rem, 1.5vw, 0.625rem)',
-              lineHeight: '1.5',
-              opacity: 0.95,
-            }}
-          >
-            安全快速，扫码添加微信，在线打票
-          </p>
-        </div>
-        
-        {/* 右侧二维码 */}
-        <div 
-          className="flex-shrink-0"
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             gap: '0.75rem',
-            flexShrink: 0,
           }}
         >
           <div
@@ -148,12 +113,13 @@ export default function TicketBanner() {
             />
           </div>
           <p 
-            className="text-white text-sm font-medium"
             style={{
               color: '#ffffff',
-              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+              fontSize: 'clamp(0.875rem, 2vw, 1rem)',
               fontWeight: '500',
               textAlign: 'center',
+              margin: 0,
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
             }}
           >
             扫码添加微信

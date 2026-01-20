@@ -12,6 +12,7 @@ export default function Nav() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [authState, setAuthState] = useState({ user: null, token: null, isAuthenticated: false })
   const [mounted, setMounted] = useState(false)
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   useEffect(() => {
     // 确保组件已挂载
@@ -228,15 +229,126 @@ export default function Nav() {
         }}
       >
         <div className="container-page h-full w-full flex items-center justify-between" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" className="font-bold text-xl tracking-tight flex items-center space-x-2" style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#000000', fontWeight: 'bold', fontSize: '20px' }}>场地发现</span>
+          {/* 左侧 Logo */}
+          <Link href="/" className="flex items-center" style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <img 
+              src="/logo.png" 
+              alt="Find遇 Logo" 
+              style={{ height: '32px', width: 'auto', display: 'block' }}
+            />
           </Link>
           
+          {/* 中间导航菜单 - Nike 风格 */}
+          <nav className="hidden lg:flex items-center gap-8" style={{ position: 'relative', zIndex: 100000, display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <Link 
+              href="/map?sport=basketball" 
+              className="text-black hover:underline transition-colors"
+              style={{ 
+                color: '#000000', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '400',
+                letterSpacing: '0.01em'
+              }}
+            >
+              篮球场地
+            </Link>
+            <Link 
+              href="/map?sport=football" 
+              className="text-black hover:underline transition-colors"
+              style={{ 
+                color: '#000000', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '400',
+                letterSpacing: '0.01em'
+              }}
+            >
+              足球场地
+            </Link>
+            <Link 
+              href="/map" 
+              className="text-black hover:underline transition-colors"
+              style={{ 
+                color: '#000000', 
+                textDecoration: 'none',
+                fontSize: '14px',
+                fontWeight: '400',
+                letterSpacing: '0.01em'
+              }}
+            >
+              地图探索
+            </Link>
+          </nav>
+
+          {/* 右侧：搜索栏 + 用户菜单 */}
           <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* 添加场地按钮 - 所有屏幕都显示 */}
+            {/* 搜索栏 - Nike 风格，可输入 */}
+            <div className="hidden md:flex items-center" style={{ position: 'relative' }}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (searchKeyword.trim()) {
+                    window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+                  } else {
+                    window.location.href = '/map'
+                  }
+                }}
+                className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors"
+                style={{
+                  backgroundColor: '#f5f5f5',
+                  padding: '8px 16px',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  minWidth: '200px',
+                  cursor: 'text'
+                }}
+              >
+                <Search className="h-4 w-4" style={{ color: '#666666', flexShrink: 0, cursor: 'pointer' }} 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (searchKeyword.trim()) {
+                      window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+                    } else {
+                      window.location.href = '/map'
+                    }
+                  }}
+                />
+                <input
+                  type="text"
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  placeholder="搜索"
+                  className="bg-transparent border-0 outline-0 flex-1"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#000000',
+                    fontSize: '14px',
+                    flex: 1,
+                    minWidth: 0
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (searchKeyword.trim()) {
+                        window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+                      } else {
+                        window.location.href = '/map'
+                      }
+                    }
+                  }}
+                />
+              </form>
+            </div>
+
+            {/* 添加场地按钮 */}
             <Link 
               href="/admin/add-venue" 
-              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-flex items-center"
+              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-flex items-center hidden md:inline-flex"
               style={{
                 backgroundColor: '#000000',
                 color: '#ffffff',
@@ -260,29 +372,35 @@ export default function Nav() {
               ➕ 添加场地
             </Link>
 
-            <nav className="hidden md:flex items-center space-x-8" style={{ position: 'relative', zIndex: 100000 }}>
-              <Link href="/map" className="link-nike" style={{ borderRadius: '4px' }}>地图探索</Link>
-              
-              {authState.isAuthenticated ? (
-                <div style={{ position: 'relative', zIndex: 100000 }}>
-                  <UserMenu user={authState.user!} onLogout={handleLogout} />
-                </div>
-              ) : (
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="link-nike"
-                  style={{ borderRadius: '4px' }}
-                >
-                  登录
-                </button>
-              )}
-            </nav>
+            {/* 用户菜单 */}
+            {authState.isAuthenticated ? (
+              <div style={{ position: 'relative', zIndex: 100000 }}>
+                <UserMenu user={authState.user!} onLogout={handleLogout} />
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="text-black hover:underline transition-colors hidden md:block"
+                style={{ 
+                  color: '#000000',
+                  fontSize: '14px',
+                  fontWeight: '400',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                登录
+              </button>
+            )}
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="text-black"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
               >
                 <Menu className="h-6 w-6" />
               </button>

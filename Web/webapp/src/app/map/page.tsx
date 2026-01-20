@@ -1,5 +1,6 @@
 "use client"
 import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
@@ -8,6 +9,7 @@ import FiltersBar, { Filters } from '@/components/FiltersBar'
 export const dynamic = 'force-dynamic'
 
 function MapPageContent() {
+  const searchParams = useSearchParams()
   const [items, setItems] = useState<Array<any>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -16,6 +18,7 @@ function MapPageContent() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
+  const keyword = searchParams?.get('keyword') || ''
 
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
@@ -25,6 +28,8 @@ function MapPageContent() {
     if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
     if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
     if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
+    // 添加关键词搜索参数
+    if (keyword.trim()) p.set('keyword', keyword.trim())
     // 添加排序参数和分页参数，不传坐标参数
     p.set('sortBy', sortBy)
     p.set('page', String(page))
@@ -62,12 +67,12 @@ function MapPageContent() {
   useEffect(() => { 
     setPage(1) // 筛选条件变化时重置到第一页
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortBy, filters])
+  }, [sortBy, filters, keyword])
   
   useEffect(() => { 
     fetchVenues() 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, sortBy, filters])
+  }, [page, sortBy, filters, keyword])
   
   const totalPages = Math.ceil(total / pageSize) || 1
 

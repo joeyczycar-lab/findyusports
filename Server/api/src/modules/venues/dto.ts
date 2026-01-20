@@ -124,6 +124,18 @@ export class CreateVenueDto {
   priceMax?: number
 
   @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  walkInPrice?: number // 散客价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPrice?: number // 包场价格（元/小时）
+
+  @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   supportsWalkIn?: boolean // 是否支持散客
 
@@ -227,6 +239,18 @@ export class UpdateVenueDto {
   @IsNumber()
   @Min(0)
   priceMax?: number
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  walkInPrice?: number // 散客价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPrice?: number // 包场价格（元/小时）
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)

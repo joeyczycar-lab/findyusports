@@ -6,7 +6,7 @@ import ForceButtonRadius from '@/components/ForceButtonRadius'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 
 export const metadata = {
-  title: '运动场地分享 | 篮球·足球',
+  title: 'Find遇体育，体育场地在线分享',
   description: '分享与发现中国各地的篮球、足球场地，地图导航、点评与上传',
 }
 

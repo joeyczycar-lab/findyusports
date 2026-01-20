@@ -501,7 +501,9 @@ export class VenuesService {
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
       venue.supportsWalkIn = dto.supportsWalkIn
+      venue.walkInPrice = dto.walkInPrice
       venue.supportsFullCourt = dto.supportsFullCourt
+      venue.fullCourtPrice = dto.fullCourtPrice
       venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
       venue.contact = dto.contact
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
@@ -552,7 +554,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price', 'full_court_price', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -564,6 +566,8 @@ export class VenuesService {
         const hasParking = existingColumns.includes('has_parking')
         const hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
         const hasSupportsFullCourt = existingColumns.includes('supports_full_court')
+        const hasWalkInPrice = existingColumns.includes('walk_in_price')
+        const hasFullCourtPrice = existingColumns.includes('full_court_price')
         const hasRestArea = existingColumns.includes('has_rest_area')
         const hasShower = existingColumns.includes('has_shower')
         const hasLocker = existingColumns.includes('has_locker')
@@ -628,6 +632,16 @@ export class VenuesService {
         if (hasSupportsFullCourt) {
           columns.push('supports_full_court')
           values.push(venue.supportsFullCourt !== undefined ? venue.supportsFullCourt : null)
+          paramIndex++
+        }
+        if (hasWalkInPrice) {
+          columns.push('walk_in_price')
+          values.push(venue.walkInPrice !== undefined ? venue.walkInPrice : null)
+          paramIndex++
+        }
+        if (hasFullCourtPrice) {
+          columns.push('full_court_price')
+          values.push(venue.fullCourtPrice !== undefined ? venue.fullCourtPrice : null)
           paramIndex++
         }
         if (hasRestArea) {
