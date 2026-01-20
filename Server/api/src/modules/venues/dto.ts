@@ -120,6 +120,14 @@ export class CreateVenueDto {
   priceMax?: number
 
   @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  supportsWalkIn?: boolean // 是否支持散客
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  supportsFullCourt?: boolean // 是否支持包场
+
+  @IsOptional()
   indoor?: boolean | null // null 表示既有室内也有室外
 
   @IsOptional()
@@ -215,6 +223,14 @@ export class UpdateVenueDto {
   @IsNumber()
   @Min(0)
   priceMax?: number
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  supportsWalkIn?: boolean // 是否支持散客
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  supportsFullCourt?: boolean // 是否支持包场
 
   @IsOptional()
   indoor?: boolean | null // null 表示既有室内也有室外

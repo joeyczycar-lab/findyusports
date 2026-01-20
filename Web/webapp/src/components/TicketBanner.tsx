@@ -145,14 +145,6 @@ export default function TicketBanner() {
                 maxHeight: '100%',
                 aspectRatio: '1 / 1',
               }}
-              onError={(e) => {
-                console.error('二维码图片加载失败:', e)
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-              }}
-              onLoad={() => {
-                console.log('二维码图片加载成功')
-              }}
             />
           </div>
           <p 

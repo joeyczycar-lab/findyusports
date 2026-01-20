@@ -495,6 +495,8 @@ export class VenuesService {
       venue.lat = dto.lat
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
+      venue.supportsWalkIn = dto.supportsWalkIn
+      venue.supportsFullCourt = dto.supportsFullCourt
       venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
       venue.contact = dto.contact
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
@@ -545,7 +547,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -555,6 +557,8 @@ export class VenuesService {
         const hasLighting = existingColumns.includes('has_lighting')
         const hasAirConditioning = existingColumns.includes('has_air_conditioning')
         const hasParking = existingColumns.includes('has_parking')
+        const hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
+        const hasSupportsFullCourt = existingColumns.includes('supports_full_court')
         const hasRestArea = existingColumns.includes('has_rest_area')
         const hasShower = existingColumns.includes('has_shower')
         const hasLocker = existingColumns.includes('has_locker')
@@ -609,6 +613,16 @@ export class VenuesService {
         if (hasParking) {
           columns.push('has_parking')
           values.push(venue.hasParking !== undefined ? venue.hasParking : null)
+          paramIndex++
+        }
+        if (hasSupportsWalkIn) {
+          columns.push('supports_walk_in')
+          values.push(venue.supportsWalkIn !== undefined ? venue.supportsWalkIn : null)
+          paramIndex++
+        }
+        if (hasSupportsFullCourt) {
+          columns.push('supports_full_court')
+          values.push(venue.supportsFullCourt !== undefined ? venue.supportsFullCourt : null)
           paramIndex++
         }
         if (hasRestArea) {
@@ -688,6 +702,8 @@ export class VenuesService {
         address: saved.address,
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,
+        supportsWalkIn: saved.supportsWalkIn,
+        supportsFullCourt: saved.supportsFullCourt,
         indoor: saved.indoor ?? false,
         contact: saved.contact,
         isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
@@ -755,6 +771,8 @@ export class VenuesService {
       if (dto.lat !== undefined) venue.lat = dto.lat
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
+      if (dto.supportsWalkIn !== undefined) venue.supportsWalkIn = dto.supportsWalkIn
+      if (dto.supportsFullCourt !== undefined) venue.supportsFullCourt = dto.supportsFullCourt
       if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
       if (dto.contact !== undefined) venue.contact = dto.contact
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic

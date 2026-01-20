@@ -46,6 +46,12 @@ export class VenueEntity {
   @Column({ type: 'int', nullable: true, name: 'priceMax' })
   priceMax?: number
 
+  @Column({ type: 'boolean', nullable: true, name: 'supports_walk_in' })
+  supportsWalkIn?: boolean // 是否支持散客
+
+  @Column({ type: 'boolean', nullable: true, name: 'supports_full_court' })
+  supportsFullCourt?: boolean // 是否支持包场
+
   @Column({ type: 'boolean', nullable: true })
   indoor?: boolean
 

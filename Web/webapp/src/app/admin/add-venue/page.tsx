@@ -29,6 +29,8 @@ export default function AddVenuePage() {
     priceMin: '',
     priceMax: '',
     isFree: false, // 是否免费
+    supportsWalkIn: false, // 是否支持散客
+    supportsFullCourt: false, // 是否支持包场
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
     isPublic: true,
@@ -256,6 +258,13 @@ export default function AddVenuePage() {
         if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
         if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
       }
+      // 收费方式（散客 / 包场），可选
+      if (formData.supportsWalkIn !== undefined) {
+        payload.supportsWalkIn = formData.supportsWalkIn
+      }
+      if (formData.supportsFullCourt !== undefined) {
+        payload.supportsFullCourt = formData.supportsFullCourt
+      }
       // 处理场地类型：
       // - 如果只选了室内，发送 indoor: true
       // - 如果只选了室外，发送 indoor: false
@@ -358,6 +367,8 @@ export default function AddVenuePage() {
         priceMin: '',
         priceMax: '',
         isFree: false,
+        supportsWalkIn: false,
+        supportsFullCourt: false,
         venueTypes: [],
         contact: '',
         isPublic: true,
@@ -526,6 +537,29 @@ export default function AddVenuePage() {
                   style={{ borderRadius: '4px' }}
                 />
                 <span className="text-body-sm font-bold uppercase tracking-wide">免费场地</span>
+              </label>
+            </div>
+            {/* 收费方式：散客 / 包场（可选，可多选） */}
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.supportsWalkIn}
+                  onChange={(e) => setFormData({ ...formData, supportsWalkIn: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">散客（走场）</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.supportsFullCourt}
+                  onChange={(e) => setFormData({ ...formData, supportsFullCourt: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">包场</span>
               </label>
             </div>
             <div className="grid grid-cols-2 gap-4">
