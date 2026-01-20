@@ -187,45 +187,51 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             </div>
           </section>
 
-          {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined || 
-            v?.hasShower !== undefined || v?.hasLocker !== undefined || v?.hasShop !== undefined) && (
+          {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
+            v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
             <section className="border-t border-border pt-8 mb-8">
               <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {v?.hasLighting !== undefined && (
+                {v?.hasLighting === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasLighting ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasLighting ? '有灯光' : '无灯光'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有灯光</span>
                   </div>
                 )}
-                {v?.hasAirConditioning !== undefined && (
+                {v?.hasAirConditioning === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasAirConditioning ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasAirConditioning ? '有空调' : '无空调'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有空调</span>
                   </div>
                 )}
-                {v?.hasParking !== undefined && (
+                {v?.hasParking === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasParking ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有停车场</span>
                   </div>
                 )}
-                {v?.hasShower !== undefined && (
+                {v?.hasRestArea === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasShower ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasShower ? '有沐浴间' : '无沐浴间'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有休息区</span>
                   </div>
                 )}
-                {v?.hasLocker !== undefined && (
+                {v?.hasShower === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasLocker ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasLocker ? '有储物柜' : '无储物柜'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有沐浴间</span>
                   </div>
                 )}
-                {v?.hasShop !== undefined && (
+                {v?.hasLocker === true && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-xl">{v.hasShop ? '✅' : '❌'}</span>
-                    <span className="text-body-sm font-medium">{v.hasShop ? '有小卖部' : '无小卖部'}</span>
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有储物柜</span>
+                  </div>
+                )}
+                {v?.hasShop === true && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有小卖部</span>
                   </div>
                 )}
               </div>
@@ -309,45 +315,51 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   </div>
                 )}
               </div>
-              {(v?.hasLighting !== undefined || v?.hasAirConditioning !== undefined || v?.hasParking !== undefined || 
-                v?.hasShower !== undefined || v?.hasLocker !== undefined || v?.hasShop !== undefined) && (
+              {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
+                v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <h4 className="text-body-sm font-bold mb-3 uppercase tracking-wide">设施信息</h4>
                   <div className="space-y-2 text-body-sm">
-                    {v?.hasLighting !== undefined && (
+                    {v?.hasLighting === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasLighting ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasLighting ? '有灯光' : '无灯光'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有灯光</span>
                       </div>
                     )}
-                    {v?.hasAirConditioning !== undefined && (
+                    {v?.hasAirConditioning === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasAirConditioning ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasAirConditioning ? '有空调' : '无空调'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有空调</span>
                       </div>
                     )}
-                    {v?.hasParking !== undefined && (
+                    {v?.hasParking === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasParking ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasParking ? '有停车场' : '无停车场'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有停车场</span>
                       </div>
                     )}
-                    {v?.hasShower !== undefined && (
+                    {v?.hasRestArea === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasShower ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasShower ? '有沐浴间' : '无沐浴间'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有休息区</span>
                       </div>
                     )}
-                    {v?.hasLocker !== undefined && (
+                    {v?.hasShower === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasLocker ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasLocker ? '有储物柜' : '无储物柜'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有沐浴间</span>
                       </div>
                     )}
-                    {v?.hasShop !== undefined && (
+                    {v?.hasLocker === true && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{v.hasShop ? '✅' : '❌'}</span>
-                        <span className="font-medium">{v.hasShop ? '有小卖部' : '无小卖部'}</span>
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有储物柜</span>
+                      </div>
+                    )}
+                    {v?.hasShop === true && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有小卖部</span>
                       </div>
                     )}
                   </div>
