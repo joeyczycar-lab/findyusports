@@ -32,7 +32,7 @@ export class VenuesService {
 
   async search(query: QueryVenuesDto) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, sortBy } = query
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, sortBy, keyword } = query
       
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
@@ -90,6 +90,11 @@ export class VenuesService {
       if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
       if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
       if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
+      // 关键词搜索（按名称或地址）
+      if (keyword && keyword.trim()) {
+        const searchKeyword = `%${keyword.trim()}%`
+        qb.andWhere('(v.name ILIKE :keyword OR v.address ILIKE :keyword)', { keyword: searchKeyword })
+      }
       
       // 只有在提供了坐标范围时才进行坐标筛选（否则获取所有场地）
       if (ne && sw) {

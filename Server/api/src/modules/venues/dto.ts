@@ -69,6 +69,10 @@ export class QueryVenuesDto {
   @IsOptional()
   @IsString()
   sortBy?: 'city' | 'popularity' | 'name' // 排序方式：按地区、按热度、按名称
+
+  @IsOptional()
+  @IsString()
+  keyword?: string // 关键词搜索（按名称或地址）
 }
 
 export class CreateReviewDto {

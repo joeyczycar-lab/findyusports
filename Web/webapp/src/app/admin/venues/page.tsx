@@ -13,6 +13,7 @@ export default function VenuesListPage() {
   const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [keyword, setKeyword] = useState('') // 关键词搜索
   const [mounted, setMounted] = useState(false)
   const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
   const [deletingVenueId, setDeletingVenueId] = useState<number | null>(null)
@@ -29,7 +30,7 @@ export default function VenuesListPage() {
 
   useEffect(() => {
     loadVenues()
-  }, [page, sortBy])
+  }, [page, sortBy, keyword])
 
   async function loadVenues() {
     try {
@@ -42,6 +43,10 @@ export default function VenuesListPage() {
         pageSize: String(pageSize),
         sortBy: sortBy,
       })
+      // 如果有关键词，添加到查询参数
+      if (keyword && keyword.trim()) {
+        params.append('keyword', keyword.trim())
+      }
       
       const data = await fetchJson(`/venues?${params.toString()}`)
       
@@ -66,6 +71,9 @@ export default function VenuesListPage() {
   }
 
   const totalPages = Math.ceil(total / pageSize) || 1
+
+  // 关键词搜索已由后端处理，直接使用返回的venues
+  const filteredVenues = venues
 
   // 处理删除场地
   const handleDeleteVenue = async (venueId: number, venueName: string) => {
@@ -117,34 +125,62 @@ export default function VenuesListPage() {
 
   return (
     <div className="container-page py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-heading font-bold mb-2">全部场地</h1>
-          <p className="text-body text-textSecondary">
-            共 {total} 个场地 · 第 {page} / {totalPages} 页
-          </p>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-heading font-bold mb-2">全部场地</h1>
+            <p className="text-body text-textSecondary">
+              共 {total} 个场地 · 第 {page} / {totalPages} 页
+            </p>
+          </div>
+          <div className="flex gap-4 items-center flex-wrap">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value)
+                  setPage(1) // 搜索时重置到第一页
+                }}
+                placeholder="按名称或地址搜索场地..."
+                className="px-3 py-2 border border-gray-300 rounded text-sm bg-white min-w-[220px]"
+              />
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value as 'city' | 'popularity' | 'name')
+                setPage(1) // 重置到第一页
+              }}
+              className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
+            >
+              <option value="popularity">🔥 按热度</option>
+              <option value="city">📍 按地区</option>
+              <option value="name">🔤 按名称</option>
+            </select>
+            <Link 
+              href="/admin/add-venue" 
+              className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors"
+              style={{ borderRadius: '4px' }}
+            >
+              ➕ 添加场地
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <select
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value as 'city' | 'popularity' | 'name')
-              setPage(1) // 重置到第一页
-            }}
-            className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
-          >
-            <option value="popularity">🔥 按热度</option>
-            <option value="city">📍 按地区</option>
-            <option value="name">🔤 按名称</option>
-          </select>
-          <Link 
-            href="/admin/add-venue" 
-            className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors"
-            style={{ borderRadius: '4px' }}
-          >
-            ➕ 添加场地
-          </Link>
-        </div>
+        {keyword && keyword.trim() && (
+          <div className="text-xs text-textSecondary">
+            搜索关键词：<span className="font-mono bg-gray-100 px-1 py-0.5 rounded">{keyword}</span> · 找到 {total} 个场地
+            <button
+              onClick={() => {
+                setKeyword('')
+                setPage(1)
+              }}
+              className="ml-2 text-blue-600 hover:text-blue-800 underline"
+            >
+              清除
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 调试信息 - 开发环境显示（仅在客户端渲染） */}
@@ -193,7 +229,26 @@ export default function VenuesListPage() {
         </div>
       )}
 
-      {!loading && !error && venues.length === 0 && total > 0 && (
+      {/* 搜索无结果的情况 */}
+      {!loading && !error && venues.length === 0 && total === 0 && keyword && keyword.trim() && (
+        <div className="text-center py-16 text-textSecondary">
+          <div className="text-4xl mb-4">🔎</div>
+          <div className="text-body mb-2">没有找到匹配"{keyword}"的场地</div>
+          <div className="text-xs mb-4">请尝试其他关键词或清除搜索条件</div>
+          <button
+            onClick={() => {
+              setKeyword('')
+              setPage(1)
+            }}
+            className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
+            style={{ borderRadius: '4px' }}
+          >
+            清除搜索
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && venues.length === 0 && total > 0 && !keyword?.trim() && (
         <div className="text-center py-16 text-textSecondary">
           <div className="text-body mb-4">当前页没有场地数据（共 {total} 个场地）</div>
           <button
