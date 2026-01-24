@@ -24,3 +24,5 @@ ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_max INTEGER;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS requires_reservation BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS reservation_method VARCHAR(200);
 
+-- 5. 添加几人制字段
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS players_per_side VARCHAR(20);

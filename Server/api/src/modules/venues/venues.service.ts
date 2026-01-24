@@ -393,6 +393,7 @@ export class VenuesService {
       let hasRestArea = false
       let hasRequiresReservation = false
       let hasReservationMethod = false
+      let hasPlayersPerSide = false
       let hasSupportsWalkIn = false
       let hasSupportsFullCourt = false
       let hasWalkInPriceMin = false
@@ -404,7 +405,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method')
+          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasShower = existingColumns.includes('has_shower')
@@ -413,6 +414,7 @@ export class VenuesService {
         hasRestArea = existingColumns.includes('has_rest_area')
         hasRequiresReservation = existingColumns.includes('requires_reservation')
         hasReservationMethod = existingColumns.includes('reservation_method')
+        hasPlayersPerSide = existingColumns.includes('players_per_side')
         hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
         hasSupportsFullCourt = existingColumns.includes('supports_full_court')
         hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
@@ -457,6 +459,7 @@ export class VenuesService {
         if (hasShop) selectColumns.push('v.hasShop')
         if (hasRequiresReservation) selectColumns.push('v.requiresReservation')
         if (hasReservationMethod) selectColumns.push('v.reservationMethod')
+        if (hasPlayersPerSide) selectColumns.push('v.playersPerSide')
         if (hasSupportsWalkIn) selectColumns.push('v.supportsWalkIn')
         if (hasWalkInPriceMin) selectColumns.push('v.walkInPriceMin')
         if (hasWalkInPriceMax) selectColumns.push('v.walkInPriceMax')
@@ -499,6 +502,7 @@ export class VenuesService {
       if (hasShop) result.hasShop = v.hasShop
       if (hasRequiresReservation) result.requiresReservation = v.requiresReservation
       if (hasReservationMethod) result.reservationMethod = v.reservationMethod
+      if (hasPlayersPerSide) result.playersPerSide = v.playersPerSide
       if (hasSupportsWalkIn) result.supportsWalkIn = v.supportsWalkIn
       if (hasWalkInPriceMin) result.walkInPriceMin = v.walkInPriceMin
       if (hasWalkInPriceMax) result.walkInPriceMax = v.walkInPriceMax
@@ -542,6 +546,7 @@ export class VenuesService {
       venue.contact = dto.contact
       venue.requiresReservation = dto.requiresReservation
       venue.reservationMethod = dto.reservationMethod
+      venue.playersPerSide = dto.playersPerSide
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       venue.courtCount = dto.courtCount
       venue.floorType = dto.floorType
@@ -590,7 +595,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -612,6 +617,7 @@ export class VenuesService {
         const hasShower = existingColumns.includes('has_shower')
         const hasLocker = existingColumns.includes('has_locker')
         const hasShop = existingColumns.includes('has_shop')
+        const hasPlayersPerSide = existingColumns.includes('players_per_side')
         
         // 构建动态的 INSERT 语句
         const baseColumns = ['name', '"sportType"', '"cityCode"', 'district_code', 'address', 'lng', 'lat', '"priceMin"', '"priceMax"', 'indoor', 'contact', 'is_public']
@@ -707,6 +713,11 @@ export class VenuesService {
         if (hasReservationMethod) {
           columns.push('reservation_method')
           values.push(venue.reservationMethod || null)
+          paramIndex++
+        }
+        if (hasPlayersPerSide) {
+          columns.push('players_per_side')
+          values.push(venue.playersPerSide || null)
           paramIndex++
         }
         if (hasShower) {
@@ -860,6 +871,9 @@ export class VenuesService {
       if (dto.fullCourtPriceMax !== undefined) venue.fullCourtPriceMax = dto.fullCourtPriceMax
       if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
       if (dto.contact !== undefined) venue.contact = dto.contact
+      if (dto.requiresReservation !== undefined) venue.requiresReservation = dto.requiresReservation
+      if (dto.reservationMethod !== undefined) venue.reservationMethod = dto.reservationMethod
+      if (dto.playersPerSide !== undefined) venue.playersPerSide = dto.playersPerSide
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
       if (dto.courtCount !== undefined) venue.courtCount = dto.courtCount
       if (dto.floorType !== undefined) venue.floorType = dto.floorType
@@ -979,6 +993,18 @@ export class VenuesService {
         if (dto.fullCourtPriceMax !== undefined) {
           updates.push(`full_court_price_max = $${paramIndex++}`)
           values.push(dto.fullCourtPriceMax)
+        }
+        if (dto.requiresReservation !== undefined) {
+          updates.push(`requires_reservation = $${paramIndex++}`)
+          values.push(dto.requiresReservation)
+        }
+        if (dto.reservationMethod !== undefined) {
+          updates.push(`reservation_method = $${paramIndex++}`)
+          values.push(dto.reservationMethod)
+        }
+        if (dto.playersPerSide !== undefined) {
+          updates.push(`players_per_side = $${paramIndex++}`)
+          values.push(dto.playersPerSide)
         }
         
         if (updates.length > 0) {

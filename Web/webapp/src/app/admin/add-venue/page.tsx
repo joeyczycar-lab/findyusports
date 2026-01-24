@@ -42,6 +42,7 @@ export default function AddVenuePage() {
     isPublic: true,
     courtCount: '',
     floorType: [] as string[],
+    playersPerSide: '', // 几人制（如 5人制/7人制/11人制）
     openHours: '',
     hasLighting: false,
     hasAirConditioning: false,
@@ -313,6 +314,9 @@ export default function AddVenuePage() {
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
       if (formData.courtCount) payload.courtCount = parseInt(formData.courtCount)
       if (formData.floorType && formData.floorType.length > 0) payload.floorType = formData.floorType.join('、')
+      if (formData.playersPerSide && formData.playersPerSide.trim()) {
+        payload.playersPerSide = formData.playersPerSide.trim()
+      }
       if (formData.openHours) payload.openHours = formData.openHours
       if (formData.hasLighting !== undefined) payload.hasLighting = formData.hasLighting
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
@@ -409,6 +413,7 @@ export default function AddVenuePage() {
         isPublic: true,
         courtCount: '',
         floorType: [],
+        playersPerSide: '',
         openHours: '',
         hasLighting: false,
         hasAirConditioning: false,
@@ -854,6 +859,30 @@ export default function AddVenuePage() {
                 已选择：{formData.floorType.join('、')}
               </p>
             )}
+          </div>
+
+          {/* 几人制（主要用于足球场地） */}
+          <div>
+            <label htmlFor="playersPerSide" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              几人制 <span className="text-gray-500 text-xs normal-case">(可选，主要用于足球场地)</span>
+            </label>
+            <select
+              id="playersPerSide"
+              value={formData.playersPerSide}
+              onChange={(e) => setFormData({ ...formData, playersPerSide: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+              style={{ borderRadius: '4px' }}
+            >
+              <option value="">未指定</option>
+              <option value="5人制">5人制</option>
+              <option value="7人制">7人制</option>
+              <option value="8人制">8人制</option>
+              <option value="9人制">9人制</option>
+              <option value="11人制">11人制</option>
+            </select>
+            <p className="text-xs text-gray-600 mt-2">
+              💡 提示：对于足球场地，常见有 5人制、7人制、8人制、9人制、11人制等。
+            </p>
           </div>
 
           <div>

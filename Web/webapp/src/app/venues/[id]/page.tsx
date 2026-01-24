@@ -322,6 +322,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     </div>
                   </div>
                 )}
+                {v.playersPerSide && v.sportType === 'football' && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">几人制</div>
+                    <div className="font-medium">{v.playersPerSide}</div>
+                  </div>
+                )}
                 {v.openHours && (
                   <div>
                     <div className="text-textSecondary uppercase tracking-wide mb-1">开放时间</div>

@@ -186,6 +186,10 @@ export class CreateVenueDto {
 
   @IsOptional()
   @IsString()
+  playersPerSide?: string // 几人制（如：5人制、7人制、11人制）
+
+  @IsOptional()
+  @IsString()
   openHours?: string // 开放时间（如：周一至周五 9:00-22:00）
 
   @IsOptional()
@@ -320,6 +324,10 @@ export class UpdateVenueDto {
   @IsOptional()
   @IsString()
   floorType?: string
+
+  @IsOptional()
+  @IsString()
+  playersPerSide?: string // 几人制（如：5人制、7人制、11人制）
 
   @IsOptional()
   @IsString()

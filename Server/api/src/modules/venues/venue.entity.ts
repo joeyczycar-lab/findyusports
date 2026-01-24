@@ -76,6 +76,9 @@ export class VenueEntity {
   @Column({ type: 'varchar', length: 200, nullable: true, name: 'reservation_method' })
   reservationMethod?: string // 预约方式（如：电话/微信/小程序 等）
 
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'players_per_side' })
+  playersPerSide?: string // 几人制（如：5人制、7人制、11人制）
+
   @Column({ type: 'boolean', nullable: true, default: true, name: 'is_public' })
   isPublic?: boolean // 是否对外开放
 
