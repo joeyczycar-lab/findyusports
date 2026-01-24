@@ -30,11 +30,15 @@ export default function AddVenuePage() {
     priceMax: '',
     isFree: false, // 是否免费
     supportsWalkIn: false, // 是否支持散客
-    walkInPrice: '', // 散客价格
+    walkInPriceMin: '', // 散客最低价格
+    walkInPriceMax: '', // 散客最高价格
     supportsFullCourt: false, // 是否支持包场
-    fullCourtPrice: '', // 包场价格
+    fullCourtPriceMin: '', // 包场最低价格
+    fullCourtPriceMax: '', // 包场最高价格
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
+    requiresReservation: false, // 是否需要预约
+    reservationMethod: '', // 预约方式
     isPublic: true,
     courtCount: '',
     floorType: [] as string[],
@@ -264,14 +268,31 @@ export default function AddVenuePage() {
       if (formData.supportsWalkIn !== undefined) {
         payload.supportsWalkIn = formData.supportsWalkIn
       }
-      if (formData.walkInPrice && formData.supportsWalkIn) {
-        payload.walkInPrice = parseInt(formData.walkInPrice)
+      if (formData.supportsWalkIn) {
+        if (formData.walkInPriceMin) {
+          payload.walkInPriceMin = parseInt(formData.walkInPriceMin)
+        }
+        if (formData.walkInPriceMax) {
+          payload.walkInPriceMax = parseInt(formData.walkInPriceMax)
+        }
       }
       if (formData.supportsFullCourt !== undefined) {
         payload.supportsFullCourt = formData.supportsFullCourt
       }
-      if (formData.fullCourtPrice && formData.supportsFullCourt) {
-        payload.fullCourtPrice = parseInt(formData.fullCourtPrice)
+      if (formData.supportsFullCourt) {
+        if (formData.fullCourtPriceMin) {
+          payload.fullCourtPriceMin = parseInt(formData.fullCourtPriceMin)
+        }
+        if (formData.fullCourtPriceMax) {
+          payload.fullCourtPriceMax = parseInt(formData.fullCourtPriceMax)
+        }
+      }
+      // 预约信息
+      if (formData.requiresReservation !== undefined) {
+        payload.requiresReservation = formData.requiresReservation
+      }
+      if (formData.reservationMethod && formData.reservationMethod.trim()) {
+        payload.reservationMethod = formData.reservationMethod.trim()
       }
       // 处理场地类型：
       // - 如果只选了室内，发送 indoor: true
@@ -376,11 +397,15 @@ export default function AddVenuePage() {
         priceMax: '',
         isFree: false,
         supportsWalkIn: false,
-        walkInPrice: '',
+        walkInPriceMin: '',
+        walkInPriceMax: '',
         supportsFullCourt: false,
-        fullCourtPrice: '',
+        fullCourtPriceMin: '',
+        fullCourtPriceMax: '',
         venueTypes: [],
         contact: '',
+        requiresReservation: false,
+        reservationMethod: '',
         isPublic: true,
         courtCount: '',
         floorType: [],
@@ -551,8 +576,8 @@ export default function AddVenuePage() {
             </div>
             {/* 收费方式：散客 / 包场（可选，可多选） */}
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="flex items-start gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer flex-shrink-0">
                   <input
                     type="checkbox"
                     checked={formData.supportsWalkIn}
@@ -560,24 +585,35 @@ export default function AddVenuePage() {
                     className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
                     style={{ borderRadius: '4px' }}
                   />
-                  <span className="text-body-sm font-bold uppercase tracking-wide">散客</span>
+                  <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">散客</span>
                 </label>
                 {formData.supportsWalkIn && (
-                  <div className="flex-1 max-w-[200px]">
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
                       type="number"
                       min="0"
-                      value={formData.walkInPrice}
-                      onChange={(e) => setFormData({ ...formData, walkInPrice: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      value={formData.walkInPriceMin}
+                      onChange={(e) => setFormData({ ...formData, walkInPriceMin: e.target.value })}
+                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
                       style={{ borderRadius: '4px' }}
-                      placeholder="价格 (元/小时)"
+                      placeholder="最低价格"
                     />
+                    <span className="text-body-sm flex-shrink-0">到</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.walkInPriceMax}
+                      onChange={(e) => setFormData({ ...formData, walkInPriceMax: e.target.value })}
+                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="最高价格"
+                    />
+                    <span className="text-body-sm text-textSecondary flex-shrink-0">元/小时</span>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
+              <div className="flex items-start gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer flex-shrink-0">
                   <input
                     type="checkbox"
                     checked={formData.supportsFullCourt}
@@ -585,19 +621,30 @@ export default function AddVenuePage() {
                     className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
                     style={{ borderRadius: '4px' }}
                   />
-                  <span className="text-body-sm font-bold uppercase tracking-wide">包场</span>
+                  <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">包场</span>
                 </label>
                 {formData.supportsFullCourt && (
-                  <div className="flex-1 max-w-[200px]">
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
                       type="number"
                       min="0"
-                      value={formData.fullCourtPrice}
-                      onChange={(e) => setFormData({ ...formData, fullCourtPrice: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      value={formData.fullCourtPriceMin}
+                      onChange={(e) => setFormData({ ...formData, fullCourtPriceMin: e.target.value })}
+                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
                       style={{ borderRadius: '4px' }}
-                      placeholder="价格 (元/小时)"
+                      placeholder="最低价格"
                     />
+                    <span className="text-body-sm flex-shrink-0">到</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.fullCourtPriceMax}
+                      onChange={(e) => setFormData({ ...formData, fullCourtPriceMax: e.target.value })}
+                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="最高价格"
+                    />
+                    <span className="text-body-sm text-textSecondary flex-shrink-0">元/小时</span>
                   </div>
                 )}
               </div>
@@ -723,6 +770,40 @@ export default function AddVenuePage() {
             <p className="text-xs text-gray-600 mt-2">
               💡 提示：可以填写电话、微信或其他联系方式
             </p>
+          </div>
+
+          {/* 预约信息 */}
+          <div className="space-y-3">
+            <label className="block text-body-sm font-bold uppercase tracking-wide">
+              预约信息 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.requiresReservation}
+                  onChange={(e) => setFormData({ ...formData, requiresReservation: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">需要预约</span>
+              </label>
+            </div>
+            {formData.requiresReservation && (
+              <div>
+                <input
+                  type="text"
+                  value={formData.reservationMethod}
+                  onChange={(e) => setFormData({ ...formData, reservationMethod: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                  placeholder="预约方式，如：电话预约 / 微信小程序 / 公众号等"
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  💡 提示：如果需要预约，请写清楚预约方式，方便用户联系场地方
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

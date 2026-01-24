@@ -127,13 +127,25 @@ export class CreateVenueDto {
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPrice?: number // 散客价格（元/小时）
+  walkInPriceMin?: number // 散客最低价格（元/小时）
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPrice?: number // 包场价格（元/小时）
+  walkInPriceMax?: number // 散客最高价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPriceMax?: number // 包场最高价格（元/小时）
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
@@ -149,6 +161,14 @@ export class CreateVenueDto {
   @IsOptional()
   @IsString()
   contact?: string // 联系方式（电话、微信等）
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  requiresReservation?: boolean // 是否需要预约
+
+  @IsOptional()
+  @IsString()
+  reservationMethod?: string // 预约方式（如：电话/微信/小程序 等）
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
@@ -244,13 +264,25 @@ export class UpdateVenueDto {
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPrice?: number // 散客价格（元/小时）
+  walkInPriceMin?: number // 散客最低价格（元/小时）
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPrice?: number // 包场价格（元/小时）
+  walkInPriceMax?: number // 散客最高价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : Number(value))
+  @IsNumber()
+  @Min(0)
+  fullCourtPriceMax?: number // 包场最高价格（元/小时）
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
@@ -266,6 +298,14 @@ export class UpdateVenueDto {
   @IsOptional()
   @IsString()
   contact?: string
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  requiresReservation?: boolean // 是否需要预约
+
+  @IsOptional()
+  @IsString()
+  reservationMethod?: string // 预约方式（如：电话/微信/小程序 等）
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)

@@ -408,18 +408,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* 浮动添加场地按钮 - 移动端 */}
-      <div className="fixed bottom-6 right-6 z-50 lg:hidden">
-        <Link 
-          href="/admin/add-venue" 
-          className="bg-black text-white px-6 py-4 shadow-lg hover:bg-gray-900 transition-colors duration-200 flex items-center gap-2 font-bold text-sm uppercase tracking-wider"
-          style={{ borderRadius: '4px' }}
-        >
-          <span className="text-xl">➕</span>
-          <span>添加场地</span>
-        </Link>
-      </div>
     </main>
   )
 }

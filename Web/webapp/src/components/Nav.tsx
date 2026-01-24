@@ -143,8 +143,9 @@ export default function Nav() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
           header#main-nav-header {
             position: fixed !important;
             top: 0 !important;
@@ -166,23 +167,25 @@ export default function Nav() {
             visibility: visible !important;
             opacity: 1 !important;
           }
-          header#main-nav-header a[href="/admin/add-venue"],
-          header#main-nav-header a[href="/admin/add-venue"]:link,
-          header#main-nav-header a[href="/admin/add-venue"]:visited,
-          header#main-nav-header a[href="/admin/add-venue"]:hover,
-          header#main-nav-header a[href="/admin/add-venue"]:focus,
-          header#main-nav-header a[href="/admin/add-venue"]:active {
-            background-color: #000000 !important;
-            color: #ffffff !important;
-            display: inline-flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            text-decoration: none !important;
-            padding: 8px 16px !important;
-            font-weight: bold !important;
-            border-radius: 4px !important;
-            -webkit-border-radius: 4px !important;
-            -moz-border-radius: 4px !important;
+          /* 只在桌面端高亮“添加场地”按钮，避免移动端样式冲突 */
+          @media (min-width: 1024px) {
+            header#main-nav-header a[href="/admin/add-venue"],
+            header#main-nav-header a[href="/admin/add-venue"]:link,
+            header#main-nav-header a[href="/admin/add-venue"]:visited,
+            header#main-nav-header a[href="/admin/add-venue"]:hover,
+            header#main-nav-header a[href="/admin/add-venue"]:focus,
+            header#main-nav-header a[href="/admin/add-venue"]:active {
+              background-color: #000000 !important;
+              color: #ffffff !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+              text-decoration: none !important;
+              padding: 8px 16px !important;
+              font-weight: bold !important;
+              border-radius: 4px !important;
+              -webkit-border-radius: 4px !important;
+              -moz-border-radius: 4px !important;
+            }
           }
           header#main-nav-header a,
           header#main-nav-header a:link,
@@ -203,8 +206,9 @@ export default function Nav() {
             -webkit-border-radius: 4px !important;
             -moz-border-radius: 4px !important;
           }
-        `
-      }} />
+        `,
+        }}
+      />
       <header 
         id="main-nav-header"
         style={{

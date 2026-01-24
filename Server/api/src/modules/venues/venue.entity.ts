@@ -49,20 +49,32 @@ export class VenueEntity {
   @Column({ type: 'boolean', nullable: true, name: 'supports_walk_in' })
   supportsWalkIn?: boolean // 是否支持散客
 
-  @Column({ type: 'int', nullable: true, name: 'walk_in_price' })
-  walkInPrice?: number // 散客价格（元/小时）
+  @Column({ type: 'int', nullable: true, name: 'walk_in_price_min' })
+  walkInPriceMin?: number // 散客最低价格（元/小时）
+
+  @Column({ type: 'int', nullable: true, name: 'walk_in_price_max' })
+  walkInPriceMax?: number // 散客最高价格（元/小时）
 
   @Column({ type: 'boolean', nullable: true, name: 'supports_full_court' })
   supportsFullCourt?: boolean // 是否支持包场
 
-  @Column({ type: 'int', nullable: true, name: 'full_court_price' })
-  fullCourtPrice?: number // 包场价格（元/小时）
+  @Column({ type: 'int', nullable: true, name: 'full_court_price_min' })
+  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+
+  @Column({ type: 'int', nullable: true, name: 'full_court_price_max' })
+  fullCourtPriceMax?: number // 包场最高价格（元/小时）
 
   @Column({ type: 'boolean', nullable: true })
   indoor?: boolean
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   contact?: string // 联系方式（电话、微信等）
+
+  @Column({ type: 'boolean', nullable: true, name: 'requires_reservation' })
+  requiresReservation?: boolean // 是否需要预约
+
+  @Column({ type: 'varchar', length: 200, nullable: true, name: 'reservation_method' })
+  reservationMethod?: string // 预约方式（如：电话/微信/小程序 等）
 
   @Column({ type: 'boolean', nullable: true, default: true, name: 'is_public' })
   isPublic?: boolean // 是否对外开放

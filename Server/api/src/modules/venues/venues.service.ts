@@ -391,18 +391,34 @@ export class VenuesService {
       let hasLocker = false
       let hasShop = false
       let hasRestArea = false
+      let hasRequiresReservation = false
+      let hasReservationMethod = false
+      let hasSupportsWalkIn = false
+      let hasSupportsFullCourt = false
+      let hasWalkInPriceMin = false
+      let hasWalkInPriceMax = false
+      let hasFullCourtPriceMin = false
+      let hasFullCourtPriceMax = false
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area')
+          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
         hasRestArea = existingColumns.includes('has_rest_area')
+        hasRequiresReservation = existingColumns.includes('requires_reservation')
+        hasReservationMethod = existingColumns.includes('reservation_method')
+        hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
+        hasSupportsFullCourt = existingColumns.includes('supports_full_court')
+        hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
+        hasWalkInPriceMax = existingColumns.includes('walk_in_price_max')
+        hasFullCourtPriceMin = existingColumns.includes('full_court_price_min')
+        hasFullCourtPriceMax = existingColumns.includes('full_court_price_max')
       } catch (error) {
         console.warn('⚠️ Error checking facility columns in detail:', error instanceof Error ? error.message : String(error))
       }
@@ -439,6 +455,14 @@ export class VenuesService {
         if (hasShower) selectColumns.push('v.hasShower')
         if (hasLocker) selectColumns.push('v.hasLocker')
         if (hasShop) selectColumns.push('v.hasShop')
+        if (hasRequiresReservation) selectColumns.push('v.requiresReservation')
+        if (hasReservationMethod) selectColumns.push('v.reservationMethod')
+        if (hasSupportsWalkIn) selectColumns.push('v.supportsWalkIn')
+        if (hasWalkInPriceMin) selectColumns.push('v.walkInPriceMin')
+        if (hasWalkInPriceMax) selectColumns.push('v.walkInPriceMax')
+        if (hasSupportsFullCourt) selectColumns.push('v.supportsFullCourt')
+        if (hasFullCourtPriceMin) selectColumns.push('v.fullCourtPriceMin')
+        if (hasFullCourtPriceMax) selectColumns.push('v.fullCourtPriceMax')
         
         qb.select(selectColumns)
       }
@@ -473,6 +497,14 @@ export class VenuesService {
       if (hasShower) result.hasShower = v.hasShower
       if (hasLocker) result.hasLocker = v.hasLocker
       if (hasShop) result.hasShop = v.hasShop
+      if (hasRequiresReservation) result.requiresReservation = v.requiresReservation
+      if (hasReservationMethod) result.reservationMethod = v.reservationMethod
+      if (hasSupportsWalkIn) result.supportsWalkIn = v.supportsWalkIn
+      if (hasWalkInPriceMin) result.walkInPriceMin = v.walkInPriceMin
+      if (hasWalkInPriceMax) result.walkInPriceMax = v.walkInPriceMax
+      if (hasSupportsFullCourt) result.supportsFullCourt = v.supportsFullCourt
+      if (hasFullCourtPriceMin) result.fullCourtPriceMin = v.fullCourtPriceMin
+      if (hasFullCourtPriceMax) result.fullCourtPriceMax = v.fullCourtPriceMax
       
       return result
     } catch (error) {
@@ -501,11 +533,15 @@ export class VenuesService {
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
       venue.supportsWalkIn = dto.supportsWalkIn
-      venue.walkInPrice = dto.walkInPrice
+      venue.walkInPriceMin = dto.walkInPriceMin
+      venue.walkInPriceMax = dto.walkInPriceMax
       venue.supportsFullCourt = dto.supportsFullCourt
-      venue.fullCourtPrice = dto.fullCourtPrice
+      venue.fullCourtPriceMin = dto.fullCourtPriceMin
+      venue.fullCourtPriceMax = dto.fullCourtPriceMax
       venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
       venue.contact = dto.contact
+      venue.requiresReservation = dto.requiresReservation
+      venue.reservationMethod = dto.reservationMethod
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       venue.courtCount = dto.courtCount
       venue.floorType = dto.floorType
@@ -554,7 +590,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price', 'full_court_price', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -566,9 +602,13 @@ export class VenuesService {
         const hasParking = existingColumns.includes('has_parking')
         const hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
         const hasSupportsFullCourt = existingColumns.includes('supports_full_court')
-        const hasWalkInPrice = existingColumns.includes('walk_in_price')
-        const hasFullCourtPrice = existingColumns.includes('full_court_price')
+        const hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
+        const hasWalkInPriceMax = existingColumns.includes('walk_in_price_max')
+        const hasFullCourtPriceMin = existingColumns.includes('full_court_price_min')
+        const hasFullCourtPriceMax = existingColumns.includes('full_court_price_max')
         const hasRestArea = existingColumns.includes('has_rest_area')
+        const hasRequiresReservation = existingColumns.includes('requires_reservation')
+        const hasReservationMethod = existingColumns.includes('reservation_method')
         const hasShower = existingColumns.includes('has_shower')
         const hasLocker = existingColumns.includes('has_locker')
         const hasShop = existingColumns.includes('has_shop')
@@ -634,19 +674,39 @@ export class VenuesService {
           values.push(venue.supportsFullCourt !== undefined ? venue.supportsFullCourt : null)
           paramIndex++
         }
-        if (hasWalkInPrice) {
-          columns.push('walk_in_price')
-          values.push(venue.walkInPrice !== undefined ? venue.walkInPrice : null)
+        if (hasWalkInPriceMin) {
+          columns.push('walk_in_price_min')
+          values.push(venue.walkInPriceMin !== undefined ? venue.walkInPriceMin : null)
           paramIndex++
         }
-        if (hasFullCourtPrice) {
-          columns.push('full_court_price')
-          values.push(venue.fullCourtPrice !== undefined ? venue.fullCourtPrice : null)
+        if (hasWalkInPriceMax) {
+          columns.push('walk_in_price_max')
+          values.push(venue.walkInPriceMax !== undefined ? venue.walkInPriceMax : null)
+          paramIndex++
+        }
+        if (hasFullCourtPriceMin) {
+          columns.push('full_court_price_min')
+          values.push(venue.fullCourtPriceMin !== undefined ? venue.fullCourtPriceMin : null)
+          paramIndex++
+        }
+        if (hasFullCourtPriceMax) {
+          columns.push('full_court_price_max')
+          values.push(venue.fullCourtPriceMax !== undefined ? venue.fullCourtPriceMax : null)
           paramIndex++
         }
         if (hasRestArea) {
           columns.push('has_rest_area')
           values.push(venue.hasRestArea !== undefined ? venue.hasRestArea : null)
+          paramIndex++
+        }
+        if (hasRequiresReservation) {
+          columns.push('requires_reservation')
+          values.push(venue.requiresReservation !== undefined ? venue.requiresReservation : null)
+          paramIndex++
+        }
+        if (hasReservationMethod) {
+          columns.push('reservation_method')
+          values.push(venue.reservationMethod || null)
           paramIndex++
         }
         if (hasShower) {
@@ -725,6 +785,8 @@ export class VenuesService {
         supportsFullCourt: saved.supportsFullCourt,
         indoor: saved.indoor ?? false,
         contact: saved.contact,
+        requiresReservation: saved.requiresReservation,
+        reservationMethod: saved.reservationMethod,
         isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
         location: [saved.lng, saved.lat] as [number, number],
       }
@@ -791,7 +853,11 @@ export class VenuesService {
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
       if (dto.supportsWalkIn !== undefined) venue.supportsWalkIn = dto.supportsWalkIn
+      if (dto.walkInPriceMin !== undefined) venue.walkInPriceMin = dto.walkInPriceMin
+      if (dto.walkInPriceMax !== undefined) venue.walkInPriceMax = dto.walkInPriceMax
       if (dto.supportsFullCourt !== undefined) venue.supportsFullCourt = dto.supportsFullCourt
+      if (dto.fullCourtPriceMin !== undefined) venue.fullCourtPriceMin = dto.fullCourtPriceMin
+      if (dto.fullCourtPriceMax !== undefined) venue.fullCourtPriceMax = dto.fullCourtPriceMax
       if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
       if (dto.contact !== undefined) venue.contact = dto.contact
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
@@ -889,6 +955,30 @@ export class VenuesService {
         if (dto.hasRestArea !== undefined) {
           updates.push(`has_rest_area = $${paramIndex++}`)
           values.push(dto.hasRestArea)
+        }
+        if (dto.supportsWalkIn !== undefined) {
+          updates.push(`supports_walk_in = $${paramIndex++}`)
+          values.push(dto.supportsWalkIn)
+        }
+        if (dto.walkInPriceMin !== undefined) {
+          updates.push(`walk_in_price_min = $${paramIndex++}`)
+          values.push(dto.walkInPriceMin)
+        }
+        if (dto.walkInPriceMax !== undefined) {
+          updates.push(`walk_in_price_max = $${paramIndex++}`)
+          values.push(dto.walkInPriceMax)
+        }
+        if (dto.supportsFullCourt !== undefined) {
+          updates.push(`supports_full_court = $${paramIndex++}`)
+          values.push(dto.supportsFullCourt)
+        }
+        if (dto.fullCourtPriceMin !== undefined) {
+          updates.push(`full_court_price_min = $${paramIndex++}`)
+          values.push(dto.fullCourtPriceMin)
+        }
+        if (dto.fullCourtPriceMax !== undefined) {
+          updates.push(`full_court_price_max = $${paramIndex++}`)
+          values.push(dto.fullCourtPriceMax)
         }
         
         if (updates.length > 0) {

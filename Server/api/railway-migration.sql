@@ -14,3 +14,13 @@ ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_rest_area BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS supports_walk_in BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS supports_full_court BOOLEAN;
 
+-- 3. 添加散客和包场价格范围字段
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS walk_in_price_min INTEGER;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS walk_in_price_max INTEGER;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_min INTEGER;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_max INTEGER;
+
+-- 4. 添加预约相关字段
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS requires_reservation BOOLEAN;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS reservation_method VARCHAR(200);
+

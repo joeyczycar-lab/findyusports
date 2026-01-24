@@ -284,6 +284,20 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
                   <div className="font-medium">{v.contact || '未提供'}</div>
                 </div>
+                {v.requiresReservation !== undefined && v.requiresReservation !== null && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">是否需要预约</div>
+                    <div className="font-medium">
+                      {v.requiresReservation ? '需要预约' : '无需预约'}
+                    </div>
+                  </div>
+                )}
+                {v.requiresReservation && v.reservationMethod && (
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">预约方式</div>
+                    <div className="font-medium whitespace-pre-line">{v.reservationMethod}</div>
+                  </div>
+                )}
                 {v.courtCount && (
                   <div>
                     <div className="text-textSecondary uppercase tracking-wide mb-1">场地数量</div>
