@@ -720,6 +720,11 @@ export class VenuesService {
           values.push(venue.playersPerSide || null)
           paramIndex++
         }
+        if (hasPlayersPerSide) {
+          columns.push('players_per_side')
+          values.push(venue.playersPerSide || null)
+          paramIndex++
+        }
         if (hasShower) {
           columns.push('has_shower')
           values.push(venue.hasShower !== undefined ? venue.hasShower : null)
