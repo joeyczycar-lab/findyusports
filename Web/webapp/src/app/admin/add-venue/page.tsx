@@ -36,7 +36,7 @@ function base64ToFile(base64: string, filename: string, mimeType: string): File 
 export default function AddVenuePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -423,30 +423,44 @@ export default function AddVenuePage() {
             setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
           } else {
             // 上传所有选中的图片
-            const uploadPromises = selectedImages.map(async (file) => {
-              const formData = new FormData()
-              formData.append('file', file)
-              return fetchJson(`/venues/${venueId}/upload`, {
-                method: 'POST',
-                body: formData
+            const uploadResults = await Promise.allSettled(
+              selectedImages.map(async (file, index) => {
+                console.log(`📤 [AddVenue] 上传第 ${index + 1} 张图片: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
+                const formData = new FormData()
+                formData.append('file', file)
+                const result = await fetchJson(`/venues/${venueId}/upload`, {
+                  method: 'POST',
+                  body: formData
+                })
+                console.log(`✅ [AddVenue] 第 ${index + 1} 张图片上传成功:`, result.url || result.id)
+                return result
               })
+            )
+            
+            // 统计成功和失败的数量
+            const successful = uploadResults.filter(r => r.status === 'fulfilled' && !r.value.error).length
+            const failed = uploadResults.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value.error)).length
+            
+            // 记录失败的详细信息
+            const failures: string[] = []
+            uploadResults.forEach((result, index) => {
+              if (result.status === 'rejected') {
+                const reason = result.reason?.message || result.reason || '未知错误'
+                console.error(`❌ [AddVenue] 第 ${index + 1} 张图片上传失败:`, reason)
+                failures.push(`第 ${index + 1} 张: ${reason}`)
+              } else if (result.value.error) {
+                const errorMsg = result.value.error.message || result.value.error.code || '上传失败'
+                console.error(`❌ [AddVenue] 第 ${index + 1} 张图片上传失败:`, errorMsg)
+                failures.push(`第 ${index + 1} 张: ${errorMsg}`)
+              }
             })
             
-            const uploadResults = await Promise.all(uploadPromises)
-            const successCount = uploadResults.filter(r => !r.error).length
-            const failCount = uploadResults.length - successCount
-            
-            if (failCount === 0) {
-              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${selectedImages.length} 张图片。\n\n点击下方按钮查看所有场地。` })
+            if (failed === 0) {
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${successful} 张图片。\n\n点击下方按钮查看所有场地。` })
+            } else if (successful > 0) {
+              setMessage({ type: 'warning', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已上传 ${successful} 张图片，${failed} 张失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传失败的图片。` })
             } else {
-              const errorMessages = uploadResults
-                .filter(r => r.error)
-                .map(r => r.error?.message || '上传失败')
-                .join('\n')
-              setMessage({ 
-                type: 'error', 
-                text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败 (${failCount}/${selectedImages.length}):\n${errorMessages}\n\n请稍后在场地详情页面上传图片。` 
-              })
+              setMessage({ type: 'error', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n❌ 图片上传全部失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传图片。` })
             }
             setSelectedImages([])
             // 清除 localStorage 中保存的图片
@@ -454,7 +468,13 @@ export default function AddVenuePage() {
           }
         } catch (error: any) {
           console.error('❌ [AddVenue] 图片上传错误:', error)
-          const errorMsg = error.message || '请稍后在场地详情页面上传图片。'
+          let errorMsg = error.message || '请稍后在场地详情页面上传图片。'
+          
+          // 如果是网络错误，提供更详细的诊断信息
+          if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('无法连接')) {
+            errorMsg = `无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${error.message || '网络连接失败'}\n\n提示：如果是本地开发，请确保后端服务运行在 http://localhost:4000\n如果是生产环境，请检查 Railway 后端服务状态`
+          }
+          
           setMessage({ 
             type: 'error', 
             text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败：${errorMsg}\n\n请稍后在场地详情页面上传图片。` 
@@ -521,12 +541,14 @@ export default function AddVenuePage() {
             className={`mb-6 p-4 border ${
               message.type === 'success'
                 ? 'bg-gray-100 border-gray-900 text-gray-900'
+                : message.type === 'warning'
+                ? 'bg-yellow-50 border-yellow-500 text-yellow-900'
                 : 'bg-red-50 border-red-500 text-red-900'
             }`}
             style={{ borderRadius: '4px' }}
           >
             <div className="whitespace-pre-line mb-3">{message.text}</div>
-            {message.type === 'success' && (
+            {(message.type === 'success' || message.type === 'warning') && (
               <div className="flex gap-3 mt-4">
                 <Link
                   href="/admin/venues"

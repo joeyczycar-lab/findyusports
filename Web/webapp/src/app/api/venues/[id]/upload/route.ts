@@ -77,7 +77,32 @@ export async function POST(
           { status: 408 }
         )
       }
-      throw fetchError
+      
+      // 处理网络连接错误
+      console.error('❌ [API Route] Fetch error:', {
+        name: fetchError.name,
+        message: fetchError.message,
+        backendUrl,
+        apiBase,
+      })
+      
+      // 提供更友好的错误信息
+      let errorMessage = '图片处理上传失败: fetch failed'
+      if (fetchError.message?.includes('ECONNREFUSED') || fetchError.message?.includes('Failed to fetch')) {
+        errorMessage = `无法连接到后端服务 (${apiBase})。\n\n请检查：\n1. 后端服务是否正在运行\n2. 后端地址是否正确\n3. 网络连接是否正常\n\n当前后端地址：${apiBase}`
+      } else if (fetchError.message) {
+        errorMessage = `图片处理上传失败: ${fetchError.message}`
+      }
+      
+      return Response.json(
+        {
+          error: {
+            code: 'NetworkError',
+            message: errorMessage,
+          },
+        },
+        { status: 503 }
+      )
     }
     
     if (!res.ok) {

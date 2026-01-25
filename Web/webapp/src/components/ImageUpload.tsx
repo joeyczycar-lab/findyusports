@@ -103,7 +103,15 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
     } catch (e: any) {
       console.error('❌ [ImageUpload] 上传异常:', e)
       console.error('❌ [ImageUpload] 错误堆栈:', e.stack)
-      const errorMsg = e.message || '上传失败，请检查网络连接和后端服务'
+      
+      // 提取错误信息
+      let errorMsg = e.message || '上传失败，请检查网络连接和后端服务'
+      
+      // 如果是网络错误，提供更详细的诊断信息
+      if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('ECONNREFUSED')) {
+        errorMsg = `无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${errorMsg}\n\n提示：如果是本地开发，请确保后端服务运行在 http://localhost:4000\n如果是生产环境，请检查 Railway 后端服务状态`
+      }
+      
       setError(errorMsg)
     } finally {
       setUploading(false)

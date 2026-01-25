@@ -485,7 +485,14 @@ export default function EditVenuePage() {
           }
         } catch (error: any) {
           console.error('❌ [EditVenue] 图片上传异常:', error)
-          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n⚠️ 图片上传失败：${error.message || '请稍后在场地详情页面上传图片。'}\n\n点击下方按钮查看场地。` })
+          let errorMsg = error.message || '请稍后在场地详情页面上传图片。'
+          
+          // 如果是网络错误，提供更详细的诊断信息
+          if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('无法连接')) {
+            errorMsg = `无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${error.message || '网络连接失败'}\n\n提示：如果是本地开发，请确保后端服务运行在 http://localhost:4000\n如果是生产环境，请检查 Railway 后端服务状态`
+          }
+          
+          setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 更新成功！\n⚠️ 图片上传失败：${errorMsg}\n\n点击下方按钮查看场地。` })
         } finally {
           setUploadingImages(false)
         }
