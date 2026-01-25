@@ -914,6 +914,9 @@ export default function EditVenuePage() {
                 multiple
                 onChange={(e) => {
                   const files = Array.from(e.target.files || [])
+                  console.log('📸 [EditVenue] 文件选择事件触发，选择了', files.length, '个文件')
+                  console.log('📸 [EditVenue] 文件列表:', files.map(f => ({ name: f.name, size: f.size, type: f.type })))
+                  
                   // 验证文件
                   const validFiles = files.filter(file => {
                     if (!file.type.startsWith('image/')) {
@@ -927,8 +930,11 @@ export default function EditVenuePage() {
                     return true
                   })
                   
+                  console.log('📸 [EditVenue] 验证后有效文件数:', validFiles.length)
+                  
                   // 追加新文件到已选中的图片（避免重复）
                   setSelectedImages(prev => {
+                    console.log('📸 [EditVenue] 当前已选中的图片数:', prev.length)
                     const newFiles = validFiles.filter(newFile => 
                       !prev.some(existingFile => 
                         existingFile.name === newFile.name && 
@@ -936,7 +942,10 @@ export default function EditVenuePage() {
                         existingFile.lastModified === newFile.lastModified
                       )
                     )
-                    return [...prev, ...newFiles]
+                    console.log('📸 [EditVenue] 新增文件数（去重后）:', newFiles.length)
+                    const updated = [...prev, ...newFiles]
+                    console.log('📸 [EditVenue] 更新后总图片数:', updated.length)
+                    return updated
                   })
                   
                   if (validFiles.length > 0) {
@@ -959,6 +968,9 @@ export default function EditVenuePage() {
                     setIsLoginModalOpen(true)
                     return
                   }
+                  console.log('📸 [EditVenue] 点击上传按钮，触发文件选择对话框')
+                  console.log('📸 [EditVenue] fileInputRef.current:', fileInputRef.current)
+                  console.log('📸 [EditVenue] multiple 属性:', fileInputRef.current?.multiple)
                   fileInputRef.current?.click()
                 }}
                 className="w-full h-14 px-4 border-2 border-gray-900 hover:bg-gray-900 hover:text-white bg-white text-black font-bold transition-colors flex items-center justify-center gap-3 text-base"
