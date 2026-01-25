@@ -919,9 +919,26 @@ export default function EditVenuePage() {
                     }
                     return true
                   })
-                  setSelectedImages(validFiles)
+                  
+                  // 追加新文件到已选中的图片（避免重复）
+                  setSelectedImages(prev => {
+                    const newFiles = validFiles.filter(newFile => 
+                      !prev.some(existingFile => 
+                        existingFile.name === newFile.name && 
+                        existingFile.size === newFile.size &&
+                        existingFile.lastModified === newFile.lastModified
+                      )
+                    )
+                    return [...prev, ...newFiles]
+                  })
+                  
                   if (validFiles.length > 0) {
                     setMessage(null)
+                  }
+                  
+                  // 清空 input，允许重复选择同一文件
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
                   }
                 }}
                 className="hidden"
@@ -949,7 +966,7 @@ export default function EditVenuePage() {
                 }}
               >
                 <span className="text-xl">📷</span>
-                <span>{selectedImages.length > 0 ? `已选择 ${selectedImages.length} 张图片（点击可重新选择）` : '📤 点击上传图片（支持多选）'}</span>
+                <span>{selectedImages.length > 0 ? `已选择 ${selectedImages.length} 张图片（点击可继续添加）` : '📤 点击上传图片（支持多选）'}</span>
               </button>
               
               {selectedImages.length > 0 && (

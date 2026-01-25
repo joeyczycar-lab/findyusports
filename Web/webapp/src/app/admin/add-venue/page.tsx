@@ -1,12 +1,37 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson, getApiBase } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
+
+const STORAGE_KEY = 'add-venue-selected-images'
+
+// 将 File 转换为 base64 字符串
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+// 将 base64 字符串转换回 File 对象
+function base64ToFile(base64: string, filename: string, mimeType: string): File {
+  const arr = base64.split(',')
+  const mime = arr[0].match(/:(.*?);/)?.[1] || mimeType
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new File([u8arr], filename, { type: mime })
+}
 
 export default function AddVenuePage() {
   const router = useRouter()
@@ -231,6 +256,53 @@ export default function AddVenuePage() {
   // 获取当前城市对应的区级选项
   const currentDistricts = districtOptions[formData.cityCode] || []
 
+  // 从 localStorage 恢复已选中的图片
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const imageData = JSON.parse(saved)
+        const restoredFiles: File[] = []
+        
+        // 异步恢复所有文件
+        Promise.all(
+          imageData.map(async (item: { base64: string; name: string; type: string }) => {
+            try {
+              return base64ToFile(item.base64, item.name, item.type)
+            } catch (error) {
+              console.warn('恢复图片失败:', item.name, error)
+              return null
+            }
+          })
+        ).then(files => {
+          const validFiles = files.filter((f): f is File => f !== null)
+          if (validFiles.length > 0) {
+            setSelectedImages(validFiles)
+            console.log(`✅ 恢复了 ${validFiles.length} 张图片`)
+          }
+        })
+      }
+    } catch (error) {
+      console.warn('恢复图片失败:', error)
+    }
+  }, [])
+
+  // 保存选中的图片到 localStorage
+  const saveImagesToStorage = async (files: File[]) => {
+    try {
+      const imageData = await Promise.all(
+        files.map(async (file) => ({
+          base64: await fileToBase64(file),
+          name: file.name,
+          type: file.type,
+        }))
+      )
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(imageData))
+    } catch (error) {
+      console.warn('保存图片到 localStorage 失败:', error)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -377,6 +449,8 @@ export default function AddVenuePage() {
               })
             }
             setSelectedImages([])
+            // 清除 localStorage 中保存的图片
+            localStorage.removeItem(STORAGE_KEY)
           }
         } catch (error: any) {
           console.error('❌ [AddVenue] 图片上传错误:', error)
@@ -385,11 +459,15 @@ export default function AddVenuePage() {
             type: 'error', 
             text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败：${errorMsg}\n\n请稍后在场地详情页面上传图片。` 
           })
+          // 即使上传失败，也清除 localStorage（因为场地已创建成功）
+          localStorage.removeItem(STORAGE_KEY)
         } finally {
           setUploadingImages(false)
         }
       } else {
         setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
+        // 清除 localStorage 中保存的图片
+        localStorage.removeItem(STORAGE_KEY)
       }
       
       // 清空表单
@@ -989,7 +1067,7 @@ export default function AddVenuePage() {
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={(e) => {
+                onChange={async (e) => {
                   const files = Array.from(e.target.files || [])
                   // 验证文件
                   const validFiles = files.filter(file => {
@@ -1003,9 +1081,29 @@ export default function AddVenuePage() {
                     }
                     return true
                   })
-                  setSelectedImages(validFiles)
+                  
+                  // 追加新文件到已选中的图片（避免重复）
+                  setSelectedImages(prev => {
+                    const newFiles = validFiles.filter(newFile => 
+                      !prev.some(existingFile => 
+                        existingFile.name === newFile.name && 
+                        existingFile.size === newFile.size &&
+                        existingFile.lastModified === newFile.lastModified
+                      )
+                    )
+                    const updated = [...prev, ...newFiles]
+                    // 保存到 localStorage
+                    saveImagesToStorage(updated)
+                    return updated
+                  })
+                  
                   if (validFiles.length > 0) {
                     setMessage(null)
+                  }
+                  
+                  // 清空 input，允许重复选择同一文件
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
                   }
                 }}
                 className="hidden"
@@ -1033,7 +1131,7 @@ export default function AddVenuePage() {
                 }}
               >
                 <span className="text-xl">📷</span>
-                <span>{selectedImages.length > 0 ? `已选择 ${selectedImages.length} 张图片（点击可重新选择）` : '📤 点击上传图片（支持多选）'}</span>
+                <span>{selectedImages.length > 0 ? `已选择 ${selectedImages.length} 张图片（点击可继续添加）` : '📤 点击上传图片（支持多选）'}</span>
               </button>
               
               {selectedImages.length > 0 && (
@@ -1059,7 +1157,10 @@ export default function AddVenuePage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation()
-                            setSelectedImages(selectedImages.filter((_, i) => i !== index))
+                            const updated = selectedImages.filter((_, i) => i !== index)
+                            setSelectedImages(updated)
+                            // 更新 localStorage
+                            saveImagesToStorage(updated)
                           }}
                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                         >
