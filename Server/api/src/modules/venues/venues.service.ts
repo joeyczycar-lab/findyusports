@@ -391,6 +391,7 @@ export class VenuesService {
       let hasLocker = false
       let hasShop = false
       let hasRestArea = false
+      let hasFence = false
       let hasRequiresReservation = false
       let hasReservationMethod = false
       let hasPlayersPerSide = false
@@ -405,13 +406,14 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
         hasRestArea = existingColumns.includes('has_rest_area')
+        hasFence = existingColumns.includes('has_fence')
         hasRequiresReservation = existingColumns.includes('requires_reservation')
         hasReservationMethod = existingColumns.includes('reservation_method')
         hasPlayersPerSide = existingColumns.includes('players_per_side')
@@ -454,6 +456,7 @@ export class VenuesService {
         
         // 只添加存在的列
         if (hasRestArea) selectColumns.push('v.hasRestArea')
+        if (hasFence) selectColumns.push('v.hasFence')
         if (hasShower) selectColumns.push('v.hasShower')
         if (hasLocker) selectColumns.push('v.hasLocker')
         if (hasShop) selectColumns.push('v.hasShop')
@@ -497,6 +500,7 @@ export class VenuesService {
       
       // 只添加存在的列
       if (hasRestArea) result.hasRestArea = v.hasRestArea
+      if (hasFence) result.hasFence = v.hasFence
       if (hasShower) result.hasShower = v.hasShower
       if (hasLocker) result.hasLocker = v.hasLocker
       if (hasShop) result.hasShop = v.hasShop
@@ -554,6 +558,7 @@ export class VenuesService {
       venue.hasLighting = dto.hasLighting
       venue.hasAirConditioning = dto.hasAirConditioning
       venue.hasParking = dto.hasParking
+      venue.hasFence = dto.hasFence
       venue.hasRestArea = dto.hasRestArea
       venue.hasShower = dto.hasShower
       venue.hasLocker = dto.hasLocker
@@ -595,7 +600,7 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -605,6 +610,7 @@ export class VenuesService {
         const hasLighting = existingColumns.includes('has_lighting')
         const hasAirConditioning = existingColumns.includes('has_air_conditioning')
         const hasParking = existingColumns.includes('has_parking')
+        const hasFence = existingColumns.includes('has_fence')
         const hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
         const hasSupportsFullCourt = existingColumns.includes('supports_full_court')
         const hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
@@ -668,6 +674,11 @@ export class VenuesService {
         if (hasParking) {
           columns.push('has_parking')
           values.push(venue.hasParking !== undefined ? venue.hasParking : null)
+          paramIndex++
+        }
+        if (hasFence) {
+          columns.push('has_fence')
+          values.push(venue.hasFence !== undefined ? venue.hasFence : null)
           paramIndex++
         }
         if (hasSupportsWalkIn) {
@@ -776,6 +787,7 @@ export class VenuesService {
           hasLighting: hasLighting ? row.has_lighting : undefined,
           hasAirConditioning: hasAirConditioning ? row.has_air_conditioning : undefined,
           hasParking: hasParking ? row.has_parking : undefined,
+          hasFence: hasFence ? row.has_fence : undefined,
           hasRestArea: hasRestArea ? row.has_rest_area : undefined,
           hasShower: hasShower ? row.has_shower : undefined,
           hasLocker: hasLocker ? row.has_locker : undefined,
@@ -886,6 +898,7 @@ export class VenuesService {
       if (dto.hasLighting !== undefined) venue.hasLighting = dto.hasLighting
       if (dto.hasAirConditioning !== undefined) venue.hasAirConditioning = dto.hasAirConditioning
       if (dto.hasParking !== undefined) venue.hasParking = dto.hasParking
+      if (dto.hasFence !== undefined) venue.hasFence = dto.hasFence
       if (dto.hasShower !== undefined) venue.hasShower = dto.hasShower
       if (dto.hasLocker !== undefined) venue.hasLocker = dto.hasLocker
       if (dto.hasShop !== undefined) venue.hasShop = dto.hasShop
@@ -970,6 +983,10 @@ export class VenuesService {
         if (dto.hasParking !== undefined) {
           updates.push(`has_parking = $${paramIndex++}`)
           values.push(dto.hasParking)
+        }
+        if (dto.hasFence !== undefined) {
+          updates.push(`has_fence = $${paramIndex++}`)
+          values.push(dto.hasFence)
         }
         if (dto.hasRestArea !== undefined) {
           updates.push(`has_rest_area = $${paramIndex++}`)

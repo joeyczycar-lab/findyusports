@@ -11,3 +11,6 @@ ALTER TABLE venue ADD COLUMN IF NOT EXISTS reservation_method VARCHAR(200);
 
 -- 5. 添加几人制字段
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS players_per_side VARCHAR(20);
+
+-- 6. 添加围栏字段
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_fence BOOLEAN;

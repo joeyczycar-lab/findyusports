@@ -13,7 +13,7 @@ function MapPageContent() {
   const [items, setItems] = useState<Array<any>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<Filters>({})
+  const [filters, setFilters] = useState<Filters>({ sport: 'basketball' })
   const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -75,6 +75,7 @@ function MapPageContent() {
   }, [page, sortBy, filters, keyword])
   
   const totalPages = Math.ceil(total / pageSize) || 1
+  const currentSport = filters.sport || 'basketball'
 
   return (
     <main className="container-page py-12 bg-white">
@@ -97,6 +98,40 @@ function MapPageContent() {
           <option value="city">📍 按地区</option>
           <option value="name">🔤 按名称</option>
         </select>
+      </div>
+      {/* 运动类型切换按钮：篮球 / 足球 */}
+      <div className="mb-4 flex items-center gap-3">
+        <span className="text-sm text-textSecondary">按运动类型：</span>
+        <div className="inline-flex rounded-full bg-gray-100 p-1">
+          <button
+            type="button"
+            className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+              currentSport === 'basketball'
+                ? 'bg-black text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, sport: 'basketball' }))
+              setPage(1)
+            }}
+          >
+            篮球场地
+          </button>
+          <button
+            type="button"
+            className={`ml-1 px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+              currentSport === 'football'
+                ? 'bg-black text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, sport: 'football' }))
+              setPage(1)
+            }}
+          >
+            足球场地
+          </button>
+        </div>
       </div>
       <FiltersBar value={filters} onChange={(f) => setFilters(f)} />
 

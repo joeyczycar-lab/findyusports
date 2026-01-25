@@ -188,7 +188,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           </section>
 
           {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
-            v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
+            v?.hasFence === true || v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
             <section className="border-t border-border pt-8 mb-8">
               <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -208,6 +208,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   <div className="flex items-center space-x-2">
                     <span className="text-xl">✅</span>
                     <span className="text-body-sm font-medium">有停车场</span>
+                  </div>
+                )}
+                {v?.hasFence === true && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">✅</span>
+                    <span className="text-body-sm font-medium">有围栏</span>
                   </div>
                 )}
                 {v?.hasRestArea === true && (
@@ -336,7 +342,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 )}
               </div>
               {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
-                v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
+                v?.hasFence === true || v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <h4 className="text-body-sm font-bold mb-3 uppercase tracking-wide">设施信息</h4>
                   <div className="space-y-2 text-body-sm">
@@ -356,6 +362,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">✅</span>
                         <span className="font-medium">有停车场</span>
+                      </div>
+                    )}
+                    {v?.hasFence === true && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">✅</span>
+                        <span className="font-medium">有围栏</span>
                       </div>
                     )}
                     {v?.hasRestArea === true && (
