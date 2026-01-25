@@ -205,8 +205,19 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={active === 0}
             />
+            {/* 在新标签页打开按钮 */}
+            <a
+              href={imageItems[active].url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-2 left-2 bg-black bg-opacity-70 text-white px-3 py-1.5 text-xs font-medium rounded hover:bg-opacity-90 transition-opacity z-10 flex items-center gap-1"
+              title="在新标签页打开图片"
+            >
+              🔗 打开图片
+            </a>
             {/* 点击提示 */}
-            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded">
+            <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded z-10">
               🔍 点击查看大图
             </div>
             {isAdmin && imageItems[active].id && (
@@ -229,20 +240,34 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       <div className="flex gap-2 overflow-x-auto">
         {imageItems.map((item, i) => (
           <div key={i} className="relative flex-shrink-0">
-            <button 
-              onClick={() => {
-                setActive(i)
-                openLightbox(i)
-              }}
-              className={`relative w-24 h-16 overflow-hidden border ${active===i? 'border-brandBlue' : 'border-border'} cursor-pointer`} 
-              style={{ borderRadius: '4px' }}
-            >
-              <ResponsiveImage 
-                src={item.url} 
-                alt="缩略图" 
-                sizes="96px"
-              />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setActive(i)
+                  openLightbox(i)
+                }}
+                className={`relative w-24 h-16 overflow-hidden border ${active===i? 'border-brandBlue' : 'border-border'} cursor-pointer`} 
+                style={{ borderRadius: '4px' }}
+              >
+                <ResponsiveImage 
+                  src={item.url} 
+                  alt="缩略图" 
+                  sizes="96px"
+                />
+              </button>
+              {/* 缩略图在新标签页打开按钮 */}
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-50 transition-opacity opacity-0 hover:opacity-100"
+                title="在新标签页打开图片"
+                style={{ borderRadius: '4px' }}
+              >
+                <span className="text-white text-xs">🔗</span>
+              </a>
+            </div>
             {isAdmin && item.id && (
               <button
                 onClick={(e) => {
@@ -281,6 +306,19 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
           >
             ×
           </button>
+
+          {/* 在新标签页打开按钮 */}
+          <a
+            href={imageItems[lightboxIndex].url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-4 right-16 bg-black bg-opacity-70 text-white px-4 py-2 text-sm font-medium rounded hover:bg-opacity-90 transition-opacity z-10 flex items-center gap-2"
+            style={{ zIndex: 1000000 }}
+            title="在新标签页打开图片"
+          >
+            🔗 打开原图
+          </a>
 
           {/* 上一张按钮 */}
           {imageItems.length > 1 && (
