@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { VenuesService } from './venues.service'
-import { QueryVenuesDto, CreateReviewDto, CreateVenueDto } from './dto'
+import { QueryVenuesDto, CreateReviewDto, CreateVenueDto, UpdateVenueDto } from './dto'
 import { JwtAuthGuard } from '../auth/auth.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { Public } from '../auth/public.decorator'
@@ -27,6 +27,11 @@ export class VenuesController {
   @Get(':id')
   async detail(@Param('id', ParseIntPipe) id: number) {
     return this.venuesService.detail(id)
+  }
+
+  @Put(':id')
+  async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVenueDto, @CurrentUser() user: any) {
+    return this.venuesService.updateVenue(id, dto, user.id)
   }
 
   @Public()
