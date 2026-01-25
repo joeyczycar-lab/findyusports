@@ -31,7 +31,22 @@ export class VenuesController {
 
   @Put(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVenueDto, @CurrentUser() user: any) {
-    return this.venuesService.updateVenue(id, dto, user.id)
+    try {
+      const result = await this.venuesService.updateVenue(id, dto, user.id)
+      // 如果返回的是错误对象，直接返回
+      if (result && (result as any).error) {
+        return result
+      }
+      return result
+    } catch (error) {
+      console.error('❌ [VenuesController] Error updating venue:', error)
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '更新场地失败',
+        },
+      }
+    }
   }
 
   @Public()

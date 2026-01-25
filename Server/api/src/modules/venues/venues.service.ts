@@ -992,6 +992,18 @@ export class VenuesService {
           updates.push(`has_rest_area = $${paramIndex++}`)
           values.push(dto.hasRestArea)
         }
+        if (dto.hasShower !== undefined) {
+          updates.push(`has_shower = $${paramIndex++}`)
+          values.push(dto.hasShower)
+        }
+        if (dto.hasLocker !== undefined) {
+          updates.push(`has_locker = $${paramIndex++}`)
+          values.push(dto.hasLocker)
+        }
+        if (dto.hasShop !== undefined) {
+          updates.push(`has_shop = $${paramIndex++}`)
+          values.push(dto.hasShop)
+        }
         if (dto.supportsWalkIn !== undefined) {
           updates.push(`supports_walk_in = $${paramIndex++}`)
           values.push(dto.supportsWalkIn)
