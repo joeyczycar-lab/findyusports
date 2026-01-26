@@ -917,7 +917,7 @@ export class VenuesService {
       // 注意：这里需要从user对象获取role，但当前方法签名只有userId
       // 如果需要更严格的权限控制，可以传入user对象
       
-      // 更新字段
+      // 更新字段（只更新存在的列）
       if (dto.name !== undefined) venue.name = dto.name
       if (dto.sportType !== undefined) venue.sportType = dto.sportType
       if (dto.cityCode !== undefined) venue.cityCode = dto.cityCode
@@ -927,17 +927,18 @@ export class VenuesService {
       if (dto.lat !== undefined) venue.lat = dto.lat
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
-      if (dto.supportsWalkIn !== undefined) venue.supportsWalkIn = dto.supportsWalkIn
-      if (dto.walkInPriceMin !== undefined) venue.walkInPriceMin = dto.walkInPriceMin
-      if (dto.walkInPriceMax !== undefined) venue.walkInPriceMax = dto.walkInPriceMax
-      if (dto.supportsFullCourt !== undefined) venue.supportsFullCourt = dto.supportsFullCourt
-      if (dto.fullCourtPriceMin !== undefined) venue.fullCourtPriceMin = dto.fullCourtPriceMin
-      if (dto.fullCourtPriceMax !== undefined) venue.fullCourtPriceMax = dto.fullCourtPriceMax
+      // 只更新存在的列
+      if (dto.supportsWalkIn !== undefined && hasSupportsWalkIn) venue.supportsWalkIn = dto.supportsWalkIn
+      if (dto.walkInPriceMin !== undefined && hasWalkInPriceMin) venue.walkInPriceMin = dto.walkInPriceMin
+      if (dto.walkInPriceMax !== undefined && hasWalkInPriceMax) venue.walkInPriceMax = dto.walkInPriceMax
+      if (dto.supportsFullCourt !== undefined && hasSupportsFullCourt) venue.supportsFullCourt = dto.supportsFullCourt
+      if (dto.fullCourtPriceMin !== undefined && hasFullCourtPriceMin) venue.fullCourtPriceMin = dto.fullCourtPriceMin
+      if (dto.fullCourtPriceMax !== undefined && hasFullCourtPriceMax) venue.fullCourtPriceMax = dto.fullCourtPriceMax
       if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
       if (dto.contact !== undefined) venue.contact = dto.contact
-      if (dto.requiresReservation !== undefined) venue.requiresReservation = dto.requiresReservation
-      if (dto.reservationMethod !== undefined) venue.reservationMethod = dto.reservationMethod
-      if (dto.playersPerSide !== undefined) venue.playersPerSide = dto.playersPerSide
+      if (dto.requiresReservation !== undefined && hasRequiresReservation) venue.requiresReservation = dto.requiresReservation
+      if (dto.reservationMethod !== undefined && hasReservationMethod) venue.reservationMethod = dto.reservationMethod
+      if (dto.playersPerSide !== undefined && hasPlayersPerSide) venue.playersPerSide = dto.playersPerSide
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
       if (dto.courtCount !== undefined) venue.courtCount = dto.courtCount
       if (dto.floorType !== undefined) venue.floorType = dto.floorType
@@ -945,15 +946,17 @@ export class VenuesService {
       if (dto.hasLighting !== undefined) venue.hasLighting = dto.hasLighting
       if (dto.hasAirConditioning !== undefined) venue.hasAirConditioning = dto.hasAirConditioning
       if (dto.hasParking !== undefined) venue.hasParking = dto.hasParking
-      if (dto.hasFence !== undefined) venue.hasFence = dto.hasFence
-      if (dto.hasShower !== undefined) venue.hasShower = dto.hasShower
-      if (dto.hasLocker !== undefined) venue.hasLocker = dto.hasLocker
-      if (dto.hasShop !== undefined) venue.hasShop = dto.hasShop
+      if (dto.hasFence !== undefined && hasFence) venue.hasFence = dto.hasFence
+      if (dto.hasShower !== undefined && hasShower) venue.hasShower = dto.hasShower
+      if (dto.hasLocker !== undefined && hasLocker) venue.hasLocker = dto.hasLocker
+      if (dto.hasShop !== undefined && hasShop) venue.hasShop = dto.hasShop
+      if (dto.hasRestArea !== undefined && hasRestArea) venue.hasRestArea = dto.hasRestArea
       
-      // 如果 geom 列不存在，使用原生 SQL UPDATE 语句，明确指定要更新的列，排除 geom
+      // 始终使用原生 SQL UPDATE 语句，明确指定要更新的列，避免更新不存在的列
+      // 这样可以确保只更新存在的列，即使某些新列还没有添加到数据库
       let saved: VenueEntity
-      if (!hasGeomColumn) {
-        console.log('⚠️ [updateVenue] geom column not found, using native SQL UPDATE')
+      {
+        console.log('📝 [updateVenue] Using native SQL UPDATE to ensure only existing columns are updated')
         // 构建 UPDATE 语句，排除 geom 列
         const updates: string[] = []
         const values: any[] = []
@@ -1098,9 +1101,6 @@ export class VenuesService {
           // 没有需要更新的字段，直接返回原对象
           saved = venue
         }
-      } else {
-        // geom 列存在，使用正常的 save 方法
-        saved = await this.repo.save(venue)
       }
       
       console.log('✅ Venue updated successfully:', saved.id)
