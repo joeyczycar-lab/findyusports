@@ -540,12 +540,13 @@ export class VenuesService {
       venue.lat = dto.lat
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
-      venue.supportsWalkIn = dto.supportsWalkIn
-      venue.walkInPriceMin = dto.walkInPriceMin
-      venue.walkInPriceMax = dto.walkInPriceMax
-      venue.supportsFullCourt = dto.supportsFullCourt
-      venue.fullCourtPriceMin = dto.fullCourtPriceMin
-      venue.fullCourtPriceMax = dto.fullCourtPriceMax
+      // 只设置存在的列
+      if (hasSupportsWalkIn) venue.supportsWalkIn = dto.supportsWalkIn
+      if (hasWalkInPriceMin) venue.walkInPriceMin = dto.walkInPriceMin
+      if (hasWalkInPriceMax) venue.walkInPriceMax = dto.walkInPriceMax
+      if (hasSupportsFullCourt) venue.supportsFullCourt = dto.supportsFullCourt
+      if (hasFullCourtPriceMin) venue.fullCourtPriceMin = dto.fullCourtPriceMin
+      if (hasFullCourtPriceMax) venue.fullCourtPriceMax = dto.fullCourtPriceMax
       venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
       venue.contact = dto.contact
       venue.requiresReservation = dto.requiresReservation
@@ -794,8 +795,163 @@ export class VenuesService {
           hasShop: hasShop ? row.has_shop : undefined,
         } as VenueEntity
       } else {
-        // geom 列存在，使用正常的 save 方法
-        saved = await this.repo.save(venue)
+        // geom 列存在，但为了确保只保存存在的列，也使用原生 SQL INSERT
+        // 这样可以避免 TypeORM 尝试保存不存在的字段
+        console.log('⚠️ [createVenue] geom column exists, but using native SQL INSERT to ensure only existing columns are saved')
+        // 使用与上面相同的原生 SQL INSERT 逻辑
+        const columns: string[] = ['name', '"sportType"', '"cityCode"', 'district_code', 'address', 'lng', 'lat', '"priceMin"', '"priceMax"', 'indoor', 'contact', 'is_public']
+        const values: any[] = [venue.name, venue.sportType, venue.cityCode, venue.districtCode, venue.address, venue.lng, venue.lat, venue.priceMin, venue.priceMax, venue.indoor ?? null, venue.contact || null, venue.isPublic !== undefined ? venue.isPublic : true]
+        let paramIndex = values.length + 1
+        
+        if (hasCourtCount) {
+          columns.push('court_count')
+          values.push(venue.courtCount !== undefined ? venue.courtCount : null)
+          paramIndex++
+        }
+        if (hasFloorType) {
+          columns.push('floor_type')
+          values.push(venue.floorType || null)
+          paramIndex++
+        }
+        if (hasOpenHours) {
+          columns.push('open_hours')
+          values.push(venue.openHours || null)
+          paramIndex++
+        }
+        if (hasLighting) {
+          columns.push('has_lighting')
+          values.push(venue.hasLighting !== undefined ? venue.hasLighting : null)
+          paramIndex++
+        }
+        if (hasAirConditioning) {
+          columns.push('has_air_conditioning')
+          values.push(venue.hasAirConditioning !== undefined ? venue.hasAirConditioning : null)
+          paramIndex++
+        }
+        if (hasParking) {
+          columns.push('has_parking')
+          values.push(venue.hasParking !== undefined ? venue.hasParking : null)
+          paramIndex++
+        }
+        if (hasFence) {
+          columns.push('has_fence')
+          values.push(venue.hasFence !== undefined ? venue.hasFence : null)
+          paramIndex++
+        }
+        if (hasRestArea) {
+          columns.push('has_rest_area')
+          values.push(venue.hasRestArea !== undefined ? venue.hasRestArea : null)
+          paramIndex++
+        }
+        if (hasSupportsWalkIn) {
+          columns.push('supports_walk_in')
+          values.push(venue.supportsWalkIn !== undefined ? venue.supportsWalkIn : null)
+          paramIndex++
+        }
+        if (hasWalkInPriceMin) {
+          columns.push('walk_in_price_min')
+          values.push(venue.walkInPriceMin !== undefined ? venue.walkInPriceMin : null)
+          paramIndex++
+        }
+        if (hasWalkInPriceMax) {
+          columns.push('walk_in_price_max')
+          values.push(venue.walkInPriceMax !== undefined ? venue.walkInPriceMax : null)
+          paramIndex++
+        }
+        if (hasSupportsFullCourt) {
+          columns.push('supports_full_court')
+          values.push(venue.supportsFullCourt !== undefined ? venue.supportsFullCourt : null)
+          paramIndex++
+        }
+        if (hasFullCourtPriceMin) {
+          columns.push('full_court_price_min')
+          values.push(venue.fullCourtPriceMin !== undefined ? venue.fullCourtPriceMin : null)
+          paramIndex++
+        }
+        if (hasFullCourtPriceMax) {
+          columns.push('full_court_price_max')
+          values.push(venue.fullCourtPriceMax !== undefined ? venue.fullCourtPriceMax : null)
+          paramIndex++
+        }
+        if (hasRequiresReservation) {
+          columns.push('requires_reservation')
+          values.push(venue.requiresReservation !== undefined ? venue.requiresReservation : null)
+          paramIndex++
+        }
+        if (hasReservationMethod) {
+          columns.push('reservation_method')
+          values.push(venue.reservationMethod || null)
+          paramIndex++
+        }
+        if (hasPlayersPerSide) {
+          columns.push('players_per_side')
+          values.push(venue.playersPerSide || null)
+          paramIndex++
+        }
+        if (hasShower) {
+          columns.push('has_shower')
+          values.push(venue.hasShower !== undefined ? venue.hasShower : null)
+          paramIndex++
+        }
+        if (hasLocker) {
+          columns.push('has_locker')
+          values.push(venue.hasLocker !== undefined ? venue.hasLocker : null)
+          paramIndex++
+        }
+        if (hasShop) {
+          columns.push('has_shop')
+          values.push(venue.hasShop !== undefined ? venue.hasShop : null)
+          paramIndex++
+        }
+        
+        // 添加 geom 列（如果存在）
+        if (hasGeomColumn && venue.lng && venue.lat) {
+          columns.push('geom')
+          values.push(`POINT(${venue.lng} ${venue.lat})`)
+          paramIndex++
+        }
+        
+        const placeholders = values.map((_, i) => `$${i + 1}`).join(', ')
+        const insertSql = `
+          INSERT INTO "venue" (${columns.join(', ')})
+          VALUES (${placeholders})
+          RETURNING *
+        `
+        
+        const result = await this.repo.query(insertSql, values)
+        
+        if (!result || result.length === 0) {
+          throw new Error('Failed to insert venue')
+        }
+        
+        // 将结果转换为实体对象
+        const row = result[0]
+        saved = {
+          id: row.id,
+          name: row.name,
+          sportType: row.sportType,
+          cityCode: row.cityCode,
+          districtCode: row.district_code,
+          address: row.address,
+          lng: row.lng,
+          lat: row.lat,
+          priceMin: row.priceMin,
+          priceMax: row.priceMax,
+          indoor: row.indoor,
+          contact: row.contact,
+          isPublic: row.is_public !== undefined ? row.is_public : true,
+          courtCount: hasCourtCount ? row.court_count : undefined,
+          floorType: hasFloorType ? row.floor_type : undefined,
+          openHours: hasOpenHours ? row.open_hours : undefined,
+          hasLighting: hasLighting ? row.has_lighting : undefined,
+          hasAirConditioning: hasAirConditioning ? row.has_air_conditioning : undefined,
+          hasParking: hasParking ? row.has_parking : undefined,
+          hasFence: hasFence ? row.has_fence : undefined,
+          hasRestArea: hasRestArea ? row.has_rest_area : undefined,
+          hasShower: hasShower ? row.has_shower : undefined,
+          hasLocker: hasLocker ? row.has_locker : undefined,
+          hasShop: hasShop ? row.has_shop : undefined,
+        } as VenueEntity
       }
       
       console.log('✅ Venue saved successfully:', saved.id)
@@ -809,12 +965,12 @@ export class VenuesService {
         address: saved.address,
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,
-        supportsWalkIn: saved.supportsWalkIn,
-        supportsFullCourt: saved.supportsFullCourt,
+        supportsWalkIn: hasSupportsWalkIn ? saved.supportsWalkIn : undefined,
+        supportsFullCourt: hasSupportsFullCourt ? saved.supportsFullCourt : undefined,
         indoor: saved.indoor ?? false,
         contact: saved.contact,
-        requiresReservation: saved.requiresReservation,
-        reservationMethod: saved.reservationMethod,
+        requiresReservation: hasRequiresReservation ? saved.requiresReservation : undefined,
+        reservationMethod: hasReservationMethod ? saved.reservationMethod : undefined,
         isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
         location: [saved.lng, saved.lat] as [number, number],
       }
