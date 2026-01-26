@@ -20,7 +20,34 @@ export class VenuesController {
   @Public()
   @Post()
   async create(@Body() dto: CreateVenueDto) {
-    return this.venuesService.createVenue(dto)
+    try {
+      const result = await this.venuesService.createVenue(dto)
+      // 如果返回的是错误对象，直接返回
+      if (result && (result as any).error) {
+        return result
+      }
+      return result
+    } catch (error) {
+      console.error('❌ [VenuesController] Error creating venue:', error)
+      let errorMessage = error instanceof Error ? error.message : '创建场地失败'
+      
+      // 提取列名（如果错误信息包含列名）
+      if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
+        const columnMatch = errorMessage.match(/column "([^"]+)" of relation "venue"/)
+        if (columnMatch) {
+          const columnName = columnMatch[1]
+          errorMessage = `数据库列 "${columnName}" 不存在。请执行迁移脚本添加缺失的列。`
+          console.error(`❌ [VenuesController] Missing column: ${columnName}`)
+        }
+      }
+      
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: errorMessage,
+        },
+      }
+    }
   }
 
   @Public()
