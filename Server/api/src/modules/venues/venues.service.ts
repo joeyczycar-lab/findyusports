@@ -1128,7 +1128,43 @@ export class VenuesService {
           const sql = `UPDATE venue SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`
           console.log('📝 [updateVenue] Executing SQL:', sql.substring(0, 200) + '...')
           const result = await this.repo.query(sql, values)
-          saved = result[0] as VenueEntity
+          const row = result[0]
+          // 将 SQL 返回的下划线格式字段名映射到驼峰格式
+          saved = {
+            id: row.id,
+            name: row.name,
+            sportType: row.sportType || row.sport_type,
+            cityCode: row.cityCode || row.city_code,
+            districtCode: row.districtCode || row.district_code,
+            address: row.address,
+            lng: row.lng,
+            lat: row.lat,
+            priceMin: row.priceMin || row.price_min,
+            priceMax: row.priceMax || row.price_max,
+            indoor: row.indoor,
+            contact: row.contact,
+            isPublic: row.isPublic !== undefined ? row.isPublic : (row.is_public !== undefined ? row.is_public : true),
+            courtCount: row.courtCount || row.court_count,
+            floorType: row.floorType || row.floor_type,
+            openHours: row.openHours || row.open_hours,
+            hasLighting: row.hasLighting !== undefined ? row.hasLighting : row.has_lighting,
+            hasAirConditioning: row.hasAirConditioning !== undefined ? row.hasAirConditioning : row.has_air_conditioning,
+            hasParking: row.hasParking !== undefined ? row.hasParking : row.has_parking,
+            hasFence: row.hasFence !== undefined ? row.hasFence : row.has_fence,
+            hasRestArea: row.hasRestArea !== undefined ? row.hasRestArea : row.has_rest_area,
+            hasShower: row.hasShower !== undefined ? row.hasShower : row.has_shower,
+            hasLocker: row.hasLocker !== undefined ? row.hasLocker : row.has_locker,
+            hasShop: row.hasShop !== undefined ? row.hasShop : row.has_shop,
+            supportsWalkIn: hasSupportsWalkIn ? (row.supportsWalkIn !== undefined ? row.supportsWalkIn : row.supports_walk_in) : undefined,
+            supportsFullCourt: hasSupportsFullCourt ? (row.supportsFullCourt !== undefined ? row.supportsFullCourt : row.supports_full_court) : undefined,
+            walkInPriceMin: hasWalkInPriceMin ? (row.walkInPriceMin !== undefined ? row.walkInPriceMin : row.walk_in_price_min) : undefined,
+            walkInPriceMax: hasWalkInPriceMax ? (row.walkInPriceMax !== undefined ? row.walkInPriceMax : row.walk_in_price_max) : undefined,
+            fullCourtPriceMin: hasFullCourtPriceMin ? (row.fullCourtPriceMin !== undefined ? row.fullCourtPriceMin : row.full_court_price_min) : undefined,
+            fullCourtPriceMax: hasFullCourtPriceMax ? (row.fullCourtPriceMax !== undefined ? row.fullCourtPriceMax : row.full_court_price_max) : undefined,
+            requiresReservation: hasRequiresReservation ? (row.requiresReservation !== undefined ? row.requiresReservation : row.requires_reservation) : undefined,
+            reservationMethod: hasReservationMethod ? (row.reservationMethod || row.reservation_method) : undefined,
+            playersPerSide: hasPlayersPerSide ? (row.playersPerSide || row.players_per_side) : undefined,
+          } as VenueEntity
         } else {
           // 没有需要更新的字段，直接返回原对象
           saved = venue
