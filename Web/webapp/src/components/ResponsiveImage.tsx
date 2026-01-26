@@ -8,9 +8,10 @@ type Props = {
   className?: string
   sizes?: string
   priority?: boolean
+  onClick?: (e: React.MouseEvent) => void
 }
 
-export default function ResponsiveImage({ src, alt, className, sizes, priority = false }: Props) {
+export default function ResponsiveImage({ src, alt, className, sizes, priority = false, onClick }: Props) {
   const [error, setError] = useState(false)
   const [imgError, setImgError] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -61,6 +62,7 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
           src={src}
           alt={alt}
           className={className}
+          onClick={onClick}
           style={{ 
             objectFit: 'cover',
             width: '100%',
@@ -71,7 +73,8 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
             right: 0,
             bottom: 0,
             zIndex: 2,
-            display: loaded ? 'block' : 'none'
+            display: loaded ? 'block' : 'none',
+            cursor: onClick ? 'pointer' : 'default'
           }}
           onLoad={() => {
             if (process.env.NODE_ENV === 'development') {
@@ -96,18 +99,20 @@ export default function ResponsiveImage({ src, alt, className, sizes, priority =
 
   // 对于其他图片，使用 Next.js Image 组件
   return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      className={className}
-      style={{ objectFit: 'cover' }}
-      sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
-      priority={priority}
-      onError={() => {
-        console.error('❌ Next.js Image load error:', src)
-        setError(true)
-      }}
-    />
+    <div onClick={onClick} style={{ width: '100%', height: '100%', position: 'relative', cursor: onClick ? 'pointer' : 'default' }}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className={className}
+        style={{ objectFit: 'cover' }}
+        sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
+        priority={priority}
+        onError={() => {
+          console.error('❌ Next.js Image load error:', src)
+          setError(true)
+        }}
+      />
+    </div>
   )
 }

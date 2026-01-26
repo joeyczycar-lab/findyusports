@@ -195,7 +195,10 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
       <div 
         className="relative h-64 overflow-hidden bg-gray-50 cursor-pointer" 
         style={{ borderRadius: '4px', position: 'relative', minHeight: '256px' }}
-        onClick={() => openLightbox(active)}
+        onClick={() => {
+          console.log('🖼️ [Gallery] Main image clicked, opening lightbox for index:', active)
+          openLightbox(active)
+        }}
       >
         {imageItems[active] && (
           <>
@@ -204,6 +207,10 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
               alt="场地图片" 
               sizes="(max-width: 768px) 100vw, 50vw"
               priority={active === 0}
+              onClick={() => {
+                console.log('🖼️ [Gallery] Main image clicked, opening lightbox for index:', active)
+                openLightbox(active)
+              }}
             />
             {/* 在新标签页打开按钮 */}
             <a
