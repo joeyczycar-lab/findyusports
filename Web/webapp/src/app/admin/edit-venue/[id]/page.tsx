@@ -455,14 +455,22 @@ export default function EditVenuePage() {
                   method: 'POST',
                   body: formData
                 })
+                
+                // 检查返回结果是否有错误
+                if (result.error) {
+                  const errorMsg = result.error.message || result.error.code || '上传失败'
+                  console.error(`❌ [EditVenue] 第 ${index + 1} 张图片上传失败:`, errorMsg)
+                  throw new Error(errorMsg)
+                }
+                
                 console.log(`✅ [EditVenue] 第 ${index + 1} 张图片上传成功:`, result.url || result.id)
                 return result
               })
             )
             
             // 统计成功和失败的数量
-            const successful = uploadResults.filter(r => r.status === 'fulfilled').length
-            const failed = uploadResults.filter(r => r.status === 'rejected').length
+            const successful = uploadResults.filter(r => r.status === 'fulfilled' && !r.value.error).length
+            const failed = uploadResults.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value.error)).length
             
             // 记录失败的详细信息
             const failures: string[] = []
@@ -471,6 +479,10 @@ export default function EditVenuePage() {
                 const reason = result.reason?.message || result.reason || '未知错误'
                 console.error(`❌ [EditVenue] 第 ${index + 1} 张图片上传失败:`, reason)
                 failures.push(`第 ${index + 1} 张: ${reason}`)
+              } else if (result.status === 'fulfilled' && result.value.error) {
+                const errorMsg = result.value.error.message || result.value.error.code || '上传失败'
+                console.error(`❌ [EditVenue] 第 ${index + 1} 张图片上传失败:`, errorMsg)
+                failures.push(`第 ${index + 1} 张: ${errorMsg}`)
               }
             })
             
