@@ -432,7 +432,14 @@ export default function EditVenuePage() {
         } else if (errorMsg.includes('Not Found') || errorMsg.includes('未找到')) {
           errorMsg = '场地不存在'
         } else if (errorMsg.includes('column') && errorMsg.includes('does not exist')) {
-          errorMsg = '数据库列不存在，请联系管理员添加缺失的列'
+          // 提取列名
+          const columnMatch = errorMsg.match(/列 "([^"]+)"|column "([^"]+)"/)
+          if (columnMatch) {
+            const columnName = columnMatch[1] || columnMatch[2]
+            errorMsg = `数据库列 "${columnName}" 不存在。\n\n请执行以下 SQL 脚本添加缺失的列：\n\nALTER TABLE venue ADD COLUMN IF NOT EXISTS ${columnName} <类型>;\n\n或者执行完整的迁移脚本：\nServer/api/src/migrations/add-all-missing-columns.sql`
+          } else {
+            errorMsg = '数据库列不存在，请联系管理员添加缺失的列。\n\n请执行迁移脚本：Server/api/src/migrations/add-all-missing-columns.sql'
+          }
         }
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
         setLoading(false)
