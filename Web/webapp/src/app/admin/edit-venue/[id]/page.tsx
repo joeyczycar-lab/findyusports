@@ -421,6 +421,8 @@ export default function EditVenuePage() {
 
       if (data.error) {
         let errorMsg = data.error.message || data.error.code || '更新失败，请检查输入'
+        console.error('❌ [EditVenue] Update failed:', errorMsg)
+        console.error('❌ [EditVenue] Full error object:', data.error)
         // 处理常见的错误信息
         if (errorMsg.includes('Unauthorized') || errorMsg.includes('未授权')) {
           errorMsg = '未授权，请先登录'
@@ -429,6 +431,8 @@ export default function EditVenuePage() {
           errorMsg = '权限不足，只有管理员可以编辑场地'
         } else if (errorMsg.includes('Not Found') || errorMsg.includes('未找到')) {
           errorMsg = '场地不存在'
+        } else if (errorMsg.includes('column') && errorMsg.includes('does not exist')) {
+          errorMsg = '数据库列不存在，请联系管理员添加缺失的列'
         }
         setMessage({ type: 'error', text: `❌ ${errorMsg}` })
         setLoading(false)
@@ -1005,10 +1009,9 @@ export default function EditVenuePage() {
                   {selectedImages.map((file, index) => {
                     const objectUrl = URL.createObjectURL(file)
                     return (
-                      <button
+                      <div
                         key={index}
-                        type="button"
-                        className="relative group w-full h-24 border border-gray-300 overflow-hidden"
+                        className="relative group w-full h-24 border border-gray-300 overflow-hidden cursor-pointer"
                         onClick={() => setPreviewIndex(index)}
                       >
                         <img
@@ -1029,7 +1032,7 @@ export default function EditVenuePage() {
                         >
                           ×
                         </button>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>
