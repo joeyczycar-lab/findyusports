@@ -833,19 +833,66 @@ export class VenuesService {
     try {
       console.log('📝 Updating venue:', venueId, dto)
       
-      // 检查 geom 列是否存在
+      // 检查 geom 列和其他新字段是否存在
+      const tableName = this.repo.metadata.tableName
       let hasGeomColumn = false
+      let hasSupportsWalkIn = false
+      let hasSupportsFullCourt = false
+      let hasWalkInPriceMin = false
+      let hasWalkInPriceMax = false
+      let hasFullCourtPriceMin = false
+      let hasFullCourtPriceMax = false
+      let hasRequiresReservation = false
+      let hasReservationMethod = false
+      let hasPlayersPerSide = false
+      let hasRestArea = false
+      let hasFence = false
+      let hasShower = false
+      let hasLocker = false
+      let hasShop = false
+      
       try {
-        const tableName = this.repo.metadata.tableName
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
-          WHERE table_name = $1 AND column_name = 'geom'
+          WHERE table_name = $1 
+          AND column_name IN ('geom', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'has_rest_area', 'has_fence', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
-        hasGeomColumn = columnCheck && columnCheck.length > 0
-        console.log('🔍 [updateVenue] geom column exists:', hasGeomColumn)
-      } catch (geomError) {
-        console.warn('⚠️ [updateVenue] Error checking geom column:', geomError instanceof Error ? geomError.message : String(geomError))
+        const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasGeomColumn = existingColumns.includes('geom')
+        hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
+        hasSupportsFullCourt = existingColumns.includes('supports_full_court')
+        hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
+        hasWalkInPriceMax = existingColumns.includes('walk_in_price_max')
+        hasFullCourtPriceMin = existingColumns.includes('full_court_price_min')
+        hasFullCourtPriceMax = existingColumns.includes('full_court_price_max')
+        hasRequiresReservation = existingColumns.includes('requires_reservation')
+        hasReservationMethod = existingColumns.includes('reservation_method')
+        hasPlayersPerSide = existingColumns.includes('players_per_side')
+        hasRestArea = existingColumns.includes('has_rest_area')
+        hasFence = existingColumns.includes('has_fence')
+        hasShower = existingColumns.includes('has_shower')
+        hasLocker = existingColumns.includes('has_locker')
+        hasShop = existingColumns.includes('has_shop')
+        console.log('🔍 [updateVenue] Column check:', {
+          hasGeomColumn,
+          hasSupportsWalkIn,
+          hasSupportsFullCourt,
+          hasWalkInPriceMin,
+          hasWalkInPriceMax,
+          hasFullCourtPriceMin,
+          hasFullCourtPriceMax,
+          hasRequiresReservation,
+          hasReservationMethod,
+          hasPlayersPerSide,
+          hasRestArea,
+          hasFence,
+          hasShower,
+          hasLocker,
+          hasShop
+        })
+      } catch (columnError) {
+        console.warn('⚠️ [updateVenue] Error checking columns:', columnError instanceof Error ? columnError.message : String(columnError))
         hasGeomColumn = false
       }
       
@@ -984,59 +1031,59 @@ export class VenuesService {
           updates.push(`has_parking = $${paramIndex++}`)
           values.push(dto.hasParking)
         }
-        if (dto.hasFence !== undefined) {
+        if (dto.hasFence !== undefined && hasFence) {
           updates.push(`has_fence = $${paramIndex++}`)
           values.push(dto.hasFence)
         }
-        if (dto.hasRestArea !== undefined) {
+        if (dto.hasRestArea !== undefined && hasRestArea) {
           updates.push(`has_rest_area = $${paramIndex++}`)
           values.push(dto.hasRestArea)
         }
-        if (dto.hasShower !== undefined) {
+        if (dto.hasShower !== undefined && hasShower) {
           updates.push(`has_shower = $${paramIndex++}`)
           values.push(dto.hasShower)
         }
-        if (dto.hasLocker !== undefined) {
+        if (dto.hasLocker !== undefined && hasLocker) {
           updates.push(`has_locker = $${paramIndex++}`)
           values.push(dto.hasLocker)
         }
-        if (dto.hasShop !== undefined) {
+        if (dto.hasShop !== undefined && hasShop) {
           updates.push(`has_shop = $${paramIndex++}`)
           values.push(dto.hasShop)
         }
-        if (dto.supportsWalkIn !== undefined) {
+        if (dto.supportsWalkIn !== undefined && hasSupportsWalkIn) {
           updates.push(`supports_walk_in = $${paramIndex++}`)
           values.push(dto.supportsWalkIn)
         }
-        if (dto.walkInPriceMin !== undefined) {
+        if (dto.walkInPriceMin !== undefined && hasWalkInPriceMin) {
           updates.push(`walk_in_price_min = $${paramIndex++}`)
           values.push(dto.walkInPriceMin)
         }
-        if (dto.walkInPriceMax !== undefined) {
+        if (dto.walkInPriceMax !== undefined && hasWalkInPriceMax) {
           updates.push(`walk_in_price_max = $${paramIndex++}`)
           values.push(dto.walkInPriceMax)
         }
-        if (dto.supportsFullCourt !== undefined) {
+        if (dto.supportsFullCourt !== undefined && hasSupportsFullCourt) {
           updates.push(`supports_full_court = $${paramIndex++}`)
           values.push(dto.supportsFullCourt)
         }
-        if (dto.fullCourtPriceMin !== undefined) {
+        if (dto.fullCourtPriceMin !== undefined && hasFullCourtPriceMin) {
           updates.push(`full_court_price_min = $${paramIndex++}`)
           values.push(dto.fullCourtPriceMin)
         }
-        if (dto.fullCourtPriceMax !== undefined) {
+        if (dto.fullCourtPriceMax !== undefined && hasFullCourtPriceMax) {
           updates.push(`full_court_price_max = $${paramIndex++}`)
           values.push(dto.fullCourtPriceMax)
         }
-        if (dto.requiresReservation !== undefined) {
+        if (dto.requiresReservation !== undefined && hasRequiresReservation) {
           updates.push(`requires_reservation = $${paramIndex++}`)
           values.push(dto.requiresReservation)
         }
-        if (dto.reservationMethod !== undefined) {
+        if (dto.reservationMethod !== undefined && hasReservationMethod) {
           updates.push(`reservation_method = $${paramIndex++}`)
           values.push(dto.reservationMethod)
         }
-        if (dto.playersPerSide !== undefined) {
+        if (dto.playersPerSide !== undefined && hasPlayersPerSide) {
           updates.push(`players_per_side = $${paramIndex++}`)
           values.push(dto.playersPerSide)
         }
