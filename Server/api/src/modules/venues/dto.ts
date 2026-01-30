@@ -132,25 +132,35 @@ export class CreateVenueDto {
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPriceMin?: number // 散客最低价格（元/小时）
+  walkInPriceMin?: number
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPriceMax?: number // 散客最高价格（元/小时）
+  walkInPriceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  walkInPriceDisplay?: string // 散客价格文字
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+  fullCourtPriceMin?: number
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPriceMax?: number // 包场最高价格（元/小时）
+  fullCourtPriceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  fullCourtPriceDisplay?: string // 包场价格文字
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
@@ -282,25 +292,35 @@ export class UpdateVenueDto {
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPriceMin?: number // 散客最低价格（元/小时）
+  walkInPriceMin?: number
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  walkInPriceMax?: number // 散客最高价格（元/小时）
+  walkInPriceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  walkInPriceDisplay?: string // 散客价格文字
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+  fullCourtPriceMin?: number
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
   @IsNumber()
   @Min(0)
-  fullCourtPriceMax?: number // 包场最高价格（元/小时）
+  fullCourtPriceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  fullCourtPriceDisplay?: string // 包场价格文字
 
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)

@@ -54,11 +54,9 @@ export default function AddVenuePage() {
     price: '', // 价格文字，如 "50元/小时"、"面议"
     isFree: false, // 是否免费
     supportsWalkIn: false, // 是否支持散客
-    walkInPriceMin: '',
-    walkInPriceMax: '',
+    walkInPrice: '', // 散客价格文字
     supportsFullCourt: false, // 是否支持包场
-    fullCourtPriceMin: '',
-    fullCourtPriceMax: '',
+    fullCourtPrice: '', // 包场价格文字
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
     requiresReservation: false, // 是否需要预约
@@ -339,16 +337,14 @@ export default function AddVenuePage() {
       if (formData.supportsWalkIn !== undefined) {
         payload.supportsWalkIn = formData.supportsWalkIn
       }
-      if (formData.supportsWalkIn) {
-        if (formData.walkInPriceMin.trim()) payload.walkInPriceMin = parseFloat(formData.walkInPriceMin) || undefined
-        if (formData.walkInPriceMax.trim()) payload.walkInPriceMax = parseFloat(formData.walkInPriceMax) || undefined
+      if (formData.supportsWalkIn && formData.walkInPrice?.trim()) {
+        payload.walkInPriceDisplay = formData.walkInPrice.trim()
       }
       if (formData.supportsFullCourt !== undefined) {
         payload.supportsFullCourt = formData.supportsFullCourt
       }
-      if (formData.supportsFullCourt) {
-        if (formData.fullCourtPriceMin.trim()) payload.fullCourtPriceMin = parseFloat(formData.fullCourtPriceMin) || undefined
-        if (formData.fullCourtPriceMax.trim()) payload.fullCourtPriceMax = parseFloat(formData.fullCourtPriceMax) || undefined
+      if (formData.supportsFullCourt && formData.fullCourtPrice?.trim()) {
+        payload.fullCourtPriceDisplay = formData.fullCourtPrice.trim()
       }
       // 预约信息
       if (formData.requiresReservation !== undefined) {
@@ -491,11 +487,9 @@ export default function AddVenuePage() {
         price: '',
         isFree: false,
         supportsWalkIn: false,
-        walkInPriceMin: '',
-        walkInPriceMax: '',
+        walkInPrice: '',
         supportsFullCourt: false,
-        fullCourtPriceMin: '',
-        fullCourtPriceMax: '',
+        fullCourtPrice: '',
         venueTypes: [],
         contact: '',
         requiresReservation: false,
@@ -685,25 +679,15 @@ export default function AddVenuePage() {
                   <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">散客</span>
                 </label>
                 {formData.supportsWalkIn && (
-                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <div className="flex-1 min-w-0">
                     <input
                       type="text"
-                      value={formData.walkInPriceMin}
-                      onChange={(e) => setFormData({ ...formData, walkInPriceMin: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      value={formData.walkInPrice}
+                      onChange={(e) => setFormData({ ...formData, walkInPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
                       style={{ borderRadius: '4px' }}
-                      placeholder="最低价格"
+                      placeholder="例如：50元/小时 或 面议"
                     />
-                    <span className="text-body-sm flex-shrink-0">到</span>
-                    <input
-                      type="text"
-                      value={formData.walkInPriceMax}
-                      onChange={(e) => setFormData({ ...formData, walkInPriceMax: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
-                      style={{ borderRadius: '4px' }}
-                      placeholder="最高价格"
-                    />
-                    <span className="text-body-sm text-textSecondary flex-shrink-0">元/小时</span>
                   </div>
                 )}
               </div>
@@ -719,25 +703,15 @@ export default function AddVenuePage() {
                   <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">包场</span>
                 </label>
                 {formData.supportsFullCourt && (
-                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <div className="flex-1 min-w-0">
                     <input
                       type="text"
-                      value={formData.fullCourtPriceMin}
-                      onChange={(e) => setFormData({ ...formData, fullCourtPriceMin: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      value={formData.fullCourtPrice}
+                      onChange={(e) => setFormData({ ...formData, fullCourtPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
                       style={{ borderRadius: '4px' }}
-                      placeholder="最低价格"
+                      placeholder="例如：50元/小时 或 面议"
                     />
-                    <span className="text-body-sm flex-shrink-0">到</span>
-                    <input
-                      type="text"
-                      value={formData.fullCourtPriceMax}
-                      onChange={(e) => setFormData({ ...formData, fullCourtPriceMax: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
-                      style={{ borderRadius: '4px' }}
-                      placeholder="最高价格"
-                    />
-                    <span className="text-body-sm text-textSecondary flex-shrink-0">元/小时</span>
                   </div>
                 )}
               </div>

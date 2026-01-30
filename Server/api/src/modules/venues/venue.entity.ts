@@ -53,19 +53,25 @@ export class VenueEntity {
   supportsWalkIn?: boolean // 是否支持散客
 
   @Column({ type: 'int', nullable: true, name: 'walk_in_price_min' })
-  walkInPriceMin?: number // 散客最低价格（元/小时）
+  walkInPriceMin?: number
 
   @Column({ type: 'int', nullable: true, name: 'walk_in_price_max' })
-  walkInPriceMax?: number // 散客最高价格（元/小时）
+  walkInPriceMax?: number
+
+  @Column({ type: 'varchar', length: 120, nullable: true, name: 'walk_in_price_display' })
+  walkInPriceDisplay?: string // 散客价格文字，如 "50元/小时"、"面议"
 
   @Column({ type: 'boolean', nullable: true, name: 'supports_full_court' })
   supportsFullCourt?: boolean // 是否支持包场
 
   @Column({ type: 'int', nullable: true, name: 'full_court_price_min' })
-  fullCourtPriceMin?: number // 包场最低价格（元/小时）
+  fullCourtPriceMin?: number
 
   @Column({ type: 'int', nullable: true, name: 'full_court_price_max' })
-  fullCourtPriceMax?: number // 包场最高价格（元/小时）
+  fullCourtPriceMax?: number
+
+  @Column({ type: 'varchar', length: 120, nullable: true, name: 'full_court_price_display' })
+  fullCourtPriceDisplay?: string // 包场价格文字，如 "面议"
 
   @Column({ type: 'boolean', nullable: true })
   indoor?: boolean
