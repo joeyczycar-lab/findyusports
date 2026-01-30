@@ -702,9 +702,9 @@ export default function EditVenuePage() {
                   最低价格 (元/小时)
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="priceMin"
-                  min="0"
+                  inputMode="decimal"
                   value={formData.priceMin}
                   onChange={(e) => setFormData({ ...formData, priceMin: e.target.value, isFree: false })}
                   disabled={formData.isFree}
@@ -718,9 +718,9 @@ export default function EditVenuePage() {
                   最高价格 (元/小时)
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="priceMax"
-                  min="0"
+                  inputMode="decimal"
                   value={formData.priceMax}
                   onChange={(e) => setFormData({ ...formData, priceMax: e.target.value, isFree: false })}
                   disabled={formData.isFree}

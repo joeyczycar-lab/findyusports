@@ -150,17 +150,26 @@ export async function GET(req: NextRequest) {
     
     return Response.json(data)
   } catch (error) {
+    const apiBase = getApiBase()
     console.error('❌ Error proxying to backend:', error)
     if (error instanceof Error) {
       console.error('Error name:', error.name)
       console.error('Error message:', error.message)
       console.error('Error stack:', error.stack)
     }
+    const hint =
+      apiBase.includes('localhost')
+        ? '请在本机运行后端: cd Server/api && npm run dev'
+        : '若改用本地后端，请在 .env.local 设置 NEXT_PUBLIC_API_BASE=http://localhost:4000 并运行 Server/api'
+    const message =
+      error instanceof Error
+        ? `${error.message}\n\n当前后端: ${apiBase}\n${hint}`
+        : `无法连接到后端服务\n\n当前后端: ${apiBase}\n${hint}`
     return Response.json(
       {
         error: {
           code: 'InternalServerError',
-          message: error instanceof Error ? error.message : '无法连接到后端服务',
+          message,
         },
         items: [],
         page: 1,
@@ -298,17 +307,26 @@ export async function POST(req: NextRequest) {
     
     return Response.json(data)
   } catch (error) {
+    const apiBase = getApiBase()
     console.error('❌ [API Route] Error proxying POST to backend:', error)
     if (error instanceof Error) {
       console.error('Error name:', error.name)
       console.error('Error message:', error.message)
       console.error('Error stack:', error.stack)
     }
+    const hint =
+      apiBase.includes('localhost')
+        ? '请在本机运行后端: cd Server/api && npm run dev'
+        : '若改用本地后端，请在 .env.local 设置 NEXT_PUBLIC_API_BASE=http://localhost:4000 并运行 Server/api'
+    const message =
+      error instanceof Error
+        ? `${error.message}\n\n当前后端: ${apiBase}\n${hint}`
+        : `无法连接到后端服务\n\n当前后端: ${apiBase}\n${hint}`
     return Response.json(
       {
         error: {
           code: 'InternalServerError',
-          message: error instanceof Error ? error.message : '无法连接到后端服务',
+          message,
         },
       },
       { status: 500 }

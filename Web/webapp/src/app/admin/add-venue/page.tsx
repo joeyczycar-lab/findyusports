@@ -700,8 +700,8 @@ export default function AddVenuePage() {
                 {formData.supportsWalkIn && (
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.walkInPriceMin}
                       onChange={(e) => setFormData({ ...formData, walkInPriceMin: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -710,8 +710,8 @@ export default function AddVenuePage() {
                     />
                     <span className="text-body-sm flex-shrink-0">到</span>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.walkInPriceMax}
                       onChange={(e) => setFormData({ ...formData, walkInPriceMax: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -736,8 +736,8 @@ export default function AddVenuePage() {
                 {formData.supportsFullCourt && (
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.fullCourtPriceMin}
                       onChange={(e) => setFormData({ ...formData, fullCourtPriceMin: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -746,8 +746,8 @@ export default function AddVenuePage() {
                     />
                     <span className="text-body-sm flex-shrink-0">到</span>
                     <input
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="decimal"
                       value={formData.fullCourtPriceMax}
                       onChange={(e) => setFormData({ ...formData, fullCourtPriceMax: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -765,9 +765,9 @@ export default function AddVenuePage() {
                   最低价格 (元/小时)
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="priceMin"
-                  min="0"
+                  inputMode="decimal"
                   value={formData.priceMin}
                   onChange={(e) => setFormData({ ...formData, priceMin: e.target.value, isFree: false })}
                   disabled={formData.isFree}
@@ -781,9 +781,9 @@ export default function AddVenuePage() {
                   最高价格 (元/小时)
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   id="priceMax"
-                  min="0"
+                  inputMode="decimal"
                   value={formData.priceMax}
                   onChange={(e) => setFormData({ ...formData, priceMax: e.target.value, isFree: false })}
                   disabled={formData.isFree}
