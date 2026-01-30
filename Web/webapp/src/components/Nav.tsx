@@ -168,6 +168,13 @@ export default function Nav() {
             visibility: visible !important;
             opacity: 1 !important;
           }
+          /* 移动端强制隐藏中间三个导航链接，避免错位重叠 */
+          @media (max-width: 1023px) {
+            header#main-nav-header .nav-desktop-only {
+              display: none !important;
+              visibility: hidden !important;
+            }
+          }
           /* 只在桌面端高亮“添加场地”按钮，避免移动端样式冲突 */
           @media (min-width: 1024px) {
             header#main-nav-header a[href="/admin/add-venue"],
@@ -248,8 +255,8 @@ export default function Nav() {
             />
           </Link>
           
-          {/* 中间导航菜单 - Nike 风格 */}
-          <nav className="hidden lg:flex items-center gap-8" style={{ position: 'relative', zIndex: 100000, display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          {/* 中间导航菜单 - 仅桌面端显示，移动端完全隐藏（不写 display 以免覆盖 hidden） */}
+          <nav className="nav-desktop-only hidden lg:flex items-center gap-8" style={{ position: 'relative', zIndex: 100000 }}>
             <Link 
               href="/map?sport=basketball" 
               className="text-black hover:underline transition-colors"
