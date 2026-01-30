@@ -361,13 +361,13 @@ export default function EditVenuePage() {
         lng: formData.lng || defaultLng,
         lat: formData.lat || defaultLat,
       }
-      // 处理价格：如果选择免费，发送0；否则发送用户输入的价格
+      // 处理价格：如果选择免费，发送0；否则发送用户输入的最低/最高价格
       if (formData.isFree) {
         payload.priceMin = 0
         payload.priceMax = 0
       } else {
-        if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
-        if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
+        if (formData.priceMin.trim()) payload.priceMin = parseFloat(formData.priceMin) || undefined
+        if (formData.priceMax.trim()) payload.priceMax = parseFloat(formData.priceMax) || undefined
       }
       // 处理场地类型：
       // - 如果只选了室内，发送 indoor: true
@@ -704,7 +704,6 @@ export default function EditVenuePage() {
                 <input
                   type="text"
                   id="priceMin"
-                  inputMode="decimal"
                   value={formData.priceMin}
                   onChange={(e) => setFormData({ ...formData, priceMin: e.target.value, isFree: false })}
                   disabled={formData.isFree}
@@ -720,7 +719,6 @@ export default function EditVenuePage() {
                 <input
                   type="text"
                   id="priceMax"
-                  inputMode="decimal"
                   value={formData.priceMax}
                   onChange={(e) => setFormData({ ...formData, priceMax: e.target.value, isFree: false })}
                   disabled={formData.isFree}

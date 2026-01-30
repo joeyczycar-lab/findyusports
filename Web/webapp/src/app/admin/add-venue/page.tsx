@@ -55,11 +55,11 @@ export default function AddVenuePage() {
     priceMax: '',
     isFree: false, // 是否免费
     supportsWalkIn: false, // 是否支持散客
-    walkInPriceMin: '', // 散客最低价格
-    walkInPriceMax: '', // 散客最高价格
+    walkInPriceMin: '',
+    walkInPriceMax: '',
     supportsFullCourt: false, // 是否支持包场
-    fullCourtPriceMin: '', // 包场最低价格
-    fullCourtPriceMax: '', // 包场最高价格
+    fullCourtPriceMin: '',
+    fullCourtPriceMax: '',
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
     requiresReservation: false, // 是否需要预约
@@ -330,36 +330,28 @@ export default function AddVenuePage() {
         lng: defaultLng,
         lat: defaultLat,
       }
-      // 处理价格：如果选择免费，发送0；否则发送用户输入的价格
+      // 处理价格：如果选择免费，发送0；否则发送用户输入的最低/最高价格
       if (formData.isFree) {
         payload.priceMin = 0
         payload.priceMax = 0
       } else {
-        if (formData.priceMin) payload.priceMin = parseInt(formData.priceMin)
-        if (formData.priceMax) payload.priceMax = parseInt(formData.priceMax)
+        if (formData.priceMin.trim()) payload.priceMin = parseFloat(formData.priceMin) || undefined
+        if (formData.priceMax.trim()) payload.priceMax = parseFloat(formData.priceMax) || undefined
       }
       // 收费方式（散客 / 包场），可选
       if (formData.supportsWalkIn !== undefined) {
         payload.supportsWalkIn = formData.supportsWalkIn
       }
       if (formData.supportsWalkIn) {
-        if (formData.walkInPriceMin) {
-          payload.walkInPriceMin = parseInt(formData.walkInPriceMin)
-        }
-        if (formData.walkInPriceMax) {
-          payload.walkInPriceMax = parseInt(formData.walkInPriceMax)
-        }
+        if (formData.walkInPriceMin.trim()) payload.walkInPriceMin = parseFloat(formData.walkInPriceMin) || undefined
+        if (formData.walkInPriceMax.trim()) payload.walkInPriceMax = parseFloat(formData.walkInPriceMax) || undefined
       }
       if (formData.supportsFullCourt !== undefined) {
         payload.supportsFullCourt = formData.supportsFullCourt
       }
       if (formData.supportsFullCourt) {
-        if (formData.fullCourtPriceMin) {
-          payload.fullCourtPriceMin = parseInt(formData.fullCourtPriceMin)
-        }
-        if (formData.fullCourtPriceMax) {
-          payload.fullCourtPriceMax = parseInt(formData.fullCourtPriceMax)
-        }
+        if (formData.fullCourtPriceMin.trim()) payload.fullCourtPriceMin = parseFloat(formData.fullCourtPriceMin) || undefined
+        if (formData.fullCourtPriceMax.trim()) payload.fullCourtPriceMax = parseFloat(formData.fullCourtPriceMax) || undefined
       }
       // 预约信息
       if (formData.requiresReservation !== undefined) {
@@ -701,7 +693,6 @@ export default function AddVenuePage() {
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.walkInPriceMin}
                       onChange={(e) => setFormData({ ...formData, walkInPriceMin: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -711,7 +702,6 @@ export default function AddVenuePage() {
                     <span className="text-body-sm flex-shrink-0">到</span>
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.walkInPriceMax}
                       onChange={(e) => setFormData({ ...formData, walkInPriceMax: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -737,7 +727,6 @@ export default function AddVenuePage() {
                   <div className="flex-1 flex items-center gap-2 min-w-0">
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.fullCourtPriceMin}
                       onChange={(e) => setFormData({ ...formData, fullCourtPriceMin: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -747,7 +736,6 @@ export default function AddVenuePage() {
                     <span className="text-body-sm flex-shrink-0">到</span>
                     <input
                       type="text"
-                      inputMode="decimal"
                       value={formData.fullCourtPriceMax}
                       onChange={(e) => setFormData({ ...formData, fullCourtPriceMax: e.target.value })}
                       className="flex-1 px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
@@ -767,7 +755,6 @@ export default function AddVenuePage() {
                 <input
                   type="text"
                   id="priceMin"
-                  inputMode="decimal"
                   value={formData.priceMin}
                   onChange={(e) => setFormData({ ...formData, priceMin: e.target.value, isFree: false })}
                   disabled={formData.isFree}
@@ -783,7 +770,6 @@ export default function AddVenuePage() {
                 <input
                   type="text"
                   id="priceMax"
-                  inputMode="decimal"
                   value={formData.priceMax}
                   onChange={(e) => setFormData({ ...formData, priceMax: e.target.value, isFree: false })}
                   disabled={formData.isFree}
