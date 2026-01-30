@@ -45,21 +45,22 @@ export default function Nav() {
         // 确保React导航栏可见
         const header = reactNav || document.querySelector('#main-nav-header') || document.querySelector('header')
         if (header && header instanceof HTMLElement) {
-          // 强制设置导航栏样式
+          // 只设置顶栏样式，不强制 height，避免裁切移动端下拉菜单
           header.style.setProperty('position', 'fixed', 'important')
           header.style.setProperty('top', '0', 'important')
           header.style.setProperty('left', '0', 'important')
           header.style.setProperty('right', '0', 'important')
           header.style.setProperty('width', '100%', 'important')
-          header.style.setProperty('height', '64px', 'important')
+          header.style.setProperty('min-height', '64px', 'important')
           header.style.setProperty('z-index', '99999', 'important')
           header.style.setProperty('display', 'flex', 'important')
-          header.style.setProperty('align-items', 'center', 'important')
+          header.style.setProperty('flex-direction', 'column', 'important')
           header.style.setProperty('visibility', 'visible', 'important')
           header.style.setProperty('opacity', '1', 'important')
           header.style.setProperty('background-color', '#ffffff', 'important')
           header.style.setProperty('border-bottom', '2px solid #000000', 'important')
           header.style.setProperty('box-shadow', '0 4px 6px rgba(0,0,0,0.1)', 'important')
+          header.style.setProperty('overflow', 'visible', 'important')
           
           // 强制设置所有添加场地按钮样式
           const buttons = header.querySelectorAll('a[href="/admin/add-venue"]')
@@ -116,25 +117,25 @@ export default function Nav() {
     setAuthState({ user: null, token: null, isAuthenticated: false })
   }
 
-  // 强制显示样式
+  // 强制显示样式（移动端不设 overflow:hidden，避免下拉菜单被裁切）
   const forceVisibleStyle: React.CSSProperties = {
     position: 'fixed',
     top: '0px',
     left: '0px',
     right: '0px',
     width: '100%',
-    height: '64px',
-    maxHeight: '64px',
     minHeight: '64px',
     display: 'flex',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'stretch',
     backgroundColor: '#ffffff',
     borderBottom: '2px solid #000000',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     zIndex: 99999,
-    overflow: 'hidden',
+    overflow: 'visible',
     margin: 0,
     padding: 0,
+    paddingTop: 'env(safe-area-inset-top, 0px)',
     visibility: 'visible',
     opacity: 1,
     WebkitTransform: 'translateZ(0)',
@@ -152,11 +153,10 @@ export default function Nav() {
             left: 0 !important;
             right: 0 !important;
             width: 100% !important;
-            height: 64px !important;
-            max-height: 64px !important;
             min-height: 64px !important;
             display: flex !important;
-            align-items: center !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
             background-color: #ffffff !important;
             border-bottom: 2px solid #000000 !important;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
@@ -164,6 +164,7 @@ export default function Nav() {
             overflow: visible !important;
             margin: 0 !important;
             padding: 0 !important;
+            padding-top: env(safe-area-inset-top, 0) !important;
             visibility: visible !important;
             opacity: 1 !important;
           }
@@ -213,15 +214,16 @@ export default function Nav() {
         id="main-nav-header"
         style={{
           ...forceVisibleStyle,
-          // 添加更多强制样式
           position: 'fixed' as const,
           top: '0px',
           left: '0px',
           right: '0px',
           width: '100%',
-          height: '64px',
+          height: isMenuOpen ? 'auto' : '64px',
+          minHeight: '64px',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: 'column',
+          alignItems: 'stretch',
           backgroundColor: '#ffffff',
           borderBottom: '2px solid #000000',
           zIndex: 999999,
@@ -232,7 +234,11 @@ export default function Nav() {
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
         }}
       >
-        <div className="container-page h-full w-full flex items-center justify-between" style={{ height: '100%', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* 顶栏：Logo + 中间导航 + 右侧操作，固定高度，避免移动端重叠 */}
+        <div 
+          className="container-page flex items-center justify-between shrink-0"
+          style={{ height: '64px', minHeight: '64px', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}
+        >
           {/* 左侧 Logo */}
           <Link href="/" className="flex items-center" style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
             <img 
@@ -349,16 +355,13 @@ export default function Nav() {
               </form>
             </div>
 
-            {/* 添加场地按钮 */}
+            {/* 添加场地按钮 - 仅 md 以上显示，移动端在汉堡菜单内 */}
             <Link 
               href="/admin/add-venue" 
-              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-flex items-center hidden md:inline-flex"
+              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors items-center justify-center rounded hidden md:inline-flex"
               style={{
                 backgroundColor: '#000000',
                 color: '#ffffff',
-                display: 'inline-flex',
-                visibility: 'visible',
-                opacity: 1,
                 textDecoration: 'none',
                 cursor: 'pointer',
                 padding: '8px 16px',
@@ -368,8 +371,6 @@ export default function Nav() {
                 border: 'none',
                 outline: 'none',
                 minWidth: '120px',
-                justifyContent: 'center',
-                alignItems: 'center',
                 whiteSpace: 'nowrap'
               }}
             >
@@ -412,49 +413,67 @@ export default function Nav() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* 移动端下拉菜单：独立一块，避免与顶栏重叠 */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border bg-white">
-            <div className="container-page py-4 space-y-4">
+          <div 
+            className="md:hidden border-t border-gray-200 bg-white"
+            style={{ flexShrink: 0, padding: '1rem', paddingBottom: '1.5rem' }}
+          >
+            <div className="flex flex-col gap-3 text-left">
+              <Link
+                href="/map?sport=basketball"
+                className="block py-2 text-black font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                篮球场地
+              </Link>
+              <Link
+                href="/map?sport=football"
+                className="block py-2 text-black font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                足球场地
+              </Link>
               <Link
                 href="/map"
-                className="block link-nike"
+                className="block py-2 text-black font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 地图探索
               </Link>
               <Link
                 href="/admin/add-venue"
-                className="block bg-black text-white px-4 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors text-center"
+                className="block w-full bg-black text-white py-3 text-center text-sm font-bold rounded"
                 onClick={() => setIsMenuOpen(false)}
               >
                 ➕ 添加场地
               </Link>
-              
               {authState.isAuthenticated ? (
-                <div className="pt-4 border-t border-border">
-                  <div className="text-sm text-textSecondary mb-3">
+                <div className="pt-3 border-t border-gray-200">
+                  <div className="text-sm text-gray-600 mb-2">
                     {authState.user?.nickname || authState.user?.phone}
                   </div>
                   <button
+                    type="button"
                     onClick={() => {
                       handleLogout()
                       setIsMenuOpen(false)
                     }}
-                    className="link-nike"
+                    className="text-black font-medium"
                   >
                     退出登录
                   </button>
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     setIsLoginModalOpen(true)
                     setIsMenuOpen(false)
                   }}
-                  className="block link-nike"
+                  className="block w-full py-2 text-left text-black font-medium"
                 >
-                  登录/注册
+                  登录 / 注册
                 </button>
               )}
             </div>

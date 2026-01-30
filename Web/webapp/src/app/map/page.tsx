@@ -20,15 +20,21 @@ function MapPageContent() {
   const pageSize = 20
   const keyword = searchParams?.get('keyword') || ''
 
+  // 有搜索关键词时默认显示「全部」（篮球+足球），并同步筛选状态
+  useEffect(() => {
+    if (keyword.trim()) {
+      setFilters((prev) => ({ ...prev, sport: undefined }))
+    }
+  }, [keyword])
+
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
-    // 城市筛选：如果选择了城市，使用 cityCode 参数
     if (filters.city) p.set('cityCode', filters.city)
+    // 有 sport 时传；无 sport（选「全部」）时不传，接口返回篮球+足球
     if (filters.sport) p.set('sport', filters.sport)
     if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
     if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
     if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
-    // 添加关键词搜索参数
     if (keyword.trim()) p.set('keyword', keyword.trim())
     // 添加排序参数和分页参数，不传坐标参数
     p.set('sortBy', sortBy)
@@ -75,7 +81,7 @@ function MapPageContent() {
   }, [page, sortBy, filters, keyword])
   
   const totalPages = Math.ceil(total / pageSize) || 1
-  const currentSport = filters.sport || 'basketball'
+  const currentSport = filters.sport === undefined ? 'all' : filters.sport
 
   return (
     <main className="container-page py-12 bg-white">
@@ -99,10 +105,24 @@ function MapPageContent() {
           <option value="name">🔤 按名称</option>
         </select>
       </div>
-      {/* 运动类型切换按钮：篮球 / 足球 */}
+      {/* 运动类型：全部 / 篮球 / 足球；有搜索关键词时默认「全部」同时显示篮球与足球 */}
       <div className="mb-4 flex items-center gap-3">
         <span className="text-sm text-textSecondary">按运动类型：</span>
         <div className="inline-flex rounded-full bg-gray-100 p-1">
+          <button
+            type="button"
+            className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+              currentSport === 'all'
+                ? 'bg-black text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, sport: undefined }))
+              setPage(1)
+            }}
+          >
+            全部
+          </button>
           <button
             type="button"
             className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
@@ -119,7 +139,7 @@ function MapPageContent() {
           </button>
           <button
             type="button"
-            className={`ml-1 px-4 py-1 text-sm font-medium rounded-full transition-colors ${
+            className={`px-4 py-1 text-sm font-medium rounded-full transition-colors ${
               currentSport === 'football'
                 ? 'bg-black text-white'
                 : 'text-gray-700 hover:bg-gray-200'
