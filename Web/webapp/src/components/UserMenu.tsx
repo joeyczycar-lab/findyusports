@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import Link from 'next/link'
+import { User, LogOut, Heart, History, ChevronDown } from 'lucide-react'
 import { User as UserType } from '@/lib/auth'
 
 interface UserMenuProps {
@@ -57,16 +58,30 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             </div>
             
             <div className="py-1">
-              <button
-                onClick={() => {
-                  setIsOpen(false)
-                  // TODO: 实现个人设置页面
-                }}
+              <Link
+                href="/user"
+                onClick={() => setIsOpen(false)}
                 className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                <Settings size={16} className="mr-3" />
+                <User size={16} className="mr-3" />
                 个人设置
-              </button>
+              </Link>
+              <Link
+                href="/user#favorites"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <Heart size={16} className="mr-3" />
+                收藏场地
+              </Link>
+              <Link
+                href="/user#history"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <History size={16} className="mr-3" />
+                浏览记录
+              </Link>
               
               <button
                 onClick={() => {

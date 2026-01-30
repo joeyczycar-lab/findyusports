@@ -40,6 +40,16 @@
   }
 }
 
+/* 顶部留白：桌面端 64px，手机端含置顶搜索栏约 130px */
+.pt-nav-offset {
+  padding-top: 64px;
+}
+@media (max-width: 767px) {
+  .pt-nav-offset {
+    padding-top: 130px;
+  }
+}
+
 :root {
   color-scheme: light;
 }

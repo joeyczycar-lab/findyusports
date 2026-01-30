@@ -226,7 +226,7 @@ export default function Nav() {
           left: '0px',
           right: '0px',
           width: '100%',
-          height: isMenuOpen ? 'auto' : '64px',
+          height: 'auto',
           minHeight: '64px',
           display: 'flex',
           flexDirection: 'column',
@@ -418,6 +418,35 @@ export default function Nav() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* 手机端置顶搜索栏：第二行全宽，仅 md 以下显示 */}
+        <div className="md:hidden shrink-0 w-full px-4 pb-3 pt-1" style={{ borderTop: '1px solid #eee' }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (searchKeyword.trim()) {
+                window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+              } else {
+                window.location.href = '/map'
+              }
+            }}
+            className="flex items-center gap-2 bg-gray-100 rounded-full overflow-hidden"
+            style={{ minHeight: '44px', padding: '0 16px' }}
+          >
+            <Search className="h-5 w-5 shrink-0" style={{ color: '#666' }} />
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="搜索篮球、足球场地"
+              className="flex-1 bg-transparent border-0 outline-0 text-base"
+              style={{ minWidth: 0 }}
+            />
+            <button type="submit" className="text-black font-medium text-sm shrink-0">
+              搜索
+            </button>
+          </form>
         </div>
 
         {/* 移动端下拉菜单：独立一块，避免与顶栏重叠 */}
