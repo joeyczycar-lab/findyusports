@@ -46,6 +46,9 @@ export class VenueEntity {
   @Column({ type: 'int', nullable: true, name: 'priceMax' })
   priceMax?: number
 
+  @Column({ type: 'varchar', length: 120, nullable: true, name: 'price_display' })
+  priceDisplay?: string // 价格文字描述，如 "50元/小时"、"面议"
+
   @Column({ type: 'boolean', nullable: true, name: 'supports_walk_in' })
   supportsWalkIn?: boolean // 是否支持散客
 

@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer'
-import { IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator'
+import { IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator'
 
 export enum SportType {
   Basketball = 'basketball',
@@ -122,6 +122,11 @@ export class CreateVenueDto {
   @IsNumber()
   @Min(0)
   priceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  priceDisplay?: string // 价格文字描述，如 "50元/小时"、"面议"
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))
@@ -267,6 +272,11 @@ export class UpdateVenueDto {
   @IsNumber()
   @Min(0)
   priceMax?: number
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  priceDisplay?: string // 价格文字描述，如 "50元/小时"、"面议"
 
   @IsOptional()
   @Transform(({ value }) => value === '' ? undefined : Number(value))

@@ -234,18 +234,22 @@ function MapPageContent() {
                       </div>
                     )}
                     <div className="flex items-center gap-4">
-                      {venue.price !== undefined && venue.price > 0 && (
+                      {(venue as any).priceDisplay?.trim() ? (
+                        <div className="flex items-center gap-1">
+                          <span>💰</span>
+                          <span className="text-xs">{(venue as any).priceDisplay}</span>
+                        </div>
+                      ) : venue.price !== undefined && venue.price > 0 ? (
                         <div className="flex items-center gap-1">
                           <span>💰</span>
                           <span className="text-xs">¥{venue.price.toFixed(2)}/小时</span>
                         </div>
-                      )}
-                      {venue.price === 0 && (
+                      ) : venue.price === 0 ? (
                         <div className="flex items-center gap-1">
                           <span>💰</span>
                           <span className="text-xs">免费</span>
                         </div>
-                      )}
+                      ) : null}
                       {venue.reviewCount > 0 && (
                         <div className="flex items-center gap-1">
                           <span>⭐</span>

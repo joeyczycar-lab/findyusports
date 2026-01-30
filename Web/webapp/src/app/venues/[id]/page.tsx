@@ -58,7 +58,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
             {v ? (
               <>
-                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {v.priceMin ? `¥${v.priceMin.toFixed(2)}` : '免费'}
+                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {(v as any).priceDisplay?.trim() || (v.priceMin != null ? `¥${v.priceMin}` : '免费')}
                 {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
               </>
             ) : '加载中…'}
@@ -130,17 +130,20 @@ export default async function VenueDetailPage({ params }: { params: { id: string
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
-                <div className="font-medium">
-                  {v?.priceMin !== undefined && v?.priceMin !== null ? (
-                    v.priceMax && v.priceMax !== v.priceMin ? (
-                      `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
-                    ) : (
-                      `¥${v.priceMin.toFixed(2)}/小时`
-                    )
-                  ) : (
-                    '免费'
-                  )}
-                </div>
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    (v as any)?.priceDisplay?.trim() ||
+                    (v?.priceMin !== undefined && v?.priceMin !== null
+                      ? v.priceMax && v.priceMax !== v.priceMin
+                        ? `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
+                        : `¥${v.priceMin.toFixed(2)}/小时`
+                      : '免费')
+                  }
+                  className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-900 font-medium read-only:cursor-default focus:outline-none"
+                  style={{ borderRadius: '4px' }}
+                />
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">室内外</div>
@@ -270,17 +273,20 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 </div>
                 <div>
                   <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
-                  <div className="font-medium">
-                    {v.priceMin !== undefined && v.priceMin !== null ? (
-                      v.priceMax && v.priceMax !== v.priceMin ? (
-                        `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
-                      ) : (
-                        `¥${v.priceMin.toFixed(2)}/小时`
-                      )
-                    ) : (
-                      '免费'
-                    )}
-                  </div>
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      (v as any).priceDisplay?.trim() ||
+                      (v.priceMin !== undefined && v.priceMin !== null
+                        ? v.priceMax && v.priceMax !== v.priceMin
+                          ? `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
+                          : `¥${v.priceMin.toFixed(2)}/小时`
+                        : '免费')
+                    }
+                    className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-900 font-medium read-only:cursor-default focus:outline-none"
+                    style={{ borderRadius: '4px' }}
+                  />
                 </div>
                 <div>
                   <div className="text-textSecondary uppercase tracking-wide mb-1">是否对外开放</div>

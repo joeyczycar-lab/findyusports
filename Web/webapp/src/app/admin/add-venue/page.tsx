@@ -51,8 +51,7 @@ export default function AddVenuePage() {
     address: '',
     lng: 0,
     lat: 0,
-    priceMin: '',
-    priceMax: '',
+    price: '', // 价格文字，如 "50元/小时"、"面议"
     isFree: false, // 是否免费
     supportsWalkIn: false, // 是否支持散客
     walkInPriceMin: '',
@@ -330,13 +329,11 @@ export default function AddVenuePage() {
         lng: defaultLng,
         lat: defaultLat,
       }
-      // 处理价格：如果选择免费，发送0；否则发送用户输入的最低/最高价格
+      // 处理价格：发送价格文字（priceDisplay）；免费时发送 0,0
+      if (formData.price?.trim()) payload.priceDisplay = formData.price.trim()
       if (formData.isFree) {
         payload.priceMin = 0
         payload.priceMax = 0
-      } else {
-        if (formData.priceMin.trim()) payload.priceMin = parseFloat(formData.priceMin) || undefined
-        if (formData.priceMax.trim()) payload.priceMax = parseFloat(formData.priceMax) || undefined
       }
       // 收费方式（散客 / 包场），可选
       if (formData.supportsWalkIn !== undefined) {
@@ -491,8 +488,7 @@ export default function AddVenuePage() {
         address: '',
         lng: 0,
         lat: 0,
-        priceMin: '',
-        priceMax: '',
+        price: '',
         isFree: false,
         supportsWalkIn: false,
         walkInPriceMin: '',
@@ -666,8 +662,7 @@ export default function AddVenuePage() {
                     setFormData({ 
                       ...formData, 
                       isFree: e.target.checked,
-                      priceMin: e.target.checked ? '' : formData.priceMin,
-                      priceMax: e.target.checked ? '' : formData.priceMax
+                      price: e.target.checked ? '' : formData.price
                     })
                   }}
                   className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
@@ -747,37 +742,20 @@ export default function AddVenuePage() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="priceMin" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-                  最低价格 (元/小时)
-                </label>
-                <input
-                  type="text"
-                  id="priceMin"
-                  value={formData.priceMin}
-                  onChange={(e) => setFormData({ ...formData, priceMin: e.target.value, isFree: false })}
-                  disabled={formData.isFree}
-                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  style={{ borderRadius: '4px' }}
-                  placeholder="例如：50"
-                />
-              </div>
-              <div>
-                <label htmlFor="priceMax" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
-                  最高价格 (元/小时)
-                </label>
-                <input
-                  type="text"
-                  id="priceMax"
-                  value={formData.priceMax}
-                  onChange={(e) => setFormData({ ...formData, priceMax: e.target.value, isFree: false })}
-                  disabled={formData.isFree}
-                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  style={{ borderRadius: '4px' }}
-                  placeholder="例如：100"
-                />
-              </div>
+            <div>
+              <label htmlFor="price" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+                价格
+              </label>
+              <input
+                type="text"
+                id="price"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value, isFree: false })}
+                disabled={formData.isFree}
+                className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                style={{ borderRadius: '4px' }}
+                placeholder="例如：50元/小时 或 面议"
+              />
             </div>
           </div>
 

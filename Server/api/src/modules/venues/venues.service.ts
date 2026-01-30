@@ -40,6 +40,7 @@ export class VenuesService {
       // 先检查数据库中是否实际存在 geom 列和新设施字段（在构建查询之前）
       const tableName = this.repo.metadata.tableName
       let hasGeomColumn = false
+      let hasPriceDisplay = false
       let hasShower = false
       let hasLocker = false
       let hasShop = false
@@ -49,10 +50,11 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('geom', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('geom', 'price_display', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasGeomColumn = existingColumns.includes('geom')
+        hasPriceDisplay = existingColumns.includes('price_display')
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
@@ -78,6 +80,7 @@ export class VenuesService {
       ]
       
       // 只添加存在的列
+      if (hasPriceDisplay) selectColumns.push('v.priceDisplay')
       if (hasShower) selectColumns.push('v.hasShower')
       if (hasLocker) selectColumns.push('v.hasLocker')
       if (hasShop) selectColumns.push('v.hasShop')
@@ -348,6 +351,7 @@ export class VenuesService {
       cityCode: r.cityCode,
       address: r.address,
       price: r.priceMin ?? 0,
+      priceDisplay: (r as any).priceDisplay ?? undefined,
       indoor: r.indoor ?? false,
       location: [r.lng, r.lat] as LngLat,
       distanceKm: 0,
@@ -387,6 +391,7 @@ export class VenuesService {
 
       // 检查新设施字段是否存在
       const tableName = this.repo.metadata.tableName
+      let hasPriceDisplay = false
       let hasShower = false
       let hasLocker = false
       let hasShop = false
@@ -406,9 +411,10 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('price_display', 'has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasPriceDisplay = existingColumns.includes('price_display')
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
@@ -455,6 +461,7 @@ export class VenuesService {
         ]
         
         // 只添加存在的列
+        if (hasPriceDisplay) selectColumns.push('v.priceDisplay')
         if (hasRestArea) selectColumns.push('v.hasRestArea')
         if (hasFence) selectColumns.push('v.hasFence')
         if (hasShower) selectColumns.push('v.hasShower')
@@ -486,6 +493,7 @@ export class VenuesService {
         address: v.address,
         priceMin: v.priceMin,
         priceMax: v.priceMax,
+        priceDisplay: hasPriceDisplay ? (v as any).priceDisplay : undefined,
         indoor: v.indoor ?? false,
         contact: v.contact,
         isPublic: v.isPublic !== undefined ? v.isPublic : true,
@@ -540,9 +548,11 @@ export class VenuesService {
       venue.lat = dto.lat
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
+      venue.priceDisplay = dto.priceDisplay
       
       // 检查哪些新字段存在（在设置字段值之前）
       const tableName = this.repo.metadata.tableName
+      let hasPriceDisplay = false
       let hasCourtCount = false
       let hasFloorType = false
       let hasOpenHours = false
@@ -569,10 +579,11 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('price_display', 'court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasPriceDisplay = existingColumns.includes('price_display')
         hasCourtCount = existingColumns.includes('court_count')
         hasFloorType = existingColumns.includes('floor_type')
         hasOpenHours = existingColumns.includes('open_hours')
@@ -674,6 +685,11 @@ export class VenuesService {
         const columns = [...baseColumns]
         const values = [...baseValues]
         
+        if (hasPriceDisplay) {
+          columns.push('price_display')
+          values.push(venue.priceDisplay ?? null)
+          paramIndex++
+        }
         if (hasCourtCount) {
           columns.push('court_count')
           values.push(venue.courtCount || null)
@@ -808,6 +824,7 @@ export class VenuesService {
           lat: row.lat,
           priceMin: row.priceMin !== undefined ? row.priceMin : row.price_min,
           priceMax: row.priceMax !== undefined ? row.priceMax : row.price_max,
+          priceDisplay: hasPriceDisplay ? (row.priceDisplay ?? row.price_display) : undefined,
           indoor: row.indoor,
           contact: row.contact,
           isPublic: row.isPublic !== undefined ? row.isPublic : (row.is_public !== undefined ? row.is_public : true),
@@ -845,6 +862,7 @@ export class VenuesService {
         address: saved.address,
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,
+        priceDisplay: hasPriceDisplay ? saved.priceDisplay : undefined,
         supportsWalkIn: hasSupportsWalkIn ? saved.supportsWalkIn : undefined,
         supportsFullCourt: hasSupportsFullCourt ? saved.supportsFullCourt : undefined,
         indoor: saved.indoor ?? false,
@@ -872,6 +890,7 @@ export class VenuesService {
       // 检查 geom 列和其他新字段是否存在
       const tableName = this.repo.metadata.tableName
       let hasGeomColumn = false
+      let hasPriceDisplay = false
       let hasSupportsWalkIn = false
       let hasSupportsFullCourt = false
       let hasWalkInPriceMin = false
@@ -892,10 +911,11 @@ export class VenuesService {
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('geom', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'has_rest_area', 'has_fence', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('geom', 'price_display', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'has_rest_area', 'has_fence', 'has_shower', 'has_locker', 'has_shop')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasGeomColumn = existingColumns.includes('geom')
+        hasPriceDisplay = existingColumns.includes('price_display')
         hasSupportsWalkIn = existingColumns.includes('supports_walk_in')
         hasSupportsFullCourt = existingColumns.includes('supports_full_court')
         hasWalkInPriceMin = existingColumns.includes('walk_in_price_min')
@@ -963,6 +983,7 @@ export class VenuesService {
       if (dto.lat !== undefined) venue.lat = dto.lat
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
+      if (dto.priceDisplay !== undefined && hasPriceDisplay) venue.priceDisplay = dto.priceDisplay
       // 只更新存在的列
       if (dto.supportsWalkIn !== undefined && hasSupportsWalkIn) venue.supportsWalkIn = dto.supportsWalkIn
       if (dto.walkInPriceMin !== undefined && hasWalkInPriceMin) venue.walkInPriceMin = dto.walkInPriceMin
@@ -1033,6 +1054,10 @@ export class VenuesService {
         if (dto.priceMax !== undefined) {
           updates.push(`"priceMax" = $${paramIndex++}`)
           values.push(dto.priceMax)
+        }
+        if (dto.priceDisplay !== undefined && hasPriceDisplay) {
+          updates.push(`price_display = $${paramIndex++}`)
+          values.push(dto.priceDisplay)
         }
         if (dto.indoor !== undefined && dto.indoor !== null) {
           updates.push(`indoor = $${paramIndex++}`)
@@ -1145,6 +1170,7 @@ export class VenuesService {
             lat: row.lat,
             priceMin: row.priceMin || row.price_min,
             priceMax: row.priceMax || row.price_max,
+            priceDisplay: hasPriceDisplay ? (row.priceDisplay ?? row.price_display) : undefined,
             indoor: row.indoor,
             contact: row.contact,
             isPublic: row.isPublic !== undefined ? row.isPublic : (row.is_public !== undefined ? row.is_public : true),
@@ -1186,6 +1212,7 @@ export class VenuesService {
         address: saved.address,
         priceMin: saved.priceMin,
         priceMax: saved.priceMax,
+        priceDisplay: hasPriceDisplay ? saved.priceDisplay : undefined,
         indoor: saved.indoor ?? false,
         contact: saved.contact,
         isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
