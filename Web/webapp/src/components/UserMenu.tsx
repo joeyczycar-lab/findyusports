@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { User, LogOut, Heart, History, ChevronDown } from 'lucide-react'
 import { User as UserType } from '@/lib/auth'
 
@@ -12,6 +12,12 @@ interface UserMenuProps {
 
 export default function UserMenu({ user, onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
+
+  const goTo = (path: string) => {
+    setIsOpen(false)
+    router.push(path)
+  }
 
   return (
     <div className="relative" style={{ zIndex: 100000 }}>
@@ -58,37 +64,38 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             </div>
             
             <div className="py-1">
-              <Link
-                href="/user"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              <button
+                type="button"
+                onClick={() => goTo('/user')}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
               >
-                <User size={16} className="mr-3" />
+                <User size={16} className="mr-3 shrink-0" />
                 个人设置
-              </Link>
-              <Link
-                href="/user#favorites"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              </button>
+              <button
+                type="button"
+                onClick={() => goTo('/user#favorites')}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
               >
-                <Heart size={16} className="mr-3" />
+                <Heart size={16} className="mr-3 shrink-0" />
                 收藏场地
-              </Link>
-              <Link
-                href="/user#history"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              </button>
+              <button
+                type="button"
+                onClick={() => goTo('/user#history')}
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
               >
-                <History size={16} className="mr-3" />
+                <History size={16} className="mr-3 shrink-0" />
                 浏览记录
-              </Link>
+              </button>
               
               <button
+                type="button"
                 onClick={() => {
                   setIsOpen(false)
                   onLogout()
                 }}
-                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
               >
                 <LogOut size={16} className="mr-3" />
                 退出登录

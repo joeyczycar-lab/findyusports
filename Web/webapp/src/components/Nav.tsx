@@ -456,6 +456,15 @@ export default function Nav() {
             style={{ flexShrink: 0, padding: '1rem', paddingBottom: '1.5rem' }}
           >
             <div className="flex flex-col gap-3 text-left">
+              {authState.isAuthenticated && (
+                <Link
+                  href="/user"
+                  className="block py-2 text-black font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  个人设置
+                </Link>
+              )}
               <Link
                 href="/map?sport=basketball"
                 className="block py-2 text-black font-medium"
