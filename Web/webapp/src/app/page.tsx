@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
 import TicketBanner from '@/components/TicketBanner'
+import HeroSearch from '@/components/HeroSearch'
 
 async function getFeaturedVenues() {
   try {
@@ -156,18 +157,7 @@ export default async function HomePage() {
           <div 
             className="space-y-3 hero-search-responsive"
           >
-            <form action="/map" method="get" className="flex flex-col sm:flex-row gap-2">
-              <input 
-                name="keyword"
-                type="text"
-                className="flex-1 bg-white text-black px-4 py-3 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white" 
-                placeholder="搜索城市、关键词…" 
-                style={{ fontSize: '0.875rem', paddingLeft: '1rem', paddingRight: '1rem', paddingTop: '0.75rem', paddingBottom: '0.75rem' }}
-              />
-              <button type="submit" className="btn-primary whitespace-nowrap flex items-center justify-center" style={{ borderRadius: '4px', lineHeight: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '8px', paddingBottom: '8px', fontSize: '0.875rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-                开始探索
-              </button>
-            </form>
+            <HeroSearch />
             <div className="flex flex-wrap gap-2">
               <Link 
                 href="/map?sport=basketball" 
