@@ -420,13 +420,16 @@ export default function Nav() {
           </div>
         </div>
 
-        {/* 手机端置顶搜索栏：第二行全宽，仅 md 以下显示 */}
+        {/* 手机端置顶搜索栏：提交时从表单直接读关键词，避免 state 未同步导致只跳转无 keyword */}
         <div className="md:hidden shrink-0 w-full px-4 pb-3 pt-1" style={{ borderTop: '1px solid #eee' }}>
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              if (searchKeyword.trim()) {
-                window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+              const form = e.currentTarget
+              const input = form.querySelector<HTMLInputElement>('input[name="mobile-search-keyword"]')
+              const kw = (input?.value ?? '').trim()
+              if (kw) {
+                window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
               } else {
                 window.location.href = '/map'
               }
@@ -436,12 +439,14 @@ export default function Nav() {
           >
             <Search className="h-5 w-5 shrink-0" style={{ color: '#666' }} />
             <input
+              name="mobile-search-keyword"
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               placeholder="搜索篮球、足球场地"
               className="flex-1 bg-transparent border-0 outline-0 text-base"
               style={{ minWidth: 0 }}
+              autoComplete="off"
             />
             <button type="submit" className="text-black font-medium text-sm shrink-0">
               搜索
