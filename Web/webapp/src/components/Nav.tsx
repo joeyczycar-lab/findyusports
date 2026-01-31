@@ -300,13 +300,16 @@ export default function Nav() {
 
           {/* 右侧：搜索栏 + 用户菜单 */}
           <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* 搜索栏 - Nike 风格，可输入 */}
+            {/* 搜索栏 - 提交时从表单直接读关键词，与主页/手机端一致 */}
             <div className="hidden md:flex items-center" style={{ position: 'relative' }}>
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
-                  if (searchKeyword.trim()) {
-                    window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
+                  const form = e.currentTarget
+                  const input = form.querySelector<HTMLInputElement>('input[name="nav-search-keyword"]')
+                  const kw = (input?.value ?? '').trim()
+                  if (kw) {
+                    window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
                   } else {
                     window.location.href = '/map'
                   }
@@ -323,17 +326,9 @@ export default function Nav() {
                   cursor: 'text'
                 }}
               >
-                <Search className="h-4 w-4" style={{ color: '#666666', flexShrink: 0, cursor: 'pointer' }} 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    if (searchKeyword.trim()) {
-                      window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
-                    } else {
-                      window.location.href = '/map'
-                    }
-                  }}
-                />
+                <Search className="h-4 w-4 shrink-0" style={{ color: '#666666', cursor: 'pointer' }} />
                 <input
+                  name="nav-search-keyword"
                   type="text"
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
@@ -348,16 +343,7 @@ export default function Nav() {
                     flex: 1,
                     minWidth: 0
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (searchKeyword.trim()) {
-                        window.location.href = `/map?keyword=${encodeURIComponent(searchKeyword.trim())}`
-                      } else {
-                        window.location.href = '/map'
-                      }
-                    }
-                  }}
+                  autoComplete="off"
                 />
               </form>
             </div>

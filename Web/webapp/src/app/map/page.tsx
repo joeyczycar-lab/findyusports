@@ -8,6 +8,12 @@ import FiltersBar, { Filters } from '@/components/FiltersBar'
 // 强制动态渲染，避免静态生成问题
 export const dynamic = 'force-dynamic'
 
+// 从当前 URL 读取 keyword（整页刷新时 useSearchParams 可能尚未就绪）
+function getKeywordFromUrl(): string {
+  if (typeof window === 'undefined') return ''
+  return (new URLSearchParams(window.location.search).get('keyword') || '').trim()
+}
+
 function MapPageContent() {
   const searchParams = useSearchParams()
   const [items, setItems] = useState<Array<any>>([])
@@ -18,7 +24,9 @@ function MapPageContent() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
-  const keyword = searchParams?.get('keyword') || ''
+  // 优先 useSearchParams，否则从 window.location 取（整页跳转后首帧 useSearchParams 可能为空）
+  const paramsKeyword = (searchParams?.get('keyword') || '').trim()
+  const keyword = paramsKeyword || (typeof window !== 'undefined' ? getKeywordFromUrl() : '')
 
   // 有搜索关键词时默认显示「全部」（篮球+足球），并同步筛选状态
   useEffect(() => {
@@ -87,9 +95,11 @@ function MapPageContent() {
     <main className="container-page py-12 bg-white">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-heading font-bold mb-2 tracking-tight">全部场地</h1>
+          <h1 className="text-heading font-bold mb-2 tracking-tight">
+            {keyword ? `搜索「${keyword}」` : '全部场地'}
+          </h1>
           <p className="text-body text-textSecondary">
-            共 {total} 个场地 · 第 {page} / {totalPages} 页
+            {keyword ? `共找到 ${total} 个相关场地` : `共 ${total} 个场地`} · 第 {page} / {totalPages} 页
           </p>
         </div>
         <select
@@ -170,7 +180,9 @@ function MapPageContent() {
       {!loading && !error && items.length === 0 && (
         <div className="text-center py-16 text-textSecondary">
           <div className="text-4xl mb-4">📭</div>
-          <div className="text-body mb-4">没有找到场地</div>
+          <div className="text-body mb-4">
+            {keyword ? `没有找到与「${keyword}」相关的场地` : '没有找到场地'}
+          </div>
           <Link 
             href="/admin/add-venue" 
             className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
