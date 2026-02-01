@@ -4,8 +4,8 @@ import { useState } from 'react'
 export type Filters = {
   city?: string
   sport?: 'basketball' | 'football'
-  minPrice?: number
-  maxPrice?: number
+  /** 价格类型：全部 / 免费 / 收费 */
+  priceType?: 'all' | 'free' | 'paid'
   indoor?: boolean
 }
 
@@ -41,16 +41,14 @@ const CITIES = [
 export default function FiltersBar({ value, onChange }: Props) {
   const [city, setCity] = useState(value.city || '')
   const [sport, setSport] = useState<Filters['sport']>(value.sport ?? 'basketball')
-  const [minPrice, setMinPrice] = useState<string>(value.minPrice?.toString() || '')
-  const [maxPrice, setMaxPrice] = useState<string>(value.maxPrice?.toString() || '')
+  const [priceType, setPriceType] = useState<Filters['priceType']>(value.priceType ?? 'all')
   const [indoor, setIndoor] = useState<boolean>(!!value.indoor)
 
   function emit() {
     onChange({
       city: city || undefined,
       sport,
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      priceType: priceType === 'all' ? undefined : priceType,
       indoor: indoor || undefined,
     })
   }
@@ -81,22 +79,15 @@ export default function FiltersBar({ value, onChange }: Props) {
         <option value="basketball">篮球</option>
         <option value="football">足球</option>
       </select>
-      <input 
-        value={minPrice} 
-        onChange={(e)=>setMinPrice(e.target.value)} 
-        onBlur={emit} 
-        inputMode="numeric" 
-        placeholder="最低价" 
-        className="h-12 w-28 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
-      />
-      <input 
-        value={maxPrice} 
-        onChange={(e)=>setMaxPrice(e.target.value)} 
-        onBlur={emit} 
-        inputMode="numeric" 
-        placeholder="最高价" 
-        className="h-12 w-28 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black" 
-      />
+      <select 
+        value={priceType || 'all'} 
+        onChange={(e)=>{ setPriceType((e.target.value as Filters['priceType']) || 'all'); emit() }} 
+        className="h-12 px-4 border border-border bg-white text-body focus:outline-none focus:ring-2 focus:ring-black"
+      >
+        <option value="all">全部</option>
+        <option value="free">免费</option>
+        <option value="paid">收费</option>
+      </select>
       <label className="flex items-center gap-2 text-body-sm uppercase tracking-wide">
         <input 
           type="checkbox" 

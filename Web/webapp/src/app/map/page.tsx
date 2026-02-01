@@ -49,8 +49,13 @@ function MapPageContent() {
     if (filters.city) p.set('cityCode', filters.city)
     // 有 sport 时传；无 sport（选「全部」）时不传，接口返回篮球+足球
     if (filters.sport) p.set('sport', filters.sport)
-    if (typeof filters.minPrice === 'number') p.set('minPrice', String(filters.minPrice))
-    if (typeof filters.maxPrice === 'number') p.set('maxPrice', String(filters.maxPrice))
+    // 价格：免费 = minPrice=0&maxPrice=0，收费 = minPrice=1
+    if (filters.priceType === 'free') {
+      p.set('minPrice', '0')
+      p.set('maxPrice', '0')
+    } else if (filters.priceType === 'paid') {
+      p.set('minPrice', '1')
+    }
     if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
     if (keyword.trim()) p.set('keyword', keyword.trim())
     // 添加排序参数和分页参数，不传坐标参数

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { MapPin, Search, Menu, LogIn } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { getAuthState, clearAuthState, User } from '@/lib/auth'
+import { getAuthState, setAuthState as persistAuthState, clearAuthState, getAuthHeader, User } from '@/lib/auth'
 import LoginModal from './LoginModal'
 import UserMenu from './UserMenu'
 
@@ -21,6 +21,18 @@ export default function Nav() {
     if (typeof window !== 'undefined') {
       const state = getAuthState()
       setAuthState(state)
+      // 已登录时从后端拉取最新用户信息，使电脑上的修改在手机端可见
+      if (state.isAuthenticated && state.token) {
+        fetch('/api/auth/profile', { headers: getAuthHeader(), cache: 'no-store' })
+          .then((r) => r.json())
+          .then((data: { user?: User }) => {
+            if (data?.user && state.token) {
+              persistAuthState(data.user, state.token)
+              setAuthState({ user: data.user, token: state.token, isAuthenticated: true })
+            }
+          })
+          .catch(() => {})
+      }
       
       // 强制确保导航栏和按钮可见，移除重复的导航栏
       const ensureVisible = () => {

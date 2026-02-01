@@ -397,6 +397,19 @@ export default function AddVenuePage() {
       }
       
       const venueId = data.id
+
+      // 登录用户上传场地加 1 分
+      const authState = getAuthState()
+      if (authState.isAuthenticated) {
+        try {
+          await fetchJson('/auth/points/add', {
+            method: 'POST',
+            body: JSON.stringify({ reason: 'venue_upload' }),
+          })
+        } catch {
+          // 积分接口失败不影响主流程，静默忽略
+        }
+      }
       
       // 如果有选中的图片，自动上传
       if (selectedImages.length > 0) {

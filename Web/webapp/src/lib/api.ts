@@ -90,18 +90,21 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       })
       
       let errorMessage = `请求失败: ${res.status}`
+      if (res.status === 404) {
+        errorMessage = '未找到请求的资源 (404)，请检查地址或联系管理员'
+      }
       try {
         if (errorText && errorText.trim().length > 0) {
           const errorJson = JSON.parse(errorText)
-          // 优先使用中文错误信息
-          errorMessage = errorJson.error?.message || errorJson.message || errorMessage
-          // 如果是英文错误，转换为中文
+          const bodyMsg = errorJson.error?.message || errorJson.message
+          if (bodyMsg) errorMessage = bodyMsg
+          // 英文转中文
           if (errorMessage.includes('Unauthorized')) {
             errorMessage = '未授权，请先登录'
           } else if (errorMessage.includes('Forbidden')) {
             errorMessage = '禁止访问，权限不足'
-          } else if (errorMessage.includes('Not Found')) {
-            errorMessage = '未找到请求的资源'
+          } else if (errorMessage.includes('Not Found') || errorMessage.includes('404')) {
+            errorMessage = '未找到请求的资源，请检查地址或联系管理员'
           } else if (errorMessage.includes('Internal Server Error')) {
             errorMessage = '服务器内部错误'
           } else if (errorMessage.includes('Bad Request')) {

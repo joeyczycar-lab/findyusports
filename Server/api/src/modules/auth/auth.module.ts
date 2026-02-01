@@ -6,11 +6,13 @@ import { AuthService } from './auth.service'
 import { AuthController } from './auth.controller'
 import { UserEntity } from './user.entity'
 import { JwtStrategy } from './jwt.strategy'
+import { OssModule } from '../oss/oss.module'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
     PassportModule,
+    OssModule,
     JwtModule.registerAsync({
       useFactory: () => {
         const secret = process.env.JWT_SECRET || 'default-jwt-secret'

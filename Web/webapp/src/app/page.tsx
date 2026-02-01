@@ -13,12 +13,11 @@ async function getFeaturedVenues() {
     }
     const url = `${base}/venues?limit=6`
     const res = await fetch(url, { 
-      next: { revalidate: 60 }, // 重新验证时间：60秒
+      cache: 'no-store', // 不缓存，删除/更新场地后首页立即反映
       headers: {
         'Content-Type': 'application/json',
       },
-      // 添加超时和错误处理
-      signal: AbortSignal.timeout(5000), // 5秒超时
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) throw new Error(`Request failed: ${res.status}`)
     const data = await res.json()
@@ -41,9 +40,9 @@ async function getVenuesBySport(sport: 'basketball' | 'football') {
     if (!base || base.length === 0) {
       return []
     }
-    const url = `${base}/venues?sport=${sport}&pageSize=100`
+    const url = `${base}/venues?sport=${sport}&pageSize=12`
     const res = await fetch(url, { 
-      next: { revalidate: 60 },
+      cache: 'no-store', // 不缓存，删除/更新后首页足球/篮球区块立即反映
       headers: {
         'Content-Type': 'application/json',
       },
@@ -152,7 +151,7 @@ export default async function HomePage() {
               fontSize: 'clamp(1.5rem, 4vw, 2.67rem)', 
             }}
           >
-            发现与分享<br />篮球与足球好场地
+            不负每一片热爱
           </h1>
           <div 
             className="space-y-3 hero-search-responsive"
@@ -215,6 +214,16 @@ export default async function HomePage() {
             >
               竞彩实体店出票
             </h3>
+            <p 
+              style={{
+                fontSize: 'clamp(0.875rem, 2vw, 1rem)',
+                lineHeight: '1.5',
+                color: '#000000',
+                margin: 0,
+              }}
+            >
+              备战世界杯
+            </p>
             <p 
               style={{
                 fontSize: 'clamp(0.875rem, 2vw, 1rem)',

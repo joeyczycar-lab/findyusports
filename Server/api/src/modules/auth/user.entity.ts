@@ -23,6 +23,12 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 20, default: 'active' })
   status!: string
 
+  @Column({ type: 'int', default: 0 })
+  points!: number
+
+  @Column({ type: 'boolean', default: false, name: 'is_vip' })
+  isVip!: boolean
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt!: Date
 

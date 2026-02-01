@@ -6,6 +6,10 @@ export interface User {
   avatar?: string
   role: string
   status: string
+  points?: number
+  /** VIP 等级 0–5，由积分计算：VIP1=20, VIP2=50, VIP3=100, VIP4=200, VIP5=500 */
+  vipLevel?: number
+  isVip?: boolean
   createdAt: string
   updatedAt: string
 }

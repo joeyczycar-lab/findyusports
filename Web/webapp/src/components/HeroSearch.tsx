@@ -6,16 +6,19 @@ export default function HeroSearch() {
   const [keyword, setKeyword] = useState('')
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!keyword.trim()) {
-      e.preventDefault()
+    e.preventDefault()
+    const form = e.currentTarget
+    const input = form.querySelector<HTMLInputElement>('input[name="keyword"]')
+    const kw = (input?.value ?? keyword).trim()
+    if (kw) {
+      window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
+    } else {
       window.location.href = '/map'
-      return
     }
-    // 有关键词时不阻止提交，让浏览器用 GET 跳转到 /map?keyword=xxx，手机端最稳定
   }
 
   return (
-    <form action="/map" method="get" onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
       <input
         name="keyword"
         type="text"

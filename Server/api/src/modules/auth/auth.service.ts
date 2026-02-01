@@ -1,17 +1,19 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { UserEntity } from './user.entity'
-import { RegisterDto, LoginDto, UpdateProfileDto } from './auth.dto'
+import { RegisterDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ChangePhoneDto } from './auth.dto'
+import { OssService } from '../oss/oss.service'
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
+    private readonly ossService: OssService
   ) {}
 
   async register(dto: RegisterDto) {
@@ -91,6 +93,55 @@ export class AuthService {
     return user ? this.sanitizeUser(user) : null
   }
 
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.userRepo.findOne({ where: { id: userId } })
+    if (!user) throw new UnauthorizedException('用户不存在')
+    const valid = await bcrypt.compare(dto.currentPassword, user.password)
+    if (!valid) throw new UnauthorizedException('当前密码错误')
+    user.password = await bcrypt.hash(dto.newPassword, 10)
+    await this.userRepo.save(user)
+    return this.sanitizeUser(user)
+  }
+
+  async changePhone(userId: number, dto: ChangePhoneDto) {
+    const user = await this.userRepo.findOne({ where: { id: userId } })
+    if (!user) throw new UnauthorizedException('用户不存在')
+    const valid = await bcrypt.compare(dto.password, user.password)
+    if (!valid) throw new UnauthorizedException('密码错误')
+    const existing = await this.userRepo.findOne({ where: { phone: dto.newPhone } })
+    if (existing && existing.id !== userId) throw new ConflictException('该手机号已被注册')
+    user.phone = dto.newPhone
+    await this.userRepo.save(user)
+    return this.sanitizeUser(user)
+  }
+
+  async addPoints(userId: number, reason: string) {
+    if (reason !== 'venue_upload') throw new BadRequestException('无效的积分原因')
+    const user = await this.userRepo.findOne({ where: { id: userId } })
+    if (!user) throw new UnauthorizedException('用户不存在')
+    user.points = (user.points ?? 0) + 1
+    await this.userRepo.save(user)
+    return this.sanitizeUser(user)
+  }
+
+  async uploadAvatar(userId: number, buffer: Buffer, mimeType: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } })
+    if (!user) throw new UnauthorizedException('用户不存在')
+    const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+    const key = `avatar/${userId}-${Date.now()}.${ext}`
+    const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl(mimeType, ext, key)
+    const body = new Uint8Array(buffer)
+    const res = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': mimeType },
+      body,
+    })
+    if (!res.ok) throw new BadRequestException('头像上传失败')
+    user.avatar = publicUrl
+    await this.userRepo.save(user)
+    return this.sanitizeUser(user)
+  }
+
   private generateToken(user: UserEntity) {
     const payload = { 
       sub: user.id, 
@@ -100,9 +151,20 @@ export class AuthService {
     return this.jwtService.sign(payload)
   }
 
+  /** 根据积分计算 VIP 等级：VIP1=20, VIP2=50, VIP3=100, VIP4=200, VIP5=500 */
+  private getVipLevelFromPoints(points: number): number {
+    if (points >= 500) return 5
+    if (points >= 200) return 4
+    if (points >= 100) return 3
+    if (points >= 50) return 2
+    if (points >= 20) return 1
+    return 0
+  }
+
   private sanitizeUser(user: UserEntity) {
     const { password, ...sanitized } = user
-    // 确保返回的用户对象包含所有必要字段，特别是 role
+    const points = sanitized.points ?? 0
+    const vipLevel = this.getVipLevelFromPoints(points)
     return {
       id: sanitized.id,
       phone: sanitized.phone,
@@ -110,6 +172,9 @@ export class AuthService {
       avatar: sanitized.avatar,
       role: sanitized.role,
       status: sanitized.status,
+      points,
+      vipLevel,
+      isVip: vipLevel >= 1,
       createdAt: sanitized.createdAt,
       updatedAt: sanitized.updatedAt,
     }

@@ -17,7 +17,7 @@ export interface HistoryItem {
   visitedAt: number
 }
 
-function getFavorites(): FavoriteItem[] {
+export function getFavorites(): FavoriteItem[] {
   if (typeof window === 'undefined') return []
   try {
     const raw = localStorage.getItem(FAVORITES_KEY)

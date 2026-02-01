@@ -13,6 +13,42 @@ const Gallery = dynamic(() => import('@/components/Gallery'), { ssr: false })
 const Reviews = dynamic(() => import('@/components/Reviews'), { ssr: false })
 const ReviewForm = dynamic(() => import('@/components/ReviewForm'), { ssr: false })
 
+function formatOnePrice(display?: string, min?: number, max?: number): string {
+  if (display?.trim()) return display.trim()
+  if (min != null && max != null && min !== max) return `¥${min} - ¥${max}/小时`
+  if (min != null) return `¥${min}/小时`
+  if (max != null) return `¥${max}/小时`
+  return '免费'
+}
+
+/** 返回全部价格文案：主价格、散客、包场（有则显示） */
+function getAllPriceLines(venue: any): { label: string; value: string }[] {
+  const lines: { label: string; value: string }[] = []
+  const main = formatOnePrice(venue?.priceDisplay, venue?.priceMin, venue?.priceMax)
+  lines.push({ label: '价格', value: main })
+  const hasWalkIn = (venue?.walkInPriceDisplay?.trim()) || venue?.walkInPriceMin != null || venue?.walkInPriceMax != null
+  if (hasWalkIn) {
+    lines.push({
+      label: '散客',
+      value: formatOnePrice(venue.walkInPriceDisplay, venue.walkInPriceMin, venue.walkInPriceMax),
+    })
+  }
+  const hasFullCourt = (venue?.fullCourtPriceDisplay?.trim()) || venue?.fullCourtPriceMin != null || venue?.fullCourtPriceMax != null
+  if (hasFullCourt) {
+    lines.push({
+      label: '包场',
+      value: formatOnePrice(venue.fullCourtPriceDisplay, venue.fullCourtPriceMin, venue.fullCourtPriceMax),
+    })
+  }
+  return lines
+}
+
+/** 简短摘要：用于副标题等单行展示 */
+function getPriceSummary(venue: any): string {
+  const lines = getAllPriceLines(venue)
+  return lines.map((l) => (l.label === '价格' ? l.value : `${l.label} ${l.value}`)).join(' · ')
+}
+
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
   const venueId = params.id
   
@@ -63,7 +99,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
             {v ? (
               <>
-                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {(v as any).priceDisplay?.trim() || (v.priceMin != null ? `¥${v.priceMin}` : '免费')}
+                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {getPriceSummary(v)}
                 {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
               </>
             ) : '加载中…'}
@@ -133,22 +169,16 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   )}
                 </div>
               </div>
-              <div>
-                <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
-                <input
-                  type="text"
-                  readOnly
-                  value={
-                    (v as any)?.priceDisplay?.trim() ||
-                    (v?.priceMin !== undefined && v?.priceMin !== null
-                      ? v.priceMax && v.priceMax !== v.priceMin
-                        ? `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
-                        : `¥${v.priceMin.toFixed(2)}/小时`
-                      : '免费')
-                  }
-                  className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-900 font-medium read-only:cursor-default focus:outline-none"
-                  style={{ borderRadius: '4px' }}
-                />
+              <div className="sm:col-span-2">
+                <div className="text-textSecondary uppercase tracking-wide mb-1">全部价格</div>
+                <div className="space-y-2">
+                  {getAllPriceLines(v).map((line) => (
+                    <div key={line.label} className="flex items-baseline gap-2">
+                      <span className="font-medium text-gray-900 shrink-0">{line.label}：</span>
+                      <span className="text-gray-700">{line.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div>
                 <div className="text-textSecondary uppercase tracking-wide mb-1">室内外</div>
@@ -277,21 +307,15 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   />
                 </div>
                 <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">收费情况</div>
-                  <input
-                    type="text"
-                    readOnly
-                    value={
-                      (v as any).priceDisplay?.trim() ||
-                      (v.priceMin !== undefined && v.priceMin !== null
-                        ? v.priceMax && v.priceMax !== v.priceMin
-                          ? `¥${v.priceMin.toFixed(2)} - ¥${v.priceMax.toFixed(2)}/小时`
-                          : `¥${v.priceMin.toFixed(2)}/小时`
-                        : '免费')
-                    }
-                    className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-900 font-medium read-only:cursor-default focus:outline-none"
-                    style={{ borderRadius: '4px' }}
-                  />
+                  <div className="text-textSecondary uppercase tracking-wide mb-1">全部价格</div>
+                  <div className="space-y-2 text-body-sm">
+                    {getAllPriceLines(v).map((line) => (
+                      <div key={line.label} className="flex items-baseline gap-2">
+                        <span className="font-medium text-gray-900 shrink-0">{line.label}：</span>
+                        <span className="text-gray-700">{line.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <div className="text-textSecondary uppercase tracking-wide mb-1">是否对外开放</div>

@@ -56,6 +56,11 @@ export class VenuesController {
     return this.venuesService.detail(id)
   }
 
+  @Post(':id/delete')
+  async deleteVenue(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.venuesService.deleteVenue(id, user.id)
+  }
+
   @Put(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateVenueDto, @CurrentUser() user: any) {
     try {
