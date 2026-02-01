@@ -1,37 +1,39 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function HeroSearch() {
-  const router = useRouter()
+  const [keyword, setKeyword] = useState('')
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const input = form.querySelector<HTMLInputElement>('input[name="keyword"]')
-    const kw = (input?.value ?? '').trim()
-    if (kw) {
-      router.push(`/map?keyword=${encodeURIComponent(kw)}`)
-    } else {
-      router.push('/map')
+    if (!keyword.trim()) {
+      e.preventDefault()
+      window.location.href = '/map'
+      return
     }
+    // 有关键词时不阻止提交，让浏览器用 GET 跳转到 /map?keyword=xxx，手机端最稳定
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+    <form action="/map" method="get" onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
       <input
         name="keyword"
         type="text"
-        className="flex-1 bg-white text-black px-4 py-3 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white"
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        className="flex-1 bg-white text-black px-4 py-3 text-body border-0 focus:outline-none focus:ring-2 focus:ring-white min-h-[44px]"
         placeholder="搜索城市、关键词…"
         style={{
-          fontSize: '0.875rem',
+          fontSize: '16px',
           paddingLeft: '1rem',
           paddingRight: '1rem',
           paddingTop: '0.75rem',
           paddingBottom: '0.75rem',
+          WebkitAppearance: 'none',
         }}
         autoComplete="off"
+        autoCapitalize="off"
+        enterKeyHint="search"
       />
       <button
         type="submit"

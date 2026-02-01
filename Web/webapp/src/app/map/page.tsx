@@ -24,9 +24,18 @@ function MapPageContent() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
-  // 优先 useSearchParams，否则从 window.location 取（整页跳转后首帧 useSearchParams 可能为空）
+  // 从 URL 取 keyword：首帧从 window 读（整页跳转后 useSearchParams 可能滞后），再用 effect 同步
   const paramsKeyword = (searchParams?.get('keyword') || '').trim()
-  const keyword = paramsKeyword || (typeof window !== 'undefined' ? getKeywordFromUrl() : '')
+  const [urlKeyword, setUrlKeyword] = useState(() =>
+    typeof window !== 'undefined' ? getKeywordFromUrl() : ''
+  )
+  const keyword = (paramsKeyword || urlKeyword).trim()
+
+  useEffect(() => {
+    const fromUrl = getKeywordFromUrl()
+    if (fromUrl) setUrlKeyword(fromUrl)
+    if (paramsKeyword) setUrlKeyword(paramsKeyword)
+  }, [paramsKeyword])
 
   // 有搜索关键词时默认显示「全部」（篮球+足球），并同步筛选状态
   useEffect(() => {

@@ -21,6 +21,7 @@ export default function EditVenuePage() {
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const [loadingData, setLoadingData] = useState(true)
   const [pendingSubmit, setPendingSubmit] = useState(false) // 标记是否有待提交的表单
+  const [deleting, setDeleting] = useState(false) // 删除场地中
   
   const [formData, setFormData] = useState({
     name: '',
@@ -523,6 +524,27 @@ export default function EditVenuePage() {
       setMessage({ type: 'error', text: `❌ ${errorMsg}` })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteVenue = async () => {
+    if (!venueId) return
+    if (!confirm(`确定要删除场地「${formData.name || '该场地'}」吗？\n\n此操作将删除：\n- 场地信息\n- 所有图片\n- 所有评论\n\n此操作不可撤销！`)) {
+      return
+    }
+    try {
+      setDeleting(true)
+      const result = await fetchJson(`/venues/${venueId}/delete`, { method: 'POST' })
+      if (result?.error) {
+        throw new Error(result.error.message || '删除场地失败')
+      }
+      alert('场地已成功删除')
+      router.push('/admin/venues')
+    } catch (error: any) {
+      console.error('❌ [EditVenue] Delete failed:', error)
+      alert(error?.message || '删除场地失败，请稍后重试')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -1044,6 +1066,23 @@ export default function EditVenuePage() {
             </button>
           </div>
         </form>
+
+        {/* 删除场地 */}
+        <section className="mt-12 pt-8 border-t border-gray-200">
+          <h2 className="text-heading-sm font-bold mb-2 text-gray-700">危险操作</h2>
+          <p className="text-body-sm text-textSecondary mb-4">
+            删除后场地及关联的图片、评论将无法恢复，请谨慎操作。
+          </p>
+          <button
+            type="button"
+            onClick={handleDeleteVenue}
+            disabled={deleting}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ borderRadius: '4px' }}
+          >
+            {deleting ? '删除中...' : '🗑️ 删除场地'}
+          </button>
+        </section>
       </div>
       
       <LoginModal

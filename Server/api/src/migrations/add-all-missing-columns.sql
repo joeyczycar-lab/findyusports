@@ -1,4 +1,4 @@
--- 完整的数据库迁移脚本
+-- 完整的数据库迁移脚本（含 price_display / walk_in_price_display / full_court_price_display）
 -- 在数据库控制台执行此脚本，添加所有可能缺失的列
 -- 使用 IF NOT EXISTS 确保不会重复添加已存在的列
 
@@ -17,7 +17,12 @@ ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_shower BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_locker BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS has_shop BOOLEAN;
 
--- 3. 添加散客和包场相关字段
+-- 3. 添加价格文字列（主价格、散客、包场）
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS price_display VARCHAR(120) NULL;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS walk_in_price_display VARCHAR(120) NULL;
+ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_display VARCHAR(120) NULL;
+
+-- 4. 添加散客和包场相关字段
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS supports_walk_in BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS supports_full_court BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS walk_in_price_min INTEGER;
@@ -25,11 +30,11 @@ ALTER TABLE venue ADD COLUMN IF NOT EXISTS walk_in_price_max INTEGER;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_min INTEGER;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS full_court_price_max INTEGER;
 
--- 4. 添加预约相关字段
+-- 5. 添加预约相关字段
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS requires_reservation BOOLEAN;
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS reservation_method VARCHAR(200);
 
--- 5. 添加几人制字段
+-- 6. 添加几人制字段
 ALTER TABLE venue ADD COLUMN IF NOT EXISTS players_per_side VARCHAR(20);
 
 -- 验证：查询所有列，确认已添加
@@ -40,6 +45,7 @@ AND column_name IN (
   'court_count', 'floor_type', 'open_hours',
   'has_lighting', 'has_air_conditioning', 'has_parking',
   'has_rest_area', 'has_fence', 'has_shower', 'has_locker', 'has_shop',
+  'price_display', 'walk_in_price_display', 'full_court_price_display',
   'supports_walk_in', 'supports_full_court',
   'walk_in_price_min', 'walk_in_price_max',
   'full_court_price_min', 'full_court_price_max',
