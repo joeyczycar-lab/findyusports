@@ -1446,9 +1446,9 @@ export class VenuesService {
       // 2. 上传所有尺寸到OSS
       console.log('📤 [Upload] 开始上传图片到 OSS...')
       console.log('📤 [Upload] OSS 服务状态检查...')
-      // Railway → 阿里云 OSS 跨地域易超时：串行上传 + Node 原生 https（90s 总超时，不受 undici 限制）+ 最多 2 次重试
-      const OSS_UPLOAD_TIMEOUT_MS = 90000
-      const MAX_ATTEMPTS = 3
+      // 前端代理（Vercel）总超时 55s，需在此前完成：单次 OSS 25s × 2 尺寸 ≈ 50s，留约 5s 给处理与预签名
+      const OSS_UPLOAD_TIMEOUT_MS = 25000
+      const MAX_ATTEMPTS = 2
       const uploadWithTimeout = async (uploadUrl: string, body: Buffer, attempt = 1): Promise<{ ok: boolean; statusCode: number }> => {
         try {
           return await putToUrlWithTimeout(uploadUrl, body, OSS_UPLOAD_TIMEOUT_MS)
@@ -1533,7 +1533,14 @@ export class VenuesService {
         info: await this.imageProcessing.getImageInfo(buffer)
       }
     } catch (error) {
-      throw new Error(`图片处理上传失败: ${error instanceof Error ? error.message : String(error)}`)
+      const msg = error instanceof Error ? error.message : String(error)
+      if (msg.includes('Upload timeout') || msg.includes('timeout') || msg.includes('ETIMEDOUT')) {
+        throw new Error('OSS 上传超时。请将图片缩小到 2MB 以内或稍后重试。')
+      }
+      if (msg.includes('OSS') && (msg.includes('未配置') || msg.includes('未设置'))) {
+        throw new Error('图片服务未配置（OSS），请联系管理员。')
+      }
+      throw new Error(`图片处理上传失败: ${msg}`)
     }
   }
 

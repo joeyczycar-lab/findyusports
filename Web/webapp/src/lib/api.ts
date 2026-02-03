@@ -42,12 +42,21 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       })
     }
     
+    // 图片上传：代理 55s 超时，前端 50s 超时以便尽早提示用户
+    const isUpload = isFormData && path.includes('/upload')
+    const uploadTimeoutMs = 50000
+    let finalSignal = options?.signal
+    if (isUpload && typeof AbortSignal !== 'undefined' && (AbortSignal as any).timeout) {
+      finalSignal = (AbortSignal as any).timeout(uploadTimeoutMs)
+    }
+
     let res: Response
     try {
       res = await fetch(url, { 
         cache: 'no-store',
         headers,
         ...options,
+        signal: finalSignal,
       })
     } catch (fetchError: any) {
       // 处理网络错误（连接失败、超时等）

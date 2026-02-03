@@ -85,6 +85,10 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
           throw new Error('请先登录后再上传图片')
         }
         
+        // 超时（408 或后端 OSS 超时）
+        if (result.error?.code === 'Timeout' || errorMsg.includes('超时') || errorMsg.includes('timeout')) {
+          throw new Error('上传超时。请将图片缩小到 2MB 以内再试（可先压缩或裁剪后上传）。')
+        }
         // 检查是否是网络问题
         if (errorMsg.includes('fetch') || errorMsg.includes('网络') || errorMsg.includes('连接')) {
           throw new Error(`无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${errorMsg}`)
@@ -109,9 +113,13 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
       // 提取错误信息
       let errorMsg = e.message || '上传失败，请检查网络连接和后端服务'
       
+      // 超时
+      if (errorMsg.includes('超时') || errorMsg.includes('timeout') || errorMsg.includes('请求超时')) {
+        errorMsg = '上传超时。请将图片缩小到 2MB 以内再试（可先压缩或裁剪后上传）。'
+      }
       // 网络/连接错误：给出可操作建议
-      if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('网络')) {
-        errorMsg = `上传失败（网络异常）。请检查网络后重试；若图片较大，请先缩小到单张 2MB 以内再上传。`
+      else if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('网络')) {
+        errorMsg = '上传失败（网络异常）。请检查网络后重试；若图片较大，请先缩小到单张 2MB 以内再上传。'
       }
       
       setError(errorMsg)
