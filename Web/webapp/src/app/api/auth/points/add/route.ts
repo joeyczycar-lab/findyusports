@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
     const apiBase = getApiBase()
     const authHeader = req.headers.get('authorization')
     const body = await req.json()
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
     const res = await fetch(`${apiBase}/auth/points/add`, {
       method: 'POST',
       headers: {
@@ -20,13 +22,20 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify(body),
       cache: 'no-store',
+      signal: controller.signal,
     })
+    clearTimeout(timeoutId)
     const data = await res.json().catch(() => ({}))
     return Response.json(data, { status: res.status })
-  } catch (e) {
+  } catch (e: any) {
+    const isTimeout = e?.name === 'AbortError'
     return Response.json(
-      { error: { message: e instanceof Error ? e.message : '请求失败' } },
-      { status: 500 }
+      {
+        error: {
+          message: isTimeout ? '请求超时，请稍后重试' : (e instanceof Error ? e.message : '请求失败'),
+        },
+      },
+      { status: isTimeout ? 408 : 500 }
     )
   }
 }

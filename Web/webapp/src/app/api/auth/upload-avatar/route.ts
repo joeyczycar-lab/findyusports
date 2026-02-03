@@ -34,12 +34,16 @@ export async function POST(req: NextRequest) {
     outForm.append('file', file)
     const headers: Record<string, string> = {}
     if (authHeader) headers['Authorization'] = authHeader
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s for avatar upload
     const res = await fetch(backendUrl, {
       method: 'POST',
       headers,
       body: outForm,
       cache: 'no-store',
+      signal: controller.signal,
     })
+    clearTimeout(timeoutId)
     const data = await res.json().catch(() => ({}))
     if (res.status === 404) {
       return Response.json(
@@ -52,10 +56,15 @@ export async function POST(req: NextRequest) {
       )
     }
     return Response.json(data, { status: res.status })
-  } catch (e) {
+  } catch (e: any) {
+    const isTimeout = e?.name === 'AbortError'
     return Response.json(
-      { error: { message: e instanceof Error ? e.message : '上传失败' } },
-      { status: 500 }
+      {
+        error: {
+          message: isTimeout ? '上传超时，请缩小图片后重试' : (e instanceof Error ? e.message : '上传失败'),
+        },
+      },
+      { status: isTimeout ? 408 : 500 }
     )
   }
 }

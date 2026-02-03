@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 
-// 后端串行上传多尺寸到 OSS 可能较久，延长等待（Vercel Pro 可设 120）
-export const maxDuration = 120
+// Vercel Hobby 单次函数最长 60 秒，必须在此前返回，否则会出现 "Application failed to respond"
+// 使用 55 秒超时以便返回明确 408，而非被平台强杀
+export const maxDuration = 60
 
 function getApiBase(): string {
   // 优先使用环境变量（开发和生产环境都支持）
@@ -39,9 +40,9 @@ export async function POST(
     // 获取 FormData
     const formData = await req.formData()
     
-    // 后端处理+上传 OSS 可能需 60–90 秒，代理等待 115 秒再超时
+    // 在平台 60s 限制前主动超时并返回 408，避免 "Application failed to respond"
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 115000) // 115 秒
+    const timeoutId = setTimeout(() => controller.abort(), 55000) // 55 秒
     
     // 获取认证 token
     const authToken = req.headers.get('authorization')
@@ -69,7 +70,7 @@ export async function POST(
     } catch (fetchError: any) {
       clearTimeout(timeoutId)
       if (fetchError.name === 'AbortError') {
-        console.error('❌ [API Route] Upload timeout after 115 seconds')
+        console.error('❌ [API Route] Upload timeout after 55 seconds')
         return Response.json(
           {
             error: {
