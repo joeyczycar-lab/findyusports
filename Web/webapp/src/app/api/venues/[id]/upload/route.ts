@@ -1,5 +1,8 @@
 import { NextRequest } from 'next/server'
 
+// 后端串行上传多尺寸到 OSS 可能较久，延长等待（Vercel Pro 可设 120）
+export const maxDuration = 120
+
 function getApiBase(): string {
   // 优先使用环境变量（开发和生产环境都支持）
   const base = process.env.NEXT_PUBLIC_API_BASE?.trim()
@@ -36,9 +39,9 @@ export async function POST(
     // 获取 FormData
     const formData = await req.formData()
     
-    // 添加超时机制
+    // 后端处理+上传 OSS 可能需 60–90 秒，代理等待 115 秒再超时
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30秒超时（图片上传可能需要更长时间）
+    const timeoutId = setTimeout(() => controller.abort(), 115000) // 115 秒
     
     // 获取认证 token
     const authToken = req.headers.get('authorization')
@@ -66,12 +69,12 @@ export async function POST(
     } catch (fetchError: any) {
       clearTimeout(timeoutId)
       if (fetchError.name === 'AbortError') {
-        console.error('❌ [API Route] Upload timeout after 30 seconds')
+        console.error('❌ [API Route] Upload timeout after 115 seconds')
         return Response.json(
           {
             error: {
               code: 'Timeout',
-              message: '上传超时：请检查网络连接或稍后重试',
+              message: '上传超时：请缩小图片尺寸或压缩后重试（建议单张小于 2MB）',
             },
           },
           { status: 408 }
@@ -87,11 +90,11 @@ export async function POST(
       })
       
       // 提供更友好的错误信息
-      let errorMessage = '图片处理上传失败: fetch failed'
+      let errorMessage = '图片上传失败：网络异常。请缩小图片后重试（建议单张小于 2MB）。'
       if (fetchError.message?.includes('ECONNREFUSED') || fetchError.message?.includes('Failed to fetch')) {
-        errorMessage = `无法连接到后端服务 (${apiBase})。\n\n请检查：\n1. 后端服务是否正在运行\n2. 后端地址是否正确\n3. 网络连接是否正常\n\n当前后端地址：${apiBase}`
+        errorMessage = `无法连接到后端服务。请检查网络后重试；若图片较大，请先压缩或缩小尺寸再上传。`
       } else if (fetchError.message) {
-        errorMessage = `图片处理上传失败: ${fetchError.message}`
+        errorMessage = `图片上传失败：${fetchError.message}。建议缩小图片后重试。`
       }
       
       return Response.json(

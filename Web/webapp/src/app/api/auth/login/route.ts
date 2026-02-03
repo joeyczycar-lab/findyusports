@@ -62,7 +62,16 @@ export async function POST(req: NextRequest) {
           { status: 408 }
         )
       }
-      throw fetchError
+      console.error('❌ [API Route] Backend unreachable:', fetchError?.message || fetchError)
+      return Response.json(
+        {
+          error: {
+            code: 'BackendUnreachable',
+            message: '无法连接登录服务，请稍后重试。若问题持续，请确认后端服务已启动且地址正确（生产环境需配置 NEXT_PUBLIC_API_BASE）',
+          },
+        },
+        { status: 502 }
+      )
     }
     
     // 只读取一次响应体
@@ -70,6 +79,10 @@ export async function POST(req: NextRequest) {
     
     if (!res.ok) {
       console.error('❌ Backend returned error:', res.status, text)
+      // 500 时打印完整响应，便于排查后端/数据库/JWT 等问题
+      if (res.status >= 500) {
+        console.error('❌ [API Route] Backend 5xx response body:', text.substring(0, 500))
+      }
       let errorMessage = `Request failed: ${res.status}`
       try {
         if (text && text.trim().length > 0) {
@@ -78,6 +91,10 @@ export async function POST(req: NextRequest) {
         }
       } catch {
         errorMessage = text || errorMessage
+      }
+      // 500 统一返回友好文案，避免直接暴露后端 "Internal server error"
+      if (res.status >= 500) {
+        errorMessage = '服务器内部错误，请稍后重试。若持续出现请确认后端服务与数据库已正常启动。'
       }
       return Response.json(
         {

@@ -21,19 +21,22 @@ export default function Nav() {
     if (typeof window !== 'undefined') {
       const state = getAuthState()
       setAuthState(state)
-      // 已登录时从后端拉取最新用户信息，使电脑上的修改在手机端可见
+      // 已登录时从后端拉取最新用户信息（延迟执行，避免阻塞首屏）
+      let profileTimeout: ReturnType<typeof setTimeout> | undefined
       if (state.isAuthenticated && state.token) {
-        fetch('/api/auth/profile', { headers: getAuthHeader(), cache: 'no-store' })
-          .then((r) => r.json())
-          .then((data: { user?: User }) => {
-            if (data?.user && state.token) {
-              persistAuthState(data.user, state.token)
-              setAuthState({ user: data.user, token: state.token, isAuthenticated: true })
-            }
-          })
-          .catch(() => {})
+        profileTimeout = setTimeout(() => {
+          fetch('/api/auth/profile', { headers: getAuthHeader(), cache: 'default' })
+            .then((r) => r.json())
+            .then((data: { user?: User }) => {
+              if (data?.user && state.token) {
+                persistAuthState(data.user, state.token)
+                setAuthState({ user: data.user, token: state.token, isAuthenticated: true })
+              }
+            })
+            .catch(() => {})
+        }, 300)
       }
-      
+
       // 强制确保导航栏和按钮可见，移除重复的导航栏
       const ensureVisible = () => {
         // 查找所有导航栏
@@ -115,8 +118,11 @@ export default function Nav() {
       
       // 持续监控（每500ms检查一次）
       const interval = setInterval(ensureVisible, 500)
-      
-      return () => clearInterval(interval)
+
+      return () => {
+        clearInterval(interval)
+        if (profileTimeout) clearTimeout(profileTimeout)
+      }
     }
   }, [])
 
@@ -319,7 +325,7 @@ export default function Nav() {
                   e.preventDefault()
                   const form = e.currentTarget
                   const input = form.querySelector<HTMLInputElement>('input[name="nav-search-keyword"]')
-                  const kw = (input?.value ?? '').trim()
+                  const kw = (input?.value ?? searchKeyword).trim()
                   if (kw) {
                     window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
                   } else {
@@ -338,13 +344,20 @@ export default function Nav() {
                   cursor: 'text'
                 }}
               >
-                <Search className="h-4 w-4 shrink-0" style={{ color: '#666666', cursor: 'pointer' }} />
+                <button
+                  type="submit"
+                  className="shrink-0 p-0 border-0 bg-transparent cursor-pointer flex items-center justify-center"
+                  style={{ color: '#666666' }}
+                  aria-label="搜索"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
                 <input
                   name="nav-search-keyword"
                   type="text"
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder="搜索"
+                  placeholder="搜索场地"
                   className="bg-transparent border-0 outline-0 flex-1"
                   style={{
                     backgroundColor: 'transparent',
@@ -356,6 +369,7 @@ export default function Nav() {
                     minWidth: 0
                   }}
                   autoComplete="off"
+                  aria-label="搜索关键词"
                 />
               </form>
             </div>
@@ -425,7 +439,7 @@ export default function Nav() {
               e.preventDefault()
               const form = e.currentTarget
               const input = form.querySelector<HTMLInputElement>('input[name="mobile-search-keyword"]')
-              const kw = (input?.value ?? '').trim()
+              const kw = (input?.value ?? searchKeyword).trim()
               if (kw) {
                 window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
               } else {
@@ -435,7 +449,9 @@ export default function Nav() {
             className="flex items-center gap-2 bg-gray-100 rounded-full overflow-hidden"
             style={{ minHeight: '44px', padding: '0 16px' }}
           >
-            <Search className="h-5 w-5 shrink-0" style={{ color: '#666' }} />
+            <button type="submit" className="shrink-0 p-0 border-0 bg-transparent cursor-pointer flex items-center" style={{ color: '#666' }} aria-label="搜索">
+              <Search className="h-5 w-5" />
+            </button>
             <input
               name="mobile-search-keyword"
               type="text"
@@ -445,6 +461,7 @@ export default function Nav() {
               className="flex-1 bg-transparent border-0 outline-0 text-base"
               style={{ minWidth: 0 }}
               autoComplete="off"
+              aria-label="搜索关键词"
             />
             <button type="submit" className="text-black font-medium text-sm shrink-0">
               搜索

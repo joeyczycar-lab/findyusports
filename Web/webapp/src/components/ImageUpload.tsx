@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { fetchJson } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
+import { compressImageForUpload } from '@/lib/imageCompress'
 import LoginModal from './LoginModal'
 
 type Props = {
@@ -43,9 +44,10 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
     setError('')
 
     try {
-      // 使用新的处理上传接口（自动压缩和多尺寸生成）
+      // 上传前压缩大图，减小体积、加快上传、降低超时
+      const fileToUpload = await compressImageForUpload(file)
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', fileToUpload)
       
       console.log('📤 [ImageUpload] 开始上传图片')
       console.log('📤 [ImageUpload] venueId:', venueId)
@@ -107,9 +109,9 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
       // 提取错误信息
       let errorMsg = e.message || '上传失败，请检查网络连接和后端服务'
       
-      // 如果是网络错误，提供更详细的诊断信息
-      if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('ECONNREFUSED')) {
-        errorMsg = `无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${errorMsg}\n\n提示：如果是本地开发，请确保后端服务运行在 http://localhost:4000\n如果是生产环境，请检查 Railway 后端服务状态`
+      // 网络/连接错误：给出可操作建议
+      if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('ECONNREFUSED') || errorMsg.includes('网络')) {
+        errorMsg = `上传失败（网络异常）。请检查网络后重试；若图片较大，请先缩小到单张 2MB 以内再上传。`
       }
       
       setError(errorMsg)

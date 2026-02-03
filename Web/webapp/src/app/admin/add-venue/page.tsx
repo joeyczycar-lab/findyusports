@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson, getApiBase } from '@/lib/api'
 import { getAuthState } from '@/lib/auth'
+import { compressImageForUpload } from '@/lib/imageCompress'
 import LoginModal from '@/components/LoginModal'
 import NavigationMenu from '@/components/NavigationMenu'
 
@@ -420,20 +421,30 @@ export default function AddVenuePage() {
             setIsLoginModalOpen(true)
             setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 请先登录后再上传图片。` })
           } else {
-            // 上传所有选中的图片
-            const uploadResults = await Promise.allSettled(
-              selectedImages.map(async (file, index) => {
-                console.log(`📤 [AddVenue] 上传第 ${index + 1} 张图片: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
+            // 串行上传并压缩大图，避免并发超时与 fetch failed
+            const uploadResults: Array<{ status: 'fulfilled' | 'rejected'; value?: any; reason?: any }> = []
+            for (let index = 0; index < selectedImages.length; index++) {
+              const file = selectedImages[index]
+              try {
+                const fileToUpload = await compressImageForUpload(file)
+                console.log(`📤 [AddVenue] 上传第 ${index + 1} 张图片: ${fileToUpload.name} (${(fileToUpload.size / 1024).toFixed(2)} KB)`)
                 const formData = new FormData()
-                formData.append('file', file)
+                formData.append('file', fileToUpload)
                 const result = await fetchJson(`/venues/${venueId}/upload`, {
                   method: 'POST',
                   body: formData
                 })
-                console.log(`✅ [AddVenue] 第 ${index + 1} 张图片上传成功:`, result.url || result.id)
-                return result
-              })
-            )
+                if (result.error) {
+                  uploadResults.push({ status: 'rejected', reason: new Error(result.error.message || result.error.code || '上传失败') })
+                } else {
+                  console.log(`✅ [AddVenue] 第 ${index + 1} 张图片上传成功:`, result.url || result.id)
+                  uploadResults.push({ status: 'fulfilled', value: result })
+                }
+              } catch (err: any) {
+                console.error(`❌ [AddVenue] 第 ${index + 1} 张图片上传失败:`, err)
+                uploadResults.push({ status: 'rejected', reason: err })
+              }
+            }
             
             // 统计成功和失败的数量
             const successful = uploadResults.filter(r => r.status === 'fulfilled' && !r.value.error).length
@@ -468,9 +479,9 @@ export default function AddVenuePage() {
           console.error('❌ [AddVenue] 图片上传错误:', error)
           let errorMsg = error.message || '请稍后在场地详情页面上传图片。'
           
-          // 如果是网络错误，提供更详细的诊断信息
+          // 网络错误：给出可操作建议
           if (errorMsg.includes('fetch failed') || errorMsg.includes('Failed to fetch') || errorMsg.includes('无法连接')) {
-            errorMsg = `无法连接到后端服务。\n\n请检查：\n1. 后端服务是否正在运行\n2. 网络连接是否正常\n3. 后端地址是否正确\n\n错误信息：${error.message || '网络连接失败'}\n\n提示：如果是本地开发，请确保后端服务运行在 http://localhost:4000\n如果是生产环境，请检查 Railway 后端服务状态`
+            errorMsg = `上传失败（网络异常）。请检查网络后重试；若图片较大，请先缩小到单张 2MB 以内再上传。`
           }
           
           setMessage({ 

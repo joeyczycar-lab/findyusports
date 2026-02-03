@@ -6,9 +6,16 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
     "lucide-react": "^0.263.1",
     "next": "14.2.5",
     "react": "18.3.1",
@@ -26,5 +33,3 @@
     "typescript": "5.4.5"
   }
 }
-
-

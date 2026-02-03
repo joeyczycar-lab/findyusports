@@ -28,19 +28,19 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       ...options?.headers,
     }
     
-    // 调试信息：检查是否有认证header
-    if (authHeader.Authorization) {
-      console.log('✅ [fetchJson] Authorization header present:', authHeader.Authorization.substring(0, 30) + '...')
-    } else {
-      console.warn('⚠️ [fetchJson] No Authorization header found')
+    // 仅在开发环境输出调试信息，减少生产环境主线程开销
+    if (process.env.NODE_ENV === 'development') {
+      if (authHeader.Authorization) {
+        console.log('✅ [fetchJson] Authorization header present:', authHeader.Authorization.substring(0, 30) + '...')
+      } else {
+        console.warn('⚠️ [fetchJson] No Authorization header found')
+      }
+      console.log('🌐 [fetchJson] Making request:', {
+        url,
+        method: options?.method || 'GET',
+        hasAuthHeader: !!authHeader.Authorization,
+      })
     }
-    
-    console.log('🌐 [fetchJson] Making request:', {
-      url,
-      method: options?.method || 'GET',
-      hasAuthHeader: !!authHeader.Authorization,
-      authHeaderPreview: authHeader.Authorization ? authHeader.Authorization.substring(0, 30) + '...' : 'none'
-    })
     
     let res: Response
     try {
@@ -146,11 +146,16 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       throw new Error(`JSON 解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
     }
   } catch (error) {
-    // 如果是网络错误，提供更友好的错误信息
+    // 网络错误：上传接口给出可操作建议，其它接口给出通用提示
     if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-      const errorMsg = `无法连接到后端服务 (${url})。请确保：\n1. 后端服务正在运行\n2. 后端地址正确\n3. 没有防火墙阻止连接`
-      console.error('❌ [fetchJson] 网络错误:', error)
-      console.error('❌ [fetchJson] 尝试访问的 URL:', url)
+      const isUpload = url.includes('/upload')
+      const errorMsg = isUpload
+        ? '上传失败（网络异常）。请检查网络后重试；若图片较大，请先缩小到单张 2MB 以内再上传。'
+        : `无法连接到后端服务 (${url})。请确保：\n1. 后端服务正在运行\n2. 后端地址正确\n3. 没有防火墙阻止连接`
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ [fetchJson] 网络错误:', error)
+        console.error('❌ [fetchJson] 尝试访问的 URL:', url)
+      }
       throw new Error(errorMsg)
     }
     // 如果是其他错误，确保错误信息是中文

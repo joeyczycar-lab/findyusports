@@ -73,6 +73,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
           errorMsg = '用户已存在'
         } else if (errorMsg.includes('User not found')) {
           errorMsg = '用户不存在'
+        } else if (errorMsg.includes('Internal server error') || errorMsg.includes('Internal Server Error')) {
+          errorMsg = '服务器内部错误，请稍后重试。若持续出现请确认后端服务与数据库已正常启动。'
         }
         throw new Error(errorMsg)
       }
@@ -117,19 +119,22 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       
       let errorMsg = err.message || '网络错误，请检查后端服务是否正常运行'
       // 确保错误信息是中文
-      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch')) {
-        errorMsg = '无法连接到服务器。请检查：\n1. 前端服务是否正常运行 (http://localhost:3000)\n2. 后端服务是否正常运行 (http://localhost:4000)\n3. 网络连接是否正常'
+      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch') || errorMsg.includes('NetworkError')) {
+        errorMsg = '无法连接登录服务，请检查网络后重试。若使用 findyusports.com，请确认后端服务正常。'
         console.error('❌ [LoginModal] Failed to fetch - 可能的原因：')
-        console.error('  1. 前端服务未运行')
-        console.error('  2. 后端服务未运行')
-        console.error('  3. CORS 问题')
-        console.error('  4. 网络连接问题')
+        console.error('  1. 网络连接问题')
+        console.error('  2. 后端服务未运行或不可达')
+        console.error('  3. 生产环境 NEXT_PUBLIC_API_BASE 未配置或错误')
+      } else if (errorMsg.includes('无法连接登录服务')) {
+        // 保留 API 返回的 502 文案
       } else if (errorMsg.includes('Unauthorized')) {
         errorMsg = '未授权，请先登录'
       } else if (errorMsg.includes('401')) {
-        errorMsg = '登录失败，用户名或密码错误'
+        errorMsg = '登录失败，手机号或密码错误'
       } else if (errorMsg.includes('手机号或密码错误')) {
         errorMsg = '手机号或密码错误，请检查输入'
+      } else if (errorMsg.includes('Internal server error') || errorMsg.includes('Internal Server Error') || errorMsg.includes('服务器内部错误')) {
+        errorMsg = '服务器内部错误，请稍后重试。若持续出现请确认后端服务与数据库已正常启动。'
       }
       setError(errorMsg)
     } finally {

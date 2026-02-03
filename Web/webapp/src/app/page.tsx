@@ -3,63 +3,58 @@ import { getApiBase } from '@/lib/api'
 import TicketBanner from '@/components/TicketBanner'
 import HeroSearch from '@/components/HeroSearch'
 
-async function getFeaturedVenues() {
+// 首页场地数据使用短期缓存（60 秒）以减轻后端压力、加快页面响应
+const VENUE_REVALIDATE_SECONDS = 60
+
+async function getFeaturedVenues(): Promise<any[]> {
   try {
     const base = getApiBase()
-    // 如果API地址未配置，返回空数组
-    if (!base || base.length === 0) {
-      console.warn('NEXT_PUBLIC_API_BASE is not configured, skipping venue fetch')
-      return []
-    }
+    if (!base || base.length === 0) return []
     const url = `${base}/venues?limit=6`
-    const res = await fetch(url, { 
-      cache: 'no-store', // 不缓存，删除/更新场地后首页立即反映
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(url, {
+      next: { revalidate: VENUE_REVALIDATE_SECONDS },
+      headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) throw new Error(`Request failed: ${res.status}`)
     const data = await res.json()
     return data?.items || []
   } catch (error) {
-    // 静默处理网络错误，不影响构建
-    if (error instanceof Error) {
-      // 只在开发环境输出错误
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to fetch venues:', error.message)
-      }
+    if (process.env.NODE_ENV === 'development' && error instanceof Error) {
+      console.error('Failed to fetch venues:', error.message)
     }
     return []
   }
 }
 
-async function getVenuesBySport(sport: 'basketball' | 'football') {
+async function getVenuesBySport(sport: 'basketball' | 'football'): Promise<any[]> {
   try {
     const base = getApiBase()
-    if (!base || base.length === 0) {
-      return []
-    }
+    if (!base || base.length === 0) return []
     const url = `${base}/venues?sport=${sport}&pageSize=12`
-    const res = await fetch(url, { 
-      cache: 'no-store', // 不缓存，删除/更新后首页足球/篮球区块立即反映
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(url, {
+      next: { revalidate: VENUE_REVALIDATE_SECONDS },
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) throw new Error(`Request failed: ${res.status}`)
     const data = await res.json()
     return data?.items || []
   } catch (error) {
-    console.error(`Failed to fetch ${sport} venues:`, error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Failed to fetch ${sport} venues:`, error)
+    }
     return []
   }
 }
 
 export default async function HomePage() {
-  const venues = await getFeaturedVenues()
-  const basketballVenues = await getVenuesBySport('basketball')
-  const footballVenues = await getVenuesBySport('football')
+  // 三路请求并行，减少首屏等待时间
+  const [venues, basketballVenues, footballVenues] = await Promise.all([
+    getFeaturedVenues(),
+    getVenuesBySport('basketball'),
+    getVenuesBySport('football'),
+  ])
 
   return (
     <main className="bg-white" style={{ paddingTop: 0 }}>
@@ -258,8 +253,9 @@ export default async function HomePage() {
         {/* Nike 风格：大图网格布局 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {venues.length > 0 ? (
-            venues.map((venue: any) => {
+            venues.map((venue: any, index: number) => {
               const firstImage = venue.firstImage || null
+              const isAboveFold = index < 3 // 前 3 张优先加载，利于 LCP
               return (
                 <Link key={venue.id} href={`/venues/${venue.id}`} className="group relative bg-white overflow-hidden" style={{ borderRadius: '4px' }}>
                   {/* 大图展示 */}
@@ -269,7 +265,9 @@ export default async function HomePage() {
                         src={firstImage} 
                         alt={venue.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
+                        loading={isAboveFold ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchPriority={isAboveFold ? 'high' : undefined}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-textMuted text-6xl">
