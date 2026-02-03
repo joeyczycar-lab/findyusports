@@ -1473,7 +1473,8 @@ export class VenuesService {
       }
 
       const uploadResults: Array<{ size: string; key: string; url: string; sizeBytes: number }> = []
-      const order = ['thumbnail', 'medium', 'large', 'original'].filter((s) => processedImages[s as keyof typeof processedImages])
+      // 只上传 large + thumbnail，减少 Railway→OSS 总时长，避免代理超时（原 4 尺寸易超时）
+      const order = ['thumbnail', 'large'].filter((s) => processedImages[s as keyof typeof processedImages])
       for (const size of order) {
         const imageBuffer = processedImages[size as keyof typeof processedImages]
         if (!imageBuffer) continue
@@ -1518,13 +1519,17 @@ export class VenuesService {
         console.error(`❌ Processed image not found after save!`)
       }
       
+      const sizesMap = uploadResults.reduce((acc, r) => {
+        acc[r.size] = r.url
+        return acc
+      }, {} as Record<string, string>)
+      // 未上传的尺寸用 large 兜底，兼容前端
+      if (sizesMap.large && !sizesMap.medium) sizesMap.medium = sizesMap.large
+      if (sizesMap.large && !sizesMap.original) sizesMap.original = sizesMap.large
       return {
         id: saved.id,
         url: saved.url,
-        sizes: uploadResults.reduce((acc, r) => {
-          acc[r.size] = r.url
-          return acc
-        }, {} as Record<string, string>),
+        sizes: sizesMap,
         info: await this.imageProcessing.getImageInfo(buffer)
       }
     } catch (error) {
