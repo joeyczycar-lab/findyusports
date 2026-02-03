@@ -23,10 +23,11 @@ if (fs.existsSync(envPath)) {
 async function bootstrap() {
   try {
     console.log('🚀 Starting NestJS application...')
+    const hasDbUrl = !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim())
     console.log('📦 Environment variables:', {
       PORT: process.env.PORT,
       NODE_ENV: process.env.NODE_ENV,
-      DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.substring(0, 50) + '...)' : 'NOT SET',
+      DATABASE_URL: hasDbUrl ? 'SET (' + process.env.DATABASE_URL!.substring(0, 50) + '...)' : 'NOT SET',
       DB_SSL: process.env.DB_SSL,
       JWT_SECRET: process.env.JWT_SECRET ? 'SET (length: ' + process.env.JWT_SECRET.length + ')' : 'NOT SET',
       OSS_REGION: process.env.OSS_REGION || 'NOT SET',
@@ -34,6 +35,15 @@ async function bootstrap() {
       OSS_ACCESS_KEY_SECRET: process.env.OSS_ACCESS_KEY_SECRET ? 'SET' : 'NOT SET',
       OSS_BUCKET: process.env.OSS_BUCKET || 'NOT SET',
     })
+    if (!hasDbUrl) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('❌ [Main] 生产环境（Railway）必须设置 DATABASE_URL。请在 Railway 中关联 PostgreSQL 服务或在变量中配置 DATABASE_URL 后重新部署。')
+        process.exit(1)
+      }
+      console.warn('⚠️ [Main] 开发环境：DATABASE_URL 未设置，将连接本机 PostgreSQL (127.0.0.1:5432)。')
+    } else {
+      console.log('✅ [Main] 使用 Railway 数据库 (DATABASE_URL)')
+    }
 
     const app = await NestFactory.create(AppModule, { cors: true })
     const port = process.env.PORT ? Number(process.env.PORT) : 4000

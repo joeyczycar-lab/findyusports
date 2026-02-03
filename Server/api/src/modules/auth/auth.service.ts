@@ -49,29 +49,39 @@ export class AuthService {
   async login(dto: LoginDto) {
     const { phone, password } = dto
 
-    // 查找用户
-    const user = await this.userRepo.findOne({ where: { phone } })
-    if (!user) {
-      throw new UnauthorizedException('手机号或密码错误')
-    }
+    try {
+      // 查找用户（若数据库未连接会在此抛错）
+      const user = await this.userRepo.findOne({ where: { phone } })
+      if (!user) {
+        throw new UnauthorizedException('手机号或密码错误')
+      }
 
-    // 验证密码
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('手机号或密码错误')
-    }
+      // 验证密码
+      const isPasswordValid = await bcrypt.compare(password, user.password)
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('手机号或密码错误')
+      }
 
-    // 检查用户状态
-    if (user.status !== 'active') {
-      throw new UnauthorizedException('账户已被禁用')
-    }
+      // 检查用户状态
+      if (user.status !== 'active') {
+        throw new UnauthorizedException('账户已被禁用')
+      }
 
-    // 生成JWT token
-    const token = this.generateToken(user)
+      // 生成JWT token
+      const token = this.generateToken(user)
 
-    return {
-      user: this.sanitizeUser(user),
-      token
+      return {
+        user: this.sanitizeUser(user),
+        token
+      }
+    } catch (err: any) {
+      // 业务异常直接抛出，由 Nest 返回 401
+      if (err instanceof UnauthorizedException) throw err
+      // 未预期错误：打完整日志便于在 Railway 日志中排查 500
+      console.error('❌ [AuthService] login 未预期错误:', err?.message ?? err)
+      console.error('❌ [AuthService] 错误名:', err?.name)
+      console.error('❌ [AuthService] 堆栈:', err?.stack)
+      throw err
     }
   }
 

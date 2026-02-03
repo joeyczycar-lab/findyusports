@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { QueryVenuesDto, CreateReviewDto, CreateVenueDto, UpdateVenueDto } from './dto'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import * as https from 'https'
+import * as http from 'http'
+import { URL } from 'url'
 import { VenueEntity } from './venue.entity'
 import { ReviewEntity } from './review.entity'
 import { VenueImageEntity } from './image.entity'
@@ -10,6 +13,42 @@ import { ImageProcessingService } from '../image/image-processing.service'
 import { HotlinkProtectionService } from '../oss/hotlink-protection.service'
 
 type LngLat = [number, number]
+
+/** Railway → 阿里云 OSS 用 fetch 易被 undici 默认超时打断，改用 Node 原生 https 并设 90s 总超时 */
+function putToUrlWithTimeout(uploadUrl: string, body: Buffer, timeoutMs: number): Promise<{ ok: boolean; statusCode: number }> {
+  return new Promise((resolve, reject) => {
+    const u = new URL(uploadUrl)
+    const isHttps = u.protocol === 'https:'
+    const mod = isHttps ? https : http
+    const req = mod.request(
+      {
+        hostname: u.hostname,
+        port: u.port || (isHttps ? 443 : 80),
+        path: u.pathname + u.search,
+        method: 'PUT',
+        headers: { 'Content-Type': 'image/jpeg', 'Content-Length': body.length },
+      },
+      (res) => {
+        clearTimeout(timer)
+        res.resume()
+        resolve({
+          ok: (res.statusCode ?? 0) >= 200 && (res.statusCode ?? 0) < 300,
+          statusCode: res.statusCode ?? 0,
+        })
+      }
+    )
+    const timer = setTimeout(() => {
+      req.destroy()
+      reject(new Error('Upload timeout'))
+    }, timeoutMs)
+    req.on('error', (err) => {
+      clearTimeout(timer)
+      reject(err)
+    })
+    req.write(body)
+    req.end()
+  })
+}
 
 function parseLngLatPair(v?: string): { northeast: LngLat; southwest: LngLat } | null {
   if (!v) return null
@@ -1407,45 +1446,55 @@ export class VenuesService {
       // 2. 上传所有尺寸到OSS
       console.log('📤 [Upload] 开始上传图片到 OSS...')
       console.log('📤 [Upload] OSS 服务状态检查...')
-      const uploadPromises = Object.entries(processedImages).map(async ([size, imageBuffer]) => {
-        const key = keys[size]
+      // Railway → 阿里云 OSS 跨地域易超时：串行上传 + Node 原生 https（90s 总超时，不受 undici 限制）+ 最多 2 次重试
+      const OSS_UPLOAD_TIMEOUT_MS = 90000
+      const MAX_ATTEMPTS = 3
+      const uploadWithTimeout = async (uploadUrl: string, body: Buffer, attempt = 1): Promise<{ ok: boolean; statusCode: number }> => {
+        try {
+          return await putToUrlWithTimeout(uploadUrl, body, OSS_UPLOAD_TIMEOUT_MS)
+        } catch (e: any) {
+          const code = e?.code ?? e?.cause?.code
+          const isRetryable =
+            e?.message?.includes('timeout') ||
+            e?.message?.includes('fetch failed') ||
+            e?.message?.includes('ETIMEDOUT') ||
+            e?.message?.includes('Upload timeout') ||
+            code === 'UND_ERR_CONNECT_TIMEOUT' ||
+            code === 'UND_ERR_HEADERS_TIMEOUT' ||
+            code === 'UND_ERR_SOCKET' ||
+            code === 'ETIMEDOUT' ||
+            code === 'ECONNRESET'
+          if (isRetryable && attempt < MAX_ATTEMPTS) {
+            console.warn(`⚠️ [Upload] OSS 请求超时/失败 (${code || e?.message}), 重试 (${attempt}/${MAX_ATTEMPTS})...`)
+            return uploadWithTimeout(uploadUrl, body, attempt + 1)
+          }
+          throw e
+        }
+      }
+
+      const uploadResults: Array<{ size: string; key: string; url: string; sizeBytes: number }> = []
+      const order = ['thumbnail', 'medium', 'large', 'original'].filter((s) => processedImages[s as keyof typeof processedImages])
+      for (const size of order) {
+        const imageBuffer = processedImages[size as keyof typeof processedImages]
+        if (!imageBuffer) continue
+        const key = keys[size as keyof typeof keys]
         console.log(`📤 [Upload] Generating presigned URL for ${size} size, key: ${key}`)
         try {
-          // 使用正确的 key 生成预签名URL
           const { uploadUrl, publicUrl } = await this.ossService.generatePresignedUrl('image/jpeg', 'jpg', key)
-          
           console.log(`📤 [Upload] Uploading ${size} size to OSS, key: ${key}, uploadUrl: ${uploadUrl.substring(0, 100)}...`)
-          // 直传处理后的图片
-          // 将 Buffer 转换为 Uint8Array 以兼容 fetch API
-          const body = new Uint8Array(imageBuffer)
-          const response = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'image/jpeg' },
-            body: body
-          })
-          
-          if (!response.ok) {
-            const errorText = await response.text()
-            console.error(`❌ [Upload] Failed to upload ${size} size:`, response.status, errorText)
-            throw new Error(`上传${size}尺寸失败: ${response.status} ${errorText}`)
+          const result = await uploadWithTimeout(uploadUrl, imageBuffer)
+          if (!result.ok) {
+            console.error(`❌ [Upload] Failed to upload ${size} size:`, result.statusCode)
+            throw new Error(`上传${size}尺寸失败: ${result.statusCode}`)
           }
-          
           const finalUrl = publicUrl || `https://${process.env.OSS_BUCKET}.${process.env.OSS_REGION}.aliyuncs.com/${key}`
           console.log(`✅ [Upload] Successfully uploaded ${size} size, key: ${key}, URL: ${finalUrl}`)
-          
-          return {
-            size,
-            key,
-            url: finalUrl,
-            sizeBytes: imageBuffer.length
-          }
+          uploadResults.push({ size, key, url: finalUrl, sizeBytes: imageBuffer.length })
         } catch (error) {
           console.error(`❌ [Upload] Error uploading ${size} size:`, error)
           throw error
         }
-      })
-      
-      const uploadResults = await Promise.all(uploadPromises)
+      }
       
       // 3. 保存到数据库（以large尺寸为主图）
       const mainImage = uploadResults.find(r => r.size === 'large')
