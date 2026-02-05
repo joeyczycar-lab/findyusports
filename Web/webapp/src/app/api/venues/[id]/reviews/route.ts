@@ -163,12 +163,22 @@ export async function POST(
     const body = await req.json()
     console.log('📝 [API Route][reviews] Proxying POST to:', backendUrl, 'body:', body)
 
-    // 认证：必须登录
-    const authHeader =
+    // 认证：必须登录（兼容被剥离的 Authorization，兜底使用 X-Auth-Token）
+    const authFromHeader =
       req.headers.get('authorization') ||
       req.headers.get('Authorization') ||
       req.headers.get('x-authorization') ||
       req.headers.get('X-Authorization')
+
+    const authFromCustom =
+      req.headers.get('x-auth-token') ||
+      req.headers.get('X-Auth-Token')
+
+    const authHeader = authFromHeader
+      ? authFromHeader
+      : authFromCustom
+        ? (authFromCustom.startsWith('Bearer ') ? authFromCustom : `Bearer ${authFromCustom}`)
+        : null
 
     if (!authHeader) {
       console.warn('⚠️ [API Route][reviews] No auth header, returning 401')
