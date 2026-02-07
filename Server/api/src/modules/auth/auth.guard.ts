@@ -19,11 +19,18 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
     
     const request = context.switchToHttp().getRequest()
-    // 检查所有可能的header名称（不区分大小写）
-    const authHeader = request.headers?.authorization || 
-                       request.headers?.Authorization ||
-                       request.headers?.['authorization'] ||
-                       request.headers?.['Authorization']
+    // 检查 Authorization，兼容 X-Auth-Token（防止代理或浏览器策略剥离 Authorization）
+    let authHeader = request.headers?.authorization ||
+                     request.headers?.Authorization ||
+                     request.headers?.['authorization'] ||
+                     request.headers?.['Authorization']
+    if (!authHeader) {
+      const xToken = request.headers?.['x-auth-token'] || request.headers?.['X-Auth-Token']
+      if (xToken) {
+        authHeader = xToken.startsWith('Bearer ') ? xToken : `Bearer ${xToken}`
+        request.headers['authorization'] = authHeader
+      }
+    }
     console.log('🔐 [JWT Auth Guard] Checking authentication:', {
       isPublic,
       hasAuthHeader: !!authHeader,

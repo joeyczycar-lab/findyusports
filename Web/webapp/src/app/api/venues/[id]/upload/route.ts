@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 
-// Vercel Hobby 单次函数最长 60 秒，必须在此前返回，否则会出现 "Application failed to respond"
-// 使用 55 秒超时以便返回明确 408，而非被平台强杀
+// 图片上传可能较慢，延长 Vercel 函数执行时间与请求超时（Vercel Pro 可到 60s）
 export const maxDuration = 60
 
 function getApiBase(): string {
@@ -40,13 +39,19 @@ export async function POST(
     // 获取 FormData
     const formData = await req.formData()
     
-    // 在平台 60s 限制前主动超时并返回 408，避免 "Application failed to respond"
+    // 添加超时机制（与 maxDuration 一致，避免过早中断大图上传）
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 55000) // 55 秒
+    const timeoutId = setTimeout(() => controller.abort(), 55000) // 55 秒，略小于 maxDuration
     
-    // 获取认证 token
-    const authToken = req.headers.get('authorization')
-    console.log('🔐 [API Route] Auth token present:', !!authToken)
+    // 获取认证 token（优先 Authorization，兼容 X-Auth-Token，避免被策略剥离）
+    const authFromHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    const authFromCustom = req.headers.get('x-auth-token') || req.headers.get('X-Auth-Token')
+    const authToken = authFromHeader
+      ? authFromHeader
+      : authFromCustom
+        ? (authFromCustom.startsWith('Bearer ') ? authFromCustom : `Bearer ${authFromCustom}`)
+        : null
+    console.log('🔐 [API Route] Auth token present:', !!authToken, 'from:', authFromHeader ? 'Authorization' : authFromCustom ? 'X-Auth-Token' : 'none')
     if (authToken) {
       console.log('🔐 [API Route] Auth token (first 20 chars):', authToken.substring(0, 20) + '...')
     }

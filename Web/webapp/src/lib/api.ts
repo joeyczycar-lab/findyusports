@@ -1,4 +1,4 @@
-import { getAuthHeader } from './auth'
+import { getAuthHeader, clearAuthState } from './auth'
 
 export function getApiBase(): string {
   // 在浏览器环境中，始终使用 Next.js API 路由作为代理
@@ -23,9 +23,9 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
     const isFormData = options?.body instanceof FormData
     const authHeader = getAuthHeader()
     const headers: HeadersInit = {
-      ...authHeader,
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options?.headers,
+      ...authHeader,
     }
     
     // 仅在开发环境输出调试信息，减少生产环境主线程开销
@@ -42,21 +42,12 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       })
     }
     
-    // 图片上传：代理 55s 超时，前端 50s 超时以便尽早提示用户
-    const isUpload = isFormData && path.includes('/upload')
-    const uploadTimeoutMs = 50000
-    let finalSignal = options?.signal
-    if (isUpload && typeof AbortSignal !== 'undefined' && (AbortSignal as any).timeout) {
-      finalSignal = (AbortSignal as any).timeout(uploadTimeoutMs)
-    }
-
     let res: Response
     try {
       res = await fetch(url, { 
         cache: 'no-store',
         headers,
         ...options,
-        signal: finalSignal,
       })
     } catch (fetchError: any) {
       // 处理网络错误（连接失败、超时等）
@@ -102,14 +93,18 @@ export async function fetchJson<T = any>(path: string, options?: RequestInit): P
       if (res.status === 404) {
         errorMessage = '未找到请求的资源 (404)，请检查地址或联系管理员'
       }
+      if (res.status === 401) {
+        clearAuthState()
+        errorMessage = '登录已过期或未授权，请重新登录'
+      }
       try {
         if (errorText && errorText.trim().length > 0) {
           const errorJson = JSON.parse(errorText)
           const bodyMsg = errorJson.error?.message || errorJson.message
           if (bodyMsg) errorMessage = bodyMsg
           // 英文转中文
-          if (errorMessage.includes('Unauthorized')) {
-            errorMessage = '未授权，请先登录'
+          if (res.status === 401 || errorMessage.includes('Unauthorized')) {
+            errorMessage = '登录已过期或未授权，请重新登录'
           } else if (errorMessage.includes('Forbidden')) {
             errorMessage = '禁止访问，权限不足'
           } else if (errorMessage.includes('Not Found') || errorMessage.includes('404')) {

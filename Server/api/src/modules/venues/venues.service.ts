@@ -163,14 +163,14 @@ export class VenuesService {
 
       // 排序逻辑
       if (sortBy === 'city') {
-        // 按城市代码排序
         qb.orderBy('v.cityCode', 'ASC')
         qb.addOrderBy('v.name', 'ASC')
+      } else if (sortBy === 'newest') {
+        // 按添加先后：id 递增即添加顺序，降序=最新添加在前
+        qb.orderBy('v.id', 'DESC')
       } else if (sortBy === 'popularity') {
-        // 按热度排序：先按名称排序，后续在前端根据评价数据重新排序
         qb.orderBy('v.name', 'ASC')
       } else {
-        // 默认按名称排序
         qb.orderBy('v.name', 'ASC')
       }
 
@@ -1311,8 +1311,25 @@ export class VenuesService {
   }
 
   async listReviews(venueId: number) {
-    const rows = await this.reviewRepo.find({ where: { venue: { id: venueId } as any }, order: { createdAt: 'DESC' }, take: 20 })
-    return { items: rows.map(r => ({ id: r.id, rating: r.rating, content: r.content, createdAt: r.createdAt })) }
+    const rows = await this.reviewRepo.find({
+      where: { venue: { id: venueId } as any },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+      take: 20,
+    })
+    return {
+      items: rows.map(r => ({
+        id: r.id,
+        rating: r.rating,
+        content: r.content,
+        createdAt: r.createdAt,
+        user: r.user ? {
+          id: r.user.id,
+          nickname: r.user.nickname || (r.user.phone ? `${r.user.phone.slice(0, 3)}****${r.user.phone.slice(-4)}` : '匿名用户'),
+          avatar: r.user.avatar || null,
+        } : null,
+      })),
+    }
   }
 
   async listImages(venueId: number, userId?: string) {
@@ -1446,8 +1463,8 @@ export class VenuesService {
       // 2. 上传所有尺寸到OSS
       console.log('📤 [Upload] 开始上传图片到 OSS...')
       console.log('📤 [Upload] OSS 服务状态检查...')
-      // 前端代理（Vercel）总超时 55s，需在此前完成：单次 OSS 25s × 2 尺寸 ≈ 50s，留约 5s 给处理与预签名
-      const OSS_UPLOAD_TIMEOUT_MS = 25000
+      // Vercel 代理 55s 即断开，后端需在此前完成所有 OSS 上传（约 4 个尺寸串行），单次 13s × 4 ≈ 52s
+      const OSS_UPLOAD_TIMEOUT_MS = 13000
       const MAX_ATTEMPTS = 2
       const uploadWithTimeout = async (uploadUrl: string, body: Buffer, attempt = 1): Promise<{ ok: boolean; statusCode: number }> => {
         try {
@@ -1473,8 +1490,7 @@ export class VenuesService {
       }
 
       const uploadResults: Array<{ size: string; key: string; url: string; sizeBytes: number }> = []
-      // 只上传 large + thumbnail，减少 Railway→OSS 总时长，避免代理超时（原 4 尺寸易超时）
-      const order = ['thumbnail', 'large'].filter((s) => processedImages[s as keyof typeof processedImages])
+      const order = ['thumbnail', 'medium', 'large', 'original'].filter((s) => processedImages[s as keyof typeof processedImages])
       for (const size of order) {
         const imageBuffer = processedImages[size as keyof typeof processedImages]
         if (!imageBuffer) continue
@@ -1519,28 +1535,17 @@ export class VenuesService {
         console.error(`❌ Processed image not found after save!`)
       }
       
-      const sizesMap = uploadResults.reduce((acc, r) => {
-        acc[r.size] = r.url
-        return acc
-      }, {} as Record<string, string>)
-      // 未上传的尺寸用 large 兜底，兼容前端
-      if (sizesMap.large && !sizesMap.medium) sizesMap.medium = sizesMap.large
-      if (sizesMap.large && !sizesMap.original) sizesMap.original = sizesMap.large
       return {
         id: saved.id,
         url: saved.url,
-        sizes: sizesMap,
+        sizes: uploadResults.reduce((acc, r) => {
+          acc[r.size] = r.url
+          return acc
+        }, {} as Record<string, string>),
         info: await this.imageProcessing.getImageInfo(buffer)
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error)
-      if (msg.includes('Upload timeout') || msg.includes('timeout') || msg.includes('ETIMEDOUT')) {
-        throw new Error('OSS 上传超时。请将图片缩小到 2MB 以内或稍后重试。')
-      }
-      if (msg.includes('OSS') && (msg.includes('未配置') || msg.includes('未设置'))) {
-        throw new Error('图片服务未配置（OSS），请联系管理员。')
-      }
-      throw new Error(`图片处理上传失败: ${msg}`)
+      throw new Error(`图片处理上传失败: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

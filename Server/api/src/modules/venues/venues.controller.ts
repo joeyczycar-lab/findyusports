@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UseInterceptors, UploadedFile, UseGuards, RequestTimeoutException } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { VenuesService } from './venues.service'
 import { QueryVenuesDto, CreateReviewDto, CreateVenueDto, UpdateVenueDto } from './dto'
@@ -132,11 +132,15 @@ export class VenuesController {
     try {
       return await this.venuesService.processAndUploadImage(file.buffer, id, file.originalname, user.id)
     } catch (error) {
-      return { 
-        error: { 
-          code: 'InternalServerError', 
-          message: error instanceof Error ? error.message : '图片上传失败' 
-        } 
+      const msg = error instanceof Error ? error.message : String(error)
+      if (msg.includes('timeout') || msg.includes('Upload timeout') || msg.includes('ETIMEDOUT')) {
+        throw new RequestTimeoutException('上传超时：请缩小图片或压缩后重试（建议单张小于 2MB）')
+      }
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: msg || '图片上传失败',
+        },
       }
     }
   }

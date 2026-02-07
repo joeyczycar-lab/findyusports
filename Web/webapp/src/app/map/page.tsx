@@ -20,7 +20,7 @@ function MapPageContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({ sport: 'basketball' })
-  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
+  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name' | 'newest'>('popularity')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
@@ -119,7 +119,7 @@ function MapPageContent() {
         <select
           value={sortBy}
           onChange={(e) => {
-            setSortBy(e.target.value as 'city' | 'popularity' | 'name')
+            setSortBy(e.target.value as 'city' | 'popularity' | 'name' | 'newest')
             setPage(1) // 重置到第一页
           }}
           className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
@@ -127,6 +127,7 @@ function MapPageContent() {
           <option value="popularity">🔥 按热度</option>
           <option value="city">📍 按地区</option>
           <option value="name">🔤 按名称</option>
+          <option value="newest">🕐 按添加时间</option>
         </select>
       </div>
       {/* 运动类型：全部 / 篮球 / 足球；有搜索关键词时默认「全部」同时显示篮球与足球 */}

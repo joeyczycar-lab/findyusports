@@ -150,11 +150,12 @@ export async function GET(
   }
 }
 
-// 创建点评
+// 创建点评（v2：支持 X-Findyu-Bearer + body _authToken 兜底）
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  console.log('📝 [API Route][reviews] POST handler v2 (body fallback enabled)')
   try {
     const apiBase = getApiBase()
     const venueId = params.id

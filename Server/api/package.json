@@ -10,6 +10,7 @@
     "add-venue": "ts-node src/add-venue.ts",
     "add-venue:interactive": "ts-node src/add-venue-interactive.ts",
     "add-venue:csv": "ts-node src/add-venue-csv.ts",
+    "import-shanghai-football": "ts-node src/import-shanghai-football.ts",
     "view-data": "ts-node src/view-data.ts",
     "set-admin": "ts-node src/set-admin.ts",
     "reset-password": "ts-node src/reset-password.ts",

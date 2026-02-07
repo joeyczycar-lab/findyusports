@@ -68,7 +68,7 @@ export class QueryVenuesDto {
 
   @IsOptional()
   @IsString()
-  sortBy?: 'city' | 'popularity' | 'name' // 排序方式：按地区、按热度、按名称
+  sortBy?: 'city' | 'popularity' | 'name' | 'newest' // 排序方式：按地区、按热度、按名称、按添加先后
 
   @IsOptional()
   @IsString()
