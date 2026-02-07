@@ -161,32 +161,43 @@ export async function POST(
     const backendUrl = `${apiBase}/venues/${venueId}/reviews`
 
     const body = await req.json()
-    console.log('📝 [API Route][reviews] Proxying POST to:', backendUrl, 'body:', body)
+    console.log('📝 [API Route][reviews] Proxying POST to:', backendUrl, 'body keys:', Object.keys(body || {}))
 
-    // 认证：必须登录（兼容被剥离的 Authorization，兜底使用 X-Auth-Token）
+    // 认证：多路兜底（Vercel 生产可能剥离 Authorization，用自定义头 + body 兜底）
     const authFromHeader =
       req.headers.get('authorization') ||
       req.headers.get('Authorization') ||
       req.headers.get('x-authorization') ||
-      req.headers.get('X-Authorization')
+      req.headers.get('X-Authorization') ||
+      req.headers.get('x-findyu-bearer') ||
+      req.headers.get('X-Findyu-Bearer')
 
     const authFromCustom =
       req.headers.get('x-auth-token') ||
       req.headers.get('X-Auth-Token')
 
-    const authHeader = authFromHeader
-      ? authFromHeader
+    let authHeader: string | null = authFromHeader
+      ? (authFromHeader.startsWith('Bearer ') ? authFromHeader : `Bearer ${authFromHeader}`)
       : authFromCustom
         ? (authFromCustom.startsWith('Bearer ') ? authFromCustom : `Bearer ${authFromCustom}`)
         : null
 
+    if (!authHeader && body && typeof body._authToken === 'string' && body._authToken.trim()) {
+      const t = body._authToken.trim()
+      authHeader = t.startsWith('Bearer ') ? t : `Bearer ${t}`
+      console.log('📝 [API Route][reviews] Auth taken from body _authToken (header was stripped)')
+    }
+
     if (!authHeader) {
-      console.warn('⚠️ [API Route][reviews] No auth header, returning 401')
+      console.warn('⚠️ [API Route][reviews] No auth header or body token, returning 401')
       return Response.json(
         { error: { code: 'Unauthorized', message: '未授权，请先登录' } },
         { status: 401 }
       )
     }
+
+    const bodyToBackend = { ...body }
+    delete (bodyToBackend as Record<string, unknown>)._authToken
 
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -203,7 +214,7 @@ export async function POST(
         cache: 'no-store',
         signal: controller.signal,
         headers,
-        body: JSON.stringify(body),
+        body: JSON.stringify(bodyToBackend),
       })
       clearTimeout(timeoutId)
     } catch (fetchError: any) {

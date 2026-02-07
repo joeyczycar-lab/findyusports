@@ -25,7 +25,15 @@ export default function ReviewForm({ venueId, onSuccess }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     
+    const currentAuth = getAuthState()
+    if (!currentAuth.isAuthenticated || !currentAuth.token) {
+      setAuthState(getAuthState())
+      setError('请先登录后再提交点评')
+      setIsLoginModalOpen(true)
+      return
+    }
     if (!authState.isAuthenticated) {
+      setAuthState(getAuthState())
       setIsLoginModalOpen(true)
       return
     }
@@ -43,16 +51,23 @@ export default function ReviewForm({ venueId, onSuccess }: Props) {
     setError('')
     
     try {
+      // 兜底：Vercel 可能剥离 Authorization，把 token 放进 body 供 API 路由读取
+      const payload: Record<string, unknown> = { rating, content: content.trim() }
+      if (currentAuth.token) payload._authToken = currentAuth.token
       await fetchJson(`/venues/${venueId}/reviews`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating, content: content.trim() })
+        body: JSON.stringify(payload)
       })
       setRating(0)
       setContent('')
       onSuccess?.()
     } catch (e: any) {
-      setError(e.message || '提交失败')
+      const msg = e.message || '提交失败'
+      setError(msg)
+      if (msg.includes('未授权') || msg.includes('登录') || msg.includes('401')) {
+        setAuthState(getAuthState())
+        setIsLoginModalOpen(true)
+      }
     } finally {
       setSubmitting(false)
     }

@@ -57,10 +57,16 @@ export function clearAuthState(): void {
   localStorage.removeItem('auth_user')
 }
 
-// 获取Authorization header
+// 获取 Authorization header；多路兜底以防 Vercel 等环境剥离 Authorization
 export function getAuthHeader(): Record<string, string> {
   const { token } = getAuthState()
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  if (!token) return {}
+  return {
+    Authorization: `Bearer ${token}`,
+    'X-Auth-Token': token,
+    // 自定义头，避免被 Vercel 生产环境剥离
+    'X-Findyu-Bearer': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+  }
 }
 
 // 检查token是否过期（简单检查，实际应该解析JWT）
