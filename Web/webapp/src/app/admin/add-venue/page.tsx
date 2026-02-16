@@ -58,7 +58,7 @@ export default function AddVenuePage() {
     walkInPrice: '', // 散客价格文字
     supportsFullCourt: false, // 是否支持包场
     fullCourtPrice: '', // 包场价格文字
-    venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
+    venueTypes: ['indoor'] as string[], // 篮球默认室内；足球默认室外（在 sportType 切换时更新）
     contact: '',
     requiresReservation: false, // 是否需要预约
     reservationMethod: '', // 预约方式
@@ -72,6 +72,7 @@ export default function AddVenuePage() {
     hasParking: false,
     hasRestArea: false,
     hasFence: false,
+    hasShower: false,
   })
 
   const cityOptions = [
@@ -384,6 +385,7 @@ export default function AddVenuePage() {
       if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
       if (formData.hasFence !== undefined) payload.hasFence = formData.hasFence
       if (formData.hasRestArea !== undefined) payload.hasRestArea = formData.hasRestArea
+      if (formData.hasShower !== undefined) payload.hasShower = formData.hasShower
 
       const data = await fetchJson('/venues', {
         method: 'POST',
@@ -499,7 +501,7 @@ export default function AddVenuePage() {
         localStorage.removeItem(STORAGE_KEY)
       }
       
-      // 清空表单
+      // 清空表单（篮球默认室内）
       setFormData({
         name: '',
         sportType: 'basketball',
@@ -514,7 +516,7 @@ export default function AddVenuePage() {
         walkInPrice: '',
         supportsFullCourt: false,
         fullCourtPrice: '',
-        venueTypes: [],
+        venueTypes: ['indoor'],
         contact: '',
         requiresReservation: false,
         reservationMethod: '',
@@ -528,6 +530,7 @@ export default function AddVenuePage() {
         hasParking: false,
         hasRestArea: false,
         hasFence: false,
+        hasShower: false,
       })
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : '网络错误，请检查后端服务是否正常运行'
@@ -600,7 +603,12 @@ export default function AddVenuePage() {
               id="sportType"
               required
               value={formData.sportType}
-              onChange={(e) => setFormData({ ...formData, sportType: e.target.value as 'basketball' | 'football' })}
+              onChange={(e) => {
+                const sport = e.target.value as 'basketball' | 'football'
+                // 足球默认为室外，篮球默认为室内
+                const defaultVenueTypes = sport === 'football' ? ['outdoor'] : ['indoor']
+                setFormData({ ...formData, sportType: sport, venueTypes: defaultVenueTypes })
+              }}
               className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
               style={{ borderRadius: '4px' }}
             >
@@ -1037,6 +1045,16 @@ export default function AddVenuePage() {
                   style={{ borderRadius: '4px' }}
                 />
                 <span className="text-body-sm font-bold uppercase tracking-wide">有休息区</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasShower}
+                  onChange={(e) => setFormData({ ...formData, hasShower: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有淋浴</span>
               </label>
             </div>
           </div>

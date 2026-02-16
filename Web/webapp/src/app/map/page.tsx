@@ -1,5 +1,5 @@
 "use client"
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
@@ -30,6 +30,9 @@ function MapPageContent() {
     typeof window !== 'undefined' ? getKeywordFromUrl() : ''
   )
   const keyword = (paramsKeyword || urlKeyword).trim()
+  // 支持 URL 参数 sport、cityCode，便于直达「上海足球」等
+  const urlSport = searchParams?.get('sport') as 'basketball' | 'football' | null
+  const urlCity = searchParams?.get('cityCode') || undefined
 
   useEffect(() => {
     const fromUrl = getKeywordFromUrl()
@@ -44,10 +47,24 @@ function MapPageContent() {
     }
   }, [keyword])
 
+  // 仅首次加载时用 URL 的 sport、cityCode 初始化筛选（如 /map?sport=football&cityCode=310000 直达上海足球）
+  const urlSynced = useRef(false)
+  useEffect(() => {
+    if (urlSynced.current) return
+    urlSynced.current = true
+    if (urlSport === 'football' || urlSport === 'basketball' || urlCity) {
+      setFilters((prev) => ({
+        ...prev,
+        ...(urlSport === 'football' || urlSport === 'basketball' ? { sport: urlSport } : {}),
+        ...(urlCity ? { city: urlCity } : {}),
+      }))
+    }
+  }, [urlSport, urlCity])
+
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
     if (filters.city) p.set('cityCode', filters.city)
-    // 有 sport 时传；无 sport（选「全部」）时不传，接口返回篮球+足球
+    if (filters.districtCode) p.set('districtCode', filters.districtCode)
     if (filters.sport) p.set('sport', filters.sport)
     // 价格：免费 = minPrice=0&maxPrice=0，收费 = minPrice=1
     if (filters.priceType === 'free') {

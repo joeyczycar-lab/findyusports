@@ -3,6 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { VenuesService } from './venues.service'
 import { QueryVenuesDto, CreateReviewDto, CreateVenueDto, UpdateVenueDto } from './dto'
 import { JwtAuthGuard } from '../auth/auth.guard'
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt.guard'
 import { CurrentUser } from '../auth/current-user.decorator'
 import { Public } from '../auth/public.decorator'
 
@@ -18,10 +19,11 @@ export class VenuesController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateVenueDto) {
+  async create(@Body() dto: CreateVenueDto, @CurrentUser() user?: { id: number }) {
     try {
-      const result = await this.venuesService.createVenue(dto)
+      const result = await this.venuesService.createVenue(dto, user?.id)
       // 如果返回的是错误对象，直接返回
       if (result && (result as any).error) {
         return result
@@ -135,6 +137,14 @@ export class VenuesController {
       const msg = error instanceof Error ? error.message : String(error)
       if (msg.includes('timeout') || msg.includes('Upload timeout') || msg.includes('ETIMEDOUT')) {
         throw new RequestTimeoutException('上传超时：请缩小图片或压缩后重试（建议单张小于 2MB）')
+      }
+      if (msg.includes('foreign key') || msg.includes('violates') || msg.includes('FK_') || (error as any)?.code === '23503') {
+        return {
+          error: {
+            code: 'BadRequest',
+            message: '保存图片失败：当前场地或登录用户在该数据库中不存在。请确认：1) 前端请求的是当前后端（.env.local 中 NEXT_PUBLIC_API_BASE=http://localhost:4000）；2) 已用该后端注册或登录；3) 场地 id 在当前库中存在。',
+          },
+        }
       }
       return {
         error: {

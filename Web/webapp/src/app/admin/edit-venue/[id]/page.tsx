@@ -34,15 +34,25 @@ export default function EditVenuePage() {
     lat: 0,
     price: '', // 价格文字，如 "50元/小时"、"面议"
     isFree: false, // 是否免费
+    supportsWalkIn: false,
+    walkInPrice: '',
+    supportsFullCourt: false,
+    fullCourtPrice: '',
     venueTypes: [] as string[], // 改为数组，支持多选：'indoor' 和 'outdoor'
     contact: '',
+    requiresReservation: false,
+    reservationMethod: '',
     isPublic: true,
     courtCount: '',
     floorType: [] as string[],
+    playersPerSide: [] as string[],
     openHours: '',
     hasLighting: false,
     hasAirConditioning: false,
     hasParking: false,
+    hasFence: false,
+    hasRestArea: false,
+    hasShower: false,
   })
 
   const cityOptions = [
@@ -277,15 +287,25 @@ export default function EditVenuePage() {
           lat: venue.location?.[1] || 0,
           price: (venue as any).priceDisplay?.trim() || (venue.priceMin === 0 && venue.priceMax === 0 ? '' : [venue.priceMin, venue.priceMax].filter((x: any) => x != null).join('-') || ''),
           isFree: venue.priceMin === 0 && venue.priceMax === 0,
+          supportsWalkIn: (venue as any).supportsWalkIn || false,
+          walkInPrice: (venue as any).walkInPriceDisplay?.trim() || '',
+          supportsFullCourt: (venue as any).supportsFullCourt || false,
+          fullCourtPrice: (venue as any).fullCourtPriceDisplay?.trim() || '',
           venueTypes: venue.indoor === true ? ['indoor'] : venue.indoor === false ? ['outdoor'] : venue.indoor === null ? ['indoor', 'outdoor'] : [],
           contact: venue.contact || '',
+          requiresReservation: (venue as any).requiresReservation || false,
+          reservationMethod: (venue as any).reservationMethod?.trim() || '',
           isPublic: venue.isPublic !== undefined ? venue.isPublic : true,
           courtCount: venue.courtCount?.toString() || '',
           floorType: venue.floorType ? venue.floorType.split('、') : [],
+          playersPerSide: (venue as any).playersPerSide ? (venue as any).playersPerSide.split('、').filter((s: string) => s.trim()) : [],
           openHours: venue.openHours || '',
           hasLighting: venue.hasLighting || false,
           hasAirConditioning: venue.hasAirConditioning || false,
           hasParking: venue.hasParking || false,
+          hasFence: venue.hasFence || false,
+          hasRestArea: venue.hasRestArea || false,
+          hasShower: venue.hasShower || false,
         })
       } catch (error: any) {
         setMessage({ type: 'error', text: `❌ 加载场地数据失败：${error.message || '网络错误'}` })
@@ -383,13 +403,23 @@ export default function EditVenuePage() {
         payload.indoor = null
       }
       if (formData.contact) payload.contact = formData.contact
+      if (formData.requiresReservation !== undefined) payload.requiresReservation = formData.requiresReservation
+      if (formData.reservationMethod && formData.reservationMethod.trim()) payload.reservationMethod = formData.reservationMethod.trim()
       if (formData.isPublic !== undefined) payload.isPublic = formData.isPublic
       if (formData.courtCount) payload.courtCount = parseInt(formData.courtCount)
       if (formData.floorType && formData.floorType.length > 0) payload.floorType = formData.floorType.join('、')
+      if (formData.playersPerSide && formData.playersPerSide.length > 0) payload.playersPerSide = formData.playersPerSide.join('、')
       if (formData.openHours) payload.openHours = formData.openHours
+      if (formData.supportsWalkIn !== undefined) payload.supportsWalkIn = formData.supportsWalkIn
+      if (formData.walkInPrice && formData.walkInPrice.trim()) payload.walkInPriceDisplay = formData.walkInPrice.trim()
+      if (formData.supportsFullCourt !== undefined) payload.supportsFullCourt = formData.supportsFullCourt
+      if (formData.fullCourtPrice && formData.fullCourtPrice.trim()) payload.fullCourtPriceDisplay = formData.fullCourtPrice.trim()
       if (formData.hasLighting !== undefined) payload.hasLighting = formData.hasLighting
       if (formData.hasAirConditioning !== undefined) payload.hasAirConditioning = formData.hasAirConditioning
       if (formData.hasParking !== undefined) payload.hasParking = formData.hasParking
+      if (formData.hasFence !== undefined) payload.hasFence = formData.hasFence
+      if (formData.hasRestArea !== undefined) payload.hasRestArea = formData.hasRestArea
+      if (formData.hasShower !== undefined) payload.hasShower = formData.hasShower
 
       console.log('📤 [EditVenue] Sending PUT request to:', `/venues/${venueId}`)
       console.log('📤 [EditVenue] Payload:', payload)
@@ -717,6 +747,57 @@ export default function EditVenuePage() {
                 <span className="text-body-sm font-bold uppercase tracking-wide">免费场地</span>
               </label>
             </div>
+            {/* 收费方式：散客 / 包场（可选，可多选） */}
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={formData.supportsWalkIn}
+                    onChange={(e) => setFormData({ ...formData, supportsWalkIn: e.target.checked })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">散客</span>
+                </label>
+                {formData.supportsWalkIn && (
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="text"
+                      value={formData.walkInPrice}
+                      onChange={(e) => setFormData({ ...formData, walkInPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="例如：50元/小时 或 面议"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex items-start gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={formData.supportsFullCourt}
+                    onChange={(e) => setFormData({ ...formData, supportsFullCourt: e.target.checked })}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide whitespace-nowrap">包场</span>
+                </label>
+                {formData.supportsFullCourt && (
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="text"
+                      value={formData.fullCourtPrice}
+                      onChange={(e) => setFormData({ ...formData, fullCourtPrice: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 min-w-0"
+                      style={{ borderRadius: '4px' }}
+                      placeholder="例如：50元/小时 或 面议"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
             <div>
               <label htmlFor="price" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
                 价格
@@ -821,6 +902,40 @@ export default function EditVenuePage() {
             </p>
           </div>
 
+          {/* 预约信息 */}
+          <div className="space-y-3">
+            <label className="block text-body-sm font-bold uppercase tracking-wide">
+              预约信息 <span className="text-gray-500 text-xs normal-case">(可选)</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.requiresReservation}
+                  onChange={(e) => setFormData({ ...formData, requiresReservation: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">需要预约</span>
+              </label>
+            </div>
+            {formData.requiresReservation && (
+              <div>
+                <input
+                  type="text"
+                  value={formData.reservationMethod}
+                  onChange={(e) => setFormData({ ...formData, reservationMethod: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                  placeholder="预约方式，如：电话预约 / 微信小程序 / 公众号等"
+                />
+                <p className="text-xs text-gray-600 mt-2">
+                  💡 提示：如果需要预约，请写清楚预约方式，方便用户联系场地方
+                </p>
+              </div>
+            )}
+          </div>
+
           <div>
             <label htmlFor="courtCount" className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
               场地数量 <span className="text-gray-500 text-xs normal-case">(可选)</span>
@@ -867,6 +982,43 @@ export default function EditVenuePage() {
             {formData.floorType.length > 0 && (
               <p className="text-xs text-gray-600 mt-2">
                 已选择：{formData.floorType.join('、')}
+              </p>
+            )}
+          </div>
+
+          {/* 几人制（主要用于足球场地，多选） */}
+          <div>
+            <label className="block text-body-sm font-bold mb-2 uppercase tracking-wide">
+              几人制 <span className="text-gray-500 text-xs normal-case">(可选，可多选，主要用于足球场地)</span>
+            </label>
+            <div className="space-y-2">
+              {['5人制', '7人制', '8人制', '9人制', '11人制'].map((type) => (
+                <label key={type} className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.playersPerSide.includes(type)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        if (!formData.playersPerSide.includes(type)) {
+                          setFormData({ ...formData, playersPerSide: [...formData.playersPerSide, type] })
+                        }
+                      } else {
+                        setFormData({
+                          ...formData,
+                          playersPerSide: formData.playersPerSide.filter((t) => t !== type),
+                        })
+                      }
+                    }}
+                    className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                    style={{ borderRadius: '4px' }}
+                  />
+                  <span className="text-body-sm font-bold uppercase tracking-wide">{type}</span>
+                </label>
+              ))}
+            </div>
+            {formData.playersPerSide.length > 0 && (
+              <p className="text-xs text-gray-600 mt-2">
+                已选择：{formData.playersPerSide.join('、')}
               </p>
             )}
           </div>
@@ -923,6 +1075,36 @@ export default function EditVenuePage() {
                   style={{ borderRadius: '4px' }}
                 />
                 <span className="text-body-sm font-bold uppercase tracking-wide">有停车场</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasFence}
+                  onChange={(e) => setFormData({ ...formData, hasFence: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有围栏</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasRestArea}
+                  onChange={(e) => setFormData({ ...formData, hasRestArea: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有休息区</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.hasShower}
+                  onChange={(e) => setFormData({ ...formData, hasShower: e.target.checked })}
+                  className="w-5 h-5 border-gray-900 text-gray-900 focus:ring-2 focus:ring-gray-900"
+                  style={{ borderRadius: '4px' }}
+                />
+                <span className="text-body-sm font-bold uppercase tracking-wide">有淋浴</span>
               </label>
             </div>
           </div>

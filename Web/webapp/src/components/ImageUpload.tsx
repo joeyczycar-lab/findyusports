@@ -84,7 +84,12 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
         
         // 检查是否是 OSS 配置问题
         if (errorMsg.includes('OSS') || errorMsg.includes('未配置') || errorMsg.includes('未设置') || errorMsg.includes('OSS未配置')) {
-          throw new Error('图片上传功能需要配置阿里云 OSS。\n\n如果使用 Railway 部署，请在 Railway 环境变量中配置：\n- OSS_ACCESS_KEY_ID\n- OSS_ACCESS_KEY_SECRET\n- OSS_REGION\n- OSS_BUCKET\n\n详细配置说明请查看：Server/api/RAILWAY_OSS_SETUP.md')
+          throw new Error(
+            '图片上传需要阿里云 OSS 配置。\n\n' +
+            '· 本地开发：在 Server/api/.env 中配置 OSS_ACCESS_KEY_ID、OSS_ACCESS_KEY_SECRET、OSS_REGION、OSS_BUCKET，保存后在 Server/api 目录执行 npm run dev 重启后端；前端 .env.local 中设置 NEXT_PUBLIC_API_BASE=http://localhost:4000 并重启前端。\n\n' +
+            '· Railway 部署：在 Railway 项目环境变量中配置上述四项。\n\n' +
+            '详细说明：Server/api/RAILWAY_OSS_SETUP.md'
+          )
         }
         
         // 检查是否是认证问题（401 时 api 已清除 token，刷新本地状态并打开登录）
@@ -102,13 +107,14 @@ export default function ImageUpload({ venueId, onSuccess }: Props) {
         throw new Error(`上传失败：${errorMsg}\n\n如果问题持续，请查看浏览器控制台（F12）获取更多信息。`)
       }
       
-      if (!result.url) {
+      const imageUrl = result.url ?? (result as any).sizes?.large
+      if (!imageUrl) {
         console.error('❌ [ImageUpload] 上传成功但未返回图片URL:', result)
         throw new Error('上传成功但未返回图片URL，请刷新页面查看')
       }
       
-      console.log('✅ [ImageUpload] 上传成功，图片URL:', result.url)
-      onSuccess?.(result.url)
+      console.log('✅ [ImageUpload] 上传成功，图片URL:', imageUrl)
+      onSuccess?.(imageUrl)
       if (fileInputRef.current) fileInputRef.current.value = ''
       setError('') // 清除之前的错误
     } catch (e: any) {

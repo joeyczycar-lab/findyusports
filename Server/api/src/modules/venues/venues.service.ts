@@ -8,11 +8,27 @@ import { URL } from 'url'
 import { VenueEntity } from './venue.entity'
 import { ReviewEntity } from './review.entity'
 import { VenueImageEntity } from './image.entity'
+import { UserEntity } from '../auth/user.entity'
 import { OssService } from '../oss/oss.service'
 import { ImageProcessingService } from '../image/image-processing.service'
 import { HotlinkProtectionService } from '../oss/hotlink-protection.service'
 
 type LngLat = [number, number]
+
+/** 数据库 venue 表字符串列限制（与 varchar 一致，超长会报错）。保存前截断避免 "value too long for type character varying(120)" */
+const VENUE_STRING_MAX = 120
+function truncateVenueStr(value: string | null | undefined, max: number = VENUE_STRING_MAX): string | undefined {
+  if (value == null || value === '') return undefined
+  return value.length <= max ? value : value.slice(0, max)
+}
+
+/** 仅展示该用户（或 NULL 历史数据）的场地；未设置则展示全部 */
+function getTrustedUserIds(): number[] | null {
+  const raw = process.env.TRUSTED_USER_ID ?? process.env.TRUSTED_USER_IDS ?? ''
+  if (!raw.trim()) return null
+  const ids = raw.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => !Number.isNaN(n))
+  return ids.length > 0 ? ids : null
+}
 
 /** Railway → 阿里云 OSS 用 fetch 易被 undici 默认超时打断，改用 Node 原生 https 并设 90s 总超时 */
 function putToUrlWithTimeout(uploadUrl: string, body: Buffer, timeoutMs: number): Promise<{ ok: boolean; statusCode: number }> {
@@ -64,6 +80,8 @@ export class VenuesService {
     private readonly reviewRepo: Repository<ReviewEntity>,
     @InjectRepository(VenueImageEntity)
     private readonly imageRepo: Repository<VenueImageEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
     private readonly ossService: OssService,
     private readonly imageProcessing: ImageProcessingService,
     private readonly hotlinkProtection: HotlinkProtectionService
@@ -71,7 +89,7 @@ export class VenuesService {
 
   async search(query: QueryVenuesDto) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, sortBy, keyword } = query
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword } = query
       
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
@@ -83,13 +101,14 @@ export class VenuesService {
       let hasShower = false
       let hasLocker = false
       let hasShop = false
+      let hasCreatedByUserId = false
       
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('geom', 'price_display', 'has_shower', 'has_locker', 'has_shop')
+          AND column_name IN ('geom', 'price_display', 'has_shower', 'has_locker', 'has_shop', 'created_by_user_id')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasGeomColumn = existingColumns.includes('geom')
@@ -97,6 +116,7 @@ export class VenuesService {
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
+        hasCreatedByUserId = existingColumns.includes('created_by_user_id')
       } catch (error) {
         console.warn('⚠️  Error checking columns:', error instanceof Error ? error.message : String(error))
         hasGeomColumn = false
@@ -125,10 +145,17 @@ export class VenuesService {
       if (hasShop) selectColumns.push('v.hasShop')
       
       qb.select(selectColumns)
+
+      // 仅展示“信任账号”或历史数据（created_by_user_id 为 NULL）的场地
+      const trustedIds = getTrustedUserIds()
+      if (trustedIds && hasCreatedByUserId) {
+        qb.andWhere('(v.created_by_user_id IS NULL OR v.created_by_user_id IN (:...trustedIds))', { trustedIds })
+      }
     
       // 筛选条件
       if (sport) qb.andWhere('v.sportType = :sport', { sport })
       if (cityCode) qb.andWhere('v.cityCode = :cityCode', { cityCode })
+      if (districtCode && districtCode.trim()) qb.andWhere('v.districtCode = :districtCode', { districtCode: districtCode.trim() })
       if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
       if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
       if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
@@ -205,89 +232,58 @@ export class VenuesService {
         let firstImages: any[] = []
         
         try {
-          // 方法1: 直接查询外键字段，避免 JOIN venue 表（防止 geom 列问题）
-          // 先尝试直接查询外键字段
+          // 方法1: 直接查询外键字段（优先 venue_id，兼容阿里云等 snake_case 列名）
           try {
             const qb = this.imageRepo
               .createQueryBuilder('img')
-              .select('img.venueId', 'venueId')
+              .select('img.venue_id', 'venueId')
               .addSelect('img.url', 'url')
-              .where('img.venueId IN (:...venueIds)', { venueIds })
+              .where('img.venue_id IN (:...venueIds)', { venueIds })
               .orderBy('img.sort', 'ASC')
               .addOrderBy('img.id', 'ASC')
             
-            const sql = qb.getSql()
-            console.log(`📸 QueryBuilder SQL (direct):`, sql)
-            
             firstImages = await qb.getRawMany()
-            
-            console.log(`📸 QueryBuilder raw results (first 3):`, JSON.stringify(firstImages.slice(0, 3)))
-            
-            // 处理 QueryBuilder 返回的字段名
             firstImages = firstImages.map((img: any) => ({
-              venueId: Number(img.venueId || img.venue_id || img.venueId),
+              venueId: Number(img.venueId ?? img.venue_id),
               url: img.url || img.img_url || img.imgUrl,
             })).filter((img: any) => img.venueId && img.url)
-            
-            console.log(`📸 QueryBuilder (direct venueId) found ${firstImages.length} images`)
-          } catch (directError) {
-            console.warn('⚠️  Direct query failed, trying alternative field name:', directError)
-            // 如果直接查询失败，尝试不同的字段名格式
+            if (firstImages.length > 0) {
+              console.log(`📸 QueryBuilder (venue_id) found ${firstImages.length} images`)
+            }
+          } catch (_) {}
+          if (firstImages.length === 0) {
             try {
               const qb = this.imageRepo
                 .createQueryBuilder('img')
-                .select('img.venue_id', 'venueId')
+                .select('img.venueId', 'venueId')
                 .addSelect('img.url', 'url')
-                .where('img.venue_id IN (:...venueIds)', { venueIds })
+                .where('img.venueId IN (:...venueIds)', { venueIds })
                 .orderBy('img.sort', 'ASC')
                 .addOrderBy('img.id', 'ASC')
-              
               firstImages = await qb.getRawMany()
-              
               firstImages = firstImages.map((img: any) => ({
                 venueId: Number(img.venueId || img.venue_id),
                 url: img.url || img.img_url || img.imgUrl,
               })).filter((img: any) => img.venueId && img.url)
-              
-              console.log(`📸 QueryBuilder (venue_id) found ${firstImages.length} images`)
-            } catch (altError) {
-              console.warn('⚠️  Alternative field name query also failed:', altError)
-            }
+              if (firstImages.length > 0) console.log(`📸 QueryBuilder (venueId) found ${firstImages.length} images`)
+            } catch (_) {}
           }
           
-          // 如果直接查询没找到，尝试原生 SQL
+          // 如果直接查询没找到，尝试原生 SQL（优先 venue_id）
           if (firstImages.length === 0) {
             try {
-              // 先检查实际的表结构
-              const tableInfo = await this.imageRepo.query(`
-                SELECT column_name, data_type 
-                FROM information_schema.columns 
-                WHERE table_name = 'venue_image'
-                ORDER BY ordinal_position
-              `)
-              console.log(`📸 venue_image table columns:`, tableInfo)
-              
-              // 尝试直接查询，不通过关系
-              const directQuery = await this.imageRepo
-                .createQueryBuilder('img')
-                .select('img.url', 'url')
-                .addSelect('img.venueId', 'venueId')
-                .where('img.venueId IN (:...venueIds)', { venueIds })
-                .orderBy('img.sort', 'ASC')
-                .addOrderBy('img.id', 'ASC')
-                .getRawMany()
-              
-              console.log(`📸 Direct query raw results (first 3):`, JSON.stringify(directQuery.slice(0, 3)))
-              
-              firstImages = directQuery.map((img: any) => ({
-                venueId: Number(img.venueId || img.img_venueId || img.venue_id),
-                url: img.url || img.img_url,
-              })).filter((img: any) => img.venueId && img.url)
-              
-              console.log(`📸 QueryBuilder (direct) found ${firstImages.length} images`)
-            } catch (directError) {
-              console.warn('⚠️  Direct query failed:', directError)
-            }
+              const rawWithVenueId = await this.imageRepo.query(
+                `SELECT venue_id as "venueId", url FROM venue_image WHERE venue_id IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
+                venueIds
+              )
+              if (rawWithVenueId.length > 0) {
+                firstImages = rawWithVenueId.map((img: any) => ({
+                  venueId: Number(img.venueId ?? img.venue_id),
+                  url: img.url,
+                })).filter((img: any) => img.venueId && img.url)
+                console.log(`📸 Raw SQL (venue_id) found ${firstImages.length} images`)
+              }
+            } catch (_) {}
           }
         } catch (qbError) {
           console.warn('⚠️  QueryBuilder failed, trying raw SQL:', qbError)
@@ -303,19 +299,16 @@ export class VenuesService {
               venueIds
             )
             
-            // 如果没找到，尝试直接查询外键
-            if (firstImages.length === 0) {
-              // 尝试 venueId（驼峰命名）
-              firstImages = await this.imageRepo.query(
-                `SELECT "venueId" as "venueId", url FROM venue_image WHERE "venueId" IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
-                venueIds
-              )
-            }
-            
-            // 如果还是没找到，尝试 venue_id（下划线命名）
+            // 如果没找到，尝试直接查询外键（优先 venue_id）
             if (firstImages.length === 0) {
               firstImages = await this.imageRepo.query(
                 `SELECT venue_id as "venueId", url FROM venue_image WHERE venue_id IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
+                venueIds
+              )
+            }
+            if (firstImages.length === 0) {
+              firstImages = await this.imageRepo.query(
+                `SELECT "venueId" as "venueId", url FROM venue_image WHERE "venueId" IN (${venueIds.map((_, i) => `$${i + 1}`).join(',')}) ORDER BY sort ASC, id ASC`,
                 venueIds
               )
             }
@@ -447,12 +440,13 @@ export class VenuesService {
       let hasWalkInPriceMax = false
       let hasFullCourtPriceMin = false
       let hasFullCourtPriceMax = false
+      let hasCreatedByUserId = false
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasPriceDisplay = existingColumns.includes('price_display')
@@ -472,6 +466,7 @@ export class VenuesService {
         hasWalkInPriceMax = existingColumns.includes('walk_in_price_max')
         hasFullCourtPriceMin = existingColumns.includes('full_court_price_min')
         hasFullCourtPriceMax = existingColumns.includes('full_court_price_max')
+        hasCreatedByUserId = existingColumns.includes('created_by_user_id')
       } catch (error) {
         console.warn('⚠️ Error checking facility columns in detail:', error instanceof Error ? error.message : String(error))
       }
@@ -521,6 +516,7 @@ export class VenuesService {
         if (hasFullCourtPriceMin) selectColumns.push('v.fullCourtPriceMin')
         if (hasFullCourtPriceMax) selectColumns.push('v.fullCourtPriceMax')
         if (hasFullCourtPriceDisplay) selectColumns.push('v.fullCourtPriceDisplay')
+        if (hasCreatedByUserId) selectColumns.push('v.createdByUserId')
         
         qb.select(selectColumns)
       }
@@ -528,6 +524,15 @@ export class VenuesService {
       const v = await qb.getOne()
       
       if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
+
+      // 仅展示“信任账号”或历史数据（created_by_user_id 为 NULL）的场地
+      const trustedIds = getTrustedUserIds()
+      if (trustedIds && hasCreatedByUserId) {
+        const createdBy = (v as any).createdByUserId
+        if (createdBy != null && !trustedIds.includes(Number(createdBy))) {
+          return { error: { code: 'NotFound', message: 'Venue not found' } }
+        }
+      }
       
       const result: any = {
         id: String(v.id),
@@ -581,21 +586,22 @@ export class VenuesService {
     }
   }
 
-  async createVenue(dto: CreateVenueDto) {
+  async createVenue(dto: CreateVenueDto, userId?: number) {
     try {
-      console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode })
+      console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode, createdByUserId: userId ?? null })
       
       const venue = new VenueEntity()
-      venue.name = dto.name
+      venue.name = (dto.name && dto.name.length > VENUE_STRING_MAX) ? dto.name.slice(0, VENUE_STRING_MAX) : (dto.name ?? '')
+      if (userId !== undefined && userId !== null) (venue as any).createdByUserId = userId
       venue.sportType = dto.sportType
       venue.cityCode = dto.cityCode
-      venue.districtCode = dto.districtCode
-      venue.address = dto.address
+      venue.districtCode = truncateVenueStr(dto.districtCode, 6) ?? dto.districtCode
+      venue.address = (dto.address && dto.address.length > 200) ? dto.address.slice(0, 200) : dto.address
       venue.lng = dto.lng
       venue.lat = dto.lat
       venue.priceMin = dto.priceMin
       venue.priceMax = dto.priceMax
-      venue.priceDisplay = dto.priceDisplay
+      venue.priceDisplay = truncateVenueStr(dto.priceDisplay)
       
       // 检查哪些新字段存在（在设置字段值之前）
       const tableName = this.repo.metadata.tableName
@@ -622,16 +628,18 @@ export class VenuesService {
       let hasShower = false
       let hasLocker = false
       let hasShop = false
+      let hasCreatedByUserId = false
       
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side')
+          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
+        hasCreatedByUserId = existingColumns.includes('created_by_user_id')
         hasPriceDisplay = existingColumns.includes('price_display')
         hasWalkInPriceDisplay = existingColumns.includes('walk_in_price_display')
         hasFullCourtPriceDisplay = existingColumns.includes('full_court_price_display')
@@ -663,16 +671,16 @@ export class VenuesService {
       if (hasSupportsWalkIn) venue.supportsWalkIn = dto.supportsWalkIn
       if (hasWalkInPriceMin) venue.walkInPriceMin = dto.walkInPriceMin
       if (hasWalkInPriceMax) venue.walkInPriceMax = dto.walkInPriceMax
-      if (hasWalkInPriceDisplay) venue.walkInPriceDisplay = dto.walkInPriceDisplay
+      if (hasWalkInPriceDisplay) venue.walkInPriceDisplay = truncateVenueStr(dto.walkInPriceDisplay)
       if (hasSupportsFullCourt) venue.supportsFullCourt = dto.supportsFullCourt
       if (hasFullCourtPriceMin) venue.fullCourtPriceMin = dto.fullCourtPriceMin
       if (hasFullCourtPriceMax) venue.fullCourtPriceMax = dto.fullCourtPriceMax
-      if (hasFullCourtPriceDisplay) venue.fullCourtPriceDisplay = dto.fullCourtPriceDisplay
+      if (hasFullCourtPriceDisplay) venue.fullCourtPriceDisplay = truncateVenueStr(dto.fullCourtPriceDisplay)
       venue.indoor = dto.indoor !== null && dto.indoor !== undefined ? dto.indoor : undefined
-      venue.contact = dto.contact
+      venue.contact = (dto.contact && dto.contact.length > 100) ? dto.contact.slice(0, 100) : dto.contact
       venue.requiresReservation = dto.requiresReservation
-      venue.reservationMethod = dto.reservationMethod
-      venue.playersPerSide = dto.playersPerSide
+      venue.reservationMethod = (dto.reservationMethod && dto.reservationMethod.length > 200) ? dto.reservationMethod.slice(0, 200) : dto.reservationMethod
+      venue.playersPerSide = truncateVenueStr(dto.playersPerSide)
       venue.isPublic = dto.isPublic !== undefined ? dto.isPublic : true // 默认为对外开放
       venue.courtCount = dto.courtCount
       venue.floorType = dto.floorType
@@ -851,6 +859,11 @@ export class VenuesService {
         if (hasShop) {
           columns.push('has_shop')
           values.push(venue.hasShop !== undefined ? venue.hasShop : null)
+          paramIndex++
+        }
+        if (hasCreatedByUserId) {
+          columns.push('created_by_user_id')
+          values.push((venue as any).createdByUserId ?? null)
           paramIndex++
         }
         
@@ -1042,31 +1055,31 @@ export class VenuesService {
       // 注意：这里需要从user对象获取role，但当前方法签名只有userId
       // 如果需要更严格的权限控制，可以传入user对象
       
-      // 更新字段（只更新存在的列）
-      if (dto.name !== undefined) venue.name = dto.name
+      // 更新字段（只更新存在的列）；长字符串按 DB 限制截断，避免 "value too long for type character varying(120)"
+      if (dto.name !== undefined) venue.name = dto.name.length > VENUE_STRING_MAX ? dto.name.slice(0, VENUE_STRING_MAX) : dto.name
       if (dto.sportType !== undefined) venue.sportType = dto.sportType
       if (dto.cityCode !== undefined) venue.cityCode = dto.cityCode
-      if (dto.districtCode !== undefined) venue.districtCode = dto.districtCode
-      if (dto.address !== undefined) venue.address = dto.address
+      if (dto.districtCode !== undefined) venue.districtCode = (dto.districtCode && dto.districtCode.length > 6) ? dto.districtCode.slice(0, 6) : dto.districtCode
+      if (dto.address !== undefined) venue.address = (dto.address && dto.address.length > 200) ? dto.address.slice(0, 200) : dto.address
       if (dto.lng !== undefined) venue.lng = dto.lng
       if (dto.lat !== undefined) venue.lat = dto.lat
       if (dto.priceMin !== undefined) venue.priceMin = dto.priceMin
       if (dto.priceMax !== undefined) venue.priceMax = dto.priceMax
-      if (dto.priceDisplay !== undefined && hasPriceDisplay) venue.priceDisplay = dto.priceDisplay
+      if (dto.priceDisplay !== undefined && hasPriceDisplay) venue.priceDisplay = truncateVenueStr(dto.priceDisplay)
       // 只更新存在的列
       if (dto.supportsWalkIn !== undefined && hasSupportsWalkIn) venue.supportsWalkIn = dto.supportsWalkIn
       if (dto.walkInPriceMin !== undefined && hasWalkInPriceMin) venue.walkInPriceMin = dto.walkInPriceMin
       if (dto.walkInPriceMax !== undefined && hasWalkInPriceMax) venue.walkInPriceMax = dto.walkInPriceMax
-      if (dto.walkInPriceDisplay !== undefined && hasWalkInPriceDisplay) venue.walkInPriceDisplay = dto.walkInPriceDisplay
+      if (dto.walkInPriceDisplay !== undefined && hasWalkInPriceDisplay) venue.walkInPriceDisplay = truncateVenueStr(dto.walkInPriceDisplay)
       if (dto.supportsFullCourt !== undefined && hasSupportsFullCourt) venue.supportsFullCourt = dto.supportsFullCourt
       if (dto.fullCourtPriceMin !== undefined && hasFullCourtPriceMin) venue.fullCourtPriceMin = dto.fullCourtPriceMin
       if (dto.fullCourtPriceMax !== undefined && hasFullCourtPriceMax) venue.fullCourtPriceMax = dto.fullCourtPriceMax
-      if (dto.fullCourtPriceDisplay !== undefined && hasFullCourtPriceDisplay) venue.fullCourtPriceDisplay = dto.fullCourtPriceDisplay
+      if (dto.fullCourtPriceDisplay !== undefined && hasFullCourtPriceDisplay) venue.fullCourtPriceDisplay = truncateVenueStr(dto.fullCourtPriceDisplay)
       if (dto.indoor !== undefined && dto.indoor !== null) venue.indoor = dto.indoor
-      if (dto.contact !== undefined) venue.contact = dto.contact
+      if (dto.contact !== undefined) venue.contact = (dto.contact && dto.contact.length > 100) ? dto.contact.slice(0, 100) : dto.contact
       if (dto.requiresReservation !== undefined && hasRequiresReservation) venue.requiresReservation = dto.requiresReservation
-      if (dto.reservationMethod !== undefined && hasReservationMethod) venue.reservationMethod = dto.reservationMethod
-      if (dto.playersPerSide !== undefined && hasPlayersPerSide) venue.playersPerSide = dto.playersPerSide
+      if (dto.reservationMethod !== undefined && hasReservationMethod) venue.reservationMethod = (dto.reservationMethod && dto.reservationMethod.length > 200) ? dto.reservationMethod.slice(0, 200) : dto.reservationMethod
+      if (dto.playersPerSide !== undefined && hasPlayersPerSide) venue.playersPerSide = truncateVenueStr(dto.playersPerSide)
       if (dto.isPublic !== undefined) venue.isPublic = dto.isPublic
       if (dto.courtCount !== undefined) venue.courtCount = dto.courtCount
       if (dto.floorType !== undefined) venue.floorType = dto.floorType
@@ -1092,7 +1105,7 @@ export class VenuesService {
         
         if (dto.name !== undefined) {
           updates.push(`name = $${paramIndex++}`)
-          values.push(dto.name)
+          values.push(dto.name.length > VENUE_STRING_MAX ? dto.name.slice(0, VENUE_STRING_MAX) : dto.name)
         }
         if (dto.sportType !== undefined) {
           updates.push(`"sportType" = $${paramIndex++}`)
@@ -1108,7 +1121,7 @@ export class VenuesService {
         }
         if (dto.address !== undefined) {
           updates.push(`address = $${paramIndex++}`)
-          values.push(dto.address)
+          values.push((dto.address && dto.address.length > 200) ? dto.address.slice(0, 200) : dto.address)
         }
         if (dto.lng !== undefined) {
           updates.push(`lng = $${paramIndex++}`)
@@ -1128,7 +1141,7 @@ export class VenuesService {
         }
         if (dto.priceDisplay !== undefined && hasPriceDisplay) {
           updates.push(`price_display = $${paramIndex++}`)
-          values.push(dto.priceDisplay)
+          values.push(truncateVenueStr(dto.priceDisplay))
         }
         if (dto.indoor !== undefined && dto.indoor !== null) {
           updates.push(`indoor = $${paramIndex++}`)
@@ -1136,7 +1149,7 @@ export class VenuesService {
         }
         if (dto.contact !== undefined) {
           updates.push(`contact = $${paramIndex++}`)
-          values.push(dto.contact)
+          values.push((dto.contact && dto.contact.length > 100) ? dto.contact.slice(0, 100) : dto.contact)
         }
         if (dto.isPublic !== undefined) {
           updates.push(`is_public = $${paramIndex++}`)
@@ -1200,7 +1213,7 @@ export class VenuesService {
         }
         if (dto.walkInPriceDisplay !== undefined && hasWalkInPriceDisplay) {
           updates.push(`walk_in_price_display = $${paramIndex++}`)
-          values.push(dto.walkInPriceDisplay)
+          values.push(truncateVenueStr(dto.walkInPriceDisplay))
         }
         if (dto.supportsFullCourt !== undefined && hasSupportsFullCourt) {
           updates.push(`supports_full_court = $${paramIndex++}`)
@@ -1216,7 +1229,7 @@ export class VenuesService {
         }
         if (dto.fullCourtPriceDisplay !== undefined && hasFullCourtPriceDisplay) {
           updates.push(`full_court_price_display = $${paramIndex++}`)
-          values.push(dto.fullCourtPriceDisplay)
+          values.push(truncateVenueStr(dto.fullCourtPriceDisplay))
         }
         if (dto.requiresReservation !== undefined && hasRequiresReservation) {
           updates.push(`requires_reservation = $${paramIndex++}`)
@@ -1224,11 +1237,11 @@ export class VenuesService {
         }
         if (dto.reservationMethod !== undefined && hasReservationMethod) {
           updates.push(`reservation_method = $${paramIndex++}`)
-          values.push(dto.reservationMethod)
+          values.push((dto.reservationMethod && dto.reservationMethod.length > 200) ? dto.reservationMethod.slice(0, 200) : dto.reservationMethod)
         }
         if (dto.playersPerSide !== undefined && hasPlayersPerSide) {
           updates.push(`players_per_side = $${paramIndex++}`)
-          values.push(dto.playersPerSide)
+          values.push(truncateVenueStr(dto.playersPerSide))
         }
         
         if (updates.length > 0) {
@@ -1349,35 +1362,29 @@ export class VenuesService {
       `)
       console.log(`📸 venue_image table columns:`, tableInfo.map((c: any) => c.column_name))
       
-      // 直接使用 QueryBuilder 查询外键，避免 JOIN venue 表（防止 geom 列问题）
+      // 直接使用 QueryBuilder 查询外键（表列名为 venue_id）
       let rows: any[] = []
       try {
-        // 先尝试直接查询外键字段（不 JOIN venue 表）
-        const directRows = await this.imageRepo
+        // 优先用 venue_id，兼容阿里云 RDS 等 snake_case 列名
+        const byVenueId = await this.imageRepo
           .createQueryBuilder('img')
-          .where('img.venueId = :venueId', { venueId })
+          .where('img.venue_id = :venueId', { venueId })
           .orderBy('img.sort', 'ASC')
           .addOrderBy('img.id', 'ASC')
           .getMany()
-        
-        console.log(`📸 QueryBuilder (direct venueId) found ${directRows.length} images`)
-        rows = directRows
-        
-        // 如果没找到，尝试不同的字段名格式
+        if (byVenueId.length > 0) {
+          rows = byVenueId
+          console.log(`📸 QueryBuilder (venue_id) found ${rows.length} images`)
+        }
         if (rows.length === 0) {
-          try {
-            const altRows = await this.imageRepo
-              .createQueryBuilder('img')
-              .where('img.venue_id = :venueId', { venueId })
-              .orderBy('img.sort', 'ASC')
-              .addOrderBy('img.id', 'ASC')
-              .getMany()
-            
-            console.log(`📸 QueryBuilder (venue_id) found ${altRows.length} images`)
-            rows = altRows
-          } catch (altError) {
-            console.warn('⚠️  Alternative field name query failed:', altError)
-          }
+          const directRows = await this.imageRepo
+            .createQueryBuilder('img')
+            .where('img.venueId = :venueId', { venueId })
+            .orderBy('img.sort', 'ASC')
+            .addOrderBy('img.id', 'ASC')
+            .getMany()
+          rows = directRows
+          console.log(`📸 QueryBuilder (venueId) found ${directRows.length} images`)
         }
       } catch (qbError) {
         console.warn('⚠️  QueryBuilder query failed, trying raw query:', qbError)
@@ -1385,8 +1392,8 @@ export class VenuesService {
           try {
             // 尝试不同的字段名格式
             const queries = [
-              `SELECT * FROM venue_image WHERE "venueId" = $1 ORDER BY sort ASC, id ASC`,
               `SELECT * FROM venue_image WHERE venue_id = $1 ORDER BY sort ASC, id ASC`,
+              `SELECT * FROM venue_image WHERE "venueId" = $1 ORDER BY sort ASC, id ASC`,
             ]
             
             for (const query of queries) {
@@ -1517,14 +1524,37 @@ export class VenuesService {
       const mainImage = uploadResults.find(r => r.size === 'large')
       if (!mainImage) throw new Error('主图上传失败')
       
+      const venue = await this.repo.findOne({ where: { id: venueId } })
+      if (!venue) {
+        throw new Error(`场地不存在（id=${venueId}）。请确认该场地在当前数据库中存在。`)
+      }
+      const user = await this.userRepo.findOne({ where: { id: userId } })
+      if (!user) {
+        throw new Error(
+          `当前登录用户（id=${userId}）在该数据库中不存在，无法保存图片。请在前端退出登录后，用「注册」或「登录」重新登录（确保前端请求的是当前后端），再试上传。`
+        )
+      }
+      
       const image = new VenueImageEntity()
-      image.venue = { id: venueId } as any
-      image.user = { id: userId } as any
+      image.venue = venue as any
+      image.user = user
+      image.userId = userId
       image.url = mainImage.url
       image.sort = 0
       
       console.log(`💾 Saving processed image to database for venue ${venueId}...`)
-      const saved = await this.imageRepo.save(image)
+      let saved: VenueImageEntity
+      try {
+        saved = await this.imageRepo.save(image)
+      } catch (saveErr: any) {
+        const msg = saveErr?.message || ''
+        if (msg.includes('foreign key') || msg.includes('violates foreign key') || saveErr?.code === '23503') {
+          throw new Error(
+            '保存图片失败：当前场地或登录用户在该数据库中不存在。请确认：1) 场地详情页的场地 ID 与数据库一致；2) 当前登录用户已在该库的 user 表中。'
+          )
+        }
+        throw saveErr
+      }
       console.log(`✅ Processed image saved: id=${saved.id}, venueId=${venueId}, url=${saved.url}`)
       
       // 验证保存是否成功
@@ -1592,23 +1622,21 @@ export class VenuesService {
     try {
       console.log(`🗑️ [Delete Image] Starting deletion for image ${imageId} of venue ${venueId} by user ${userId}`)
       
-      // 使用 QueryBuilder 直接查询，避免加载 venue 关系（防止 geom 列问题）
+      // 使用 QueryBuilder 直接查询（优先 venueId，兼容驼峰表）
       let image = await this.imageRepo
         .createQueryBuilder('img')
         .where('img.id = :imageId', { imageId })
         .andWhere('img.venueId = :venueId', { venueId })
         .getOne()
-      
-      // 如果上面的查询失败，尝试不同的字段名格式
       if (!image) {
-        image = await this.imageRepo
-          .createQueryBuilder('img')
-          .where('img.id = :imageId', { imageId })
-          .andWhere('img.venue_id = :venueId', { venueId })
-          .getOne()
-        
-        if (image) {
-          console.log(`✅ [Delete Image] Found image using alternative field name`)
+        try {
+          image = await this.imageRepo
+            .createQueryBuilder('img')
+            .where('img.id = :imageId', { imageId })
+            .andWhere('img.venue_id = :venueId', { venueId })
+            .getOne()
+        } catch {
+          // 表无 venue_id 列时忽略
         }
       }
       if (!image) {

@@ -26,9 +26,19 @@ async function addGeomColumn() {
     const hasPostGIS = extensionCheck[0]?.exists === true
     
     if (!hasPostGIS) {
-      console.log('📦 安装 PostGIS 扩展...')
-      await ds.query('CREATE EXTENSION IF NOT EXISTS postgis')
-      console.log('✅ PostGIS 扩展已安装\n')
+      console.log('📦 尝试安装 PostGIS 扩展...')
+      try {
+        await ds.query('CREATE EXTENSION IF NOT EXISTS postgis')
+        console.log('✅ PostGIS 扩展已安装\n')
+      } catch (e: any) {
+        if (e?.message?.includes('is not available') || e?.message?.includes('postgis')) {
+          console.warn('⚠️  PostGIS 未安装或不可用，跳过 geom 列添加。')
+          console.warn('   应用将使用 lng/lat 字段，功能不受影响。若需空间索引，请在数据库服务器上安装 PostGIS 后重试。\n')
+          await ds.destroy()
+          return
+        }
+        throw e
+      }
     } else {
       console.log('✅ PostGIS 扩展已存在\n')
     }

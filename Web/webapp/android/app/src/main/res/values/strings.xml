@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Find遇体育</string>
+    <string name="title_activity_main">Find遇体育</string>
+    <string name="package_name">com.findyusports.app</string>
+    <string name="custom_url_scheme">com.findyusports.app</string>
+</resources>

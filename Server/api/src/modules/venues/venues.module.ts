@@ -5,12 +5,13 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { VenueEntity } from './venue.entity'
 import { ReviewEntity } from './review.entity'
 import { VenueImageEntity } from './image.entity'
+import { UserEntity } from '../auth/user.entity'
 import { OssModule } from '../oss/oss.module'
 import { ImageModule } from '../image/image.module'
 import { AuthModule } from '../auth/auth.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VenueEntity, ReviewEntity, VenueImageEntity]), OssModule, ImageModule, AuthModule],
+  imports: [TypeOrmModule.forFeature([VenueEntity, ReviewEntity, VenueImageEntity, UserEntity]), OssModule, ImageModule, AuthModule],
   controllers: [VenuesController],
   providers: [VenuesService],
 })

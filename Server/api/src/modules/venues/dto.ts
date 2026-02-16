@@ -68,6 +68,10 @@ export class QueryVenuesDto {
 
   @IsOptional()
   @IsString()
+  districtCode?: string // 区/县代码，次级区域筛选
+
+  @IsOptional()
+  @IsString()
   sortBy?: 'city' | 'popularity' | 'name' | 'newest' // 排序方式：按地区、按热度、按名称、按添加先后
 
   @IsOptional()
@@ -87,6 +91,7 @@ export class CreateReviewDto {
 
 export class CreateVenueDto {
   @IsString()
+  @MaxLength(120, { message: '场地名称不能超过 120 个字符' })
   name!: string
 
   @IsEnum(SportType)
@@ -243,6 +248,7 @@ export class CreateVenueDto {
 export class UpdateVenueDto {
   @IsOptional()
   @IsString()
+  @MaxLength(120, { message: '场地名称不能超过 120 个字符' })
   name?: string
 
   @IsOptional()

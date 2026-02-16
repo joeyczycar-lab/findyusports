@@ -1,0 +1,24 @@
+# 在 GitHub 云端从 Railway 导出 PostgreSQL，生成 artifact 供下载后导入阿里云
+# 使用：仓库 Settings → Secrets → 添加 RAILWAY_DATABASE_URL，然后 Actions → 运行此 workflow
+name: Export Railway DB
+
+on:
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    container: postgres:15
+    steps:
+      - name: Export from Railway
+        run: |
+          pg_dump "$RAILWAY_DATABASE_URL" --no-owner --no-acl --no-comments -f railway_dump.sql
+          ls -la railway_dump.sql
+        env:
+          RAILWAY_DATABASE_URL: ${{ secrets.RAILWAY_DATABASE_URL }}
+
+      - name: Upload dump as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: railway-dump
+          path: railway_dump.sql

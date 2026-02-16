@@ -191,10 +191,12 @@ export async function POST(
     }
     
     // 安全地解析 JSON
-    let data
+    let data: { url?: string; id?: number; error?: { code: string; message: string } }
     try {
       data = JSON.parse(text)
-      console.log('✅ Successfully uploaded image:', data.url || data.id)
+      const url = data?.url ?? (data as any)?.image?.url
+      const id = data?.id ?? (data as any)?.image?.id
+      console.log('✅ Successfully uploaded image:', url || id ? (url || `id=${id}`) : '(no url/id in response)', data?.error ? `backend error: ${data.error.message}` : '')
     } catch (parseError) {
       console.error('❌ [API Route] JSON parse error:', parseError)
       console.error('Response text:', text.substring(0, 500))
@@ -208,8 +210,13 @@ export async function POST(
         { status: 500 }
       )
     }
-    
-    return Response.json(data)
+
+    // 若后端未返回顶层 url 但有 sizes.large，补全给前端使用
+    const payload = data as Record<string, unknown>
+    if (!payload.url && payload.sizes && typeof payload.sizes === 'object' && (payload.sizes as Record<string, string>).large) {
+      payload.url = (payload.sizes as Record<string, string>).large
+    }
+    return Response.json(payload)
   } catch (error) {
     console.error('❌ Error proxying image upload to backend:', error)
     if (error instanceof Error) {
