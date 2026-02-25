@@ -18,7 +18,11 @@ export default function HeroSearch() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col sm:flex-row gap-2 max-w-md w-full"
+      style={{ maxWidth: '360px' }}
+    >
       <input
         name="keyword"
         type="text"

@@ -126,6 +126,13 @@ export default function Nav() {
     }
   }, [])
 
+  // 引导页点击「登录」时打开登录弹窗
+  useEffect(() => {
+    const openLogin = () => setIsLoginModalOpen(true)
+    window.addEventListener('findyu-open-login', openLogin)
+    return () => window.removeEventListener('findyu-open-login', openLogin)
+  }, [])
+
   const handleLoginSuccess = (user: User, token: string) => {
     setAuthState({ user, token, isAuthenticated: true })
   }
@@ -314,117 +321,112 @@ export default function Nav() {
             >
               地图探索
             </Link>
-          </nav>
-
-          {/* 右侧：搜索栏 + 用户菜单 */}
-          <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* 搜索栏 - 提交时从表单直接读关键词，与主页/手机端一致 */}
-            <div className="hidden md:flex items-center" style={{ position: 'relative' }}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const form = e.currentTarget
-                  const input = form.querySelector<HTMLInputElement>('input[name="nav-search-keyword"]')
-                  const kw = (input?.value ?? searchKeyword).trim()
-                  if (kw) {
-                    window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
-                  } else {
-                    window.location.href = '/map'
-                  }
-                }}
-                className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors"
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  padding: '8px 16px',
-                  borderRadius: '9999px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  minWidth: '200px',
-                  cursor: 'text'
-                }}
-              >
-                <button
-                  type="submit"
-                  className="shrink-0 p-0 border-0 bg-transparent cursor-pointer flex items-center justify-center"
-                  style={{ color: '#666666' }}
-                  aria-label="搜索"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-                <input
-                  name="nav-search-keyword"
-                  type="text"
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder="搜索场地"
-                  className="bg-transparent border-0 outline-0 flex-1"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: '#000000',
-                    fontSize: '14px',
-                    flex: 1,
-                    minWidth: 0
-                  }}
-                  autoComplete="off"
-                  aria-label="搜索关键词"
-                />
-              </form>
-            </div>
-
-            {/* 添加场地按钮 - 仅 md 以上显示，移动端在汉堡菜单内 */}
             <Link 
               href="/admin/add-venue" 
-              className="bg-black text-white px-4 py-2 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors items-center justify-center rounded hidden md:inline-flex"
+              className="text-black hover:underline transition-colors"
+              style={{ fontSize: '14px', fontWeight: '400', letterSpacing: '0.01em' }}
+            >
+              添加场地
+            </Link>
+          </nav>
+
+          {/* 右侧：搜索栏 + 用户菜单（移动端单行：Logo + 圆角搜索 + 菜单，Nike 风格） */}
+          <div className="flex items-center gap-2 md:gap-4 min-w-0" style={{ display: 'flex', alignItems: 'center' }}>
+            {/* 搜索栏 - 桌面端与移动端同栏，移动端占满中间 */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const form = e.currentTarget
+                const input = form.querySelector<HTMLInputElement>('input[name="nav-search-keyword"]')
+                const kw = (input?.value ?? searchKeyword).trim()
+                if (kw) {
+                  window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
+                } else {
+                  window.location.href = '/map'
+                }
+              }}
+              className="flex items-center gap-2 bg-gray-100 min-w-0 rounded-full hover:bg-gray-200 transition-colors"
               style={{
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                padding: '8px 16px',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                borderRadius: '4px',
-                border: 'none',
-                outline: 'none',
-                minWidth: '120px',
-                whiteSpace: 'nowrap'
+                backgroundColor: '#f3f3f3',
+                padding: '8px 14px',
+                borderRadius: '9999px',
+                cursor: 'text',
+                minHeight: '40px',
+                width: '100%',
+                maxWidth: '170px',
               }}
             >
-              ➕ 添加场地
-            </Link>
+              <button
+                type="submit"
+                className="shrink-0 p-0 border-0 bg-transparent cursor-pointer flex items-center justify-center"
+                style={{ color: '#6b7280' }}
+                aria-label="搜索"
+              >
+                <Search className="h-4 w-4 md:h-4" />
+              </button>
+              <input
+                name="nav-search-keyword"
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="搜索场地"
+                className="bg-transparent border-0 outline-0 flex-1 min-w-0 text-sm"
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  color: '#000000',
+                  flex: 1,
+                  minWidth: 0
+                }}
+                autoComplete="off"
+                aria-label="搜索关键词"
+              />
+            </form>
 
-            {/* 用户菜单 */}
-            {authState.isAuthenticated ? (
-              <div style={{ position: 'relative', zIndex: 100000 }}>
+            {/* 网页端：下载 APP 二维码（悬停显示） */}
+            <div className="hidden md:block shrink-0 relative group">
+              <button
+                type="button"
+                className="text-black text-sm font-medium hover:underline"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
+              >
+                下载APP
+              </button>
+              <div
+                className="absolute right-0 top-full mt-2 py-3 px-4 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100001]"
+                style={{ minWidth: '140px' }}
+              >
+                <img
+                  src="/app-download-qrcode.png"
+                  alt="扫码下载 FY体育 APP"
+                  className="w-28 h-28 object-contain mx-auto"
+                  onError={(e) => {
+                    const target = e.currentTarget
+                    if (target.src !== '/wechat-qrcode.jpg') {
+                      target.src = '/wechat-qrcode.jpg'
+                      target.alt = '扫码添加微信'
+                    }
+                  }}
+                />
+                <p className="text-center text-xs text-gray-600 mt-2">扫码下载 APP</p>
+              </div>
+            </div>
+
+            {/* 用户菜单（仅已登录时显示头像，下方移动端菜单保留登录入口） */}
+            {authState.isAuthenticated && (
+              <div className="shrink-0 hidden md:block" style={{ position: 'relative', zIndex: 100000 }}>
                 <UserMenu user={authState.user!} onLogout={handleLogout} />
               </div>
-            ) : (
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="text-black hover:underline transition-colors hidden md:block"
-                style={{ 
-                  color: '#000000',
-                  fontSize: '14px',
-                  fontWeight: '400',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-              >
-                登录
-              </button>
             )}
 
-            {/* Mobile menu button */}
-            <div className="lg:hidden">
+            {/* 移动端菜单按钮（Nike 风格单行顶栏） */}
+            <div className="md:hidden shrink-0">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-black"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                className="text-black p-1"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                aria-label="菜单"
               >
                 <Menu className="h-6 w-6" />
               </button>
@@ -432,44 +434,7 @@ export default function Nav() {
           </div>
         </div>
 
-        {/* 手机端置顶搜索栏：提交时从表单直接读关键词，避免 state 未同步导致只跳转无 keyword */}
-        <div className="md:hidden shrink-0 w-full px-4 pb-3 pt-1" style={{ borderTop: '1px solid #eee' }}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const form = e.currentTarget
-              const input = form.querySelector<HTMLInputElement>('input[name="mobile-search-keyword"]')
-              const kw = (input?.value ?? searchKeyword).trim()
-              if (kw) {
-                window.location.href = `/map?keyword=${encodeURIComponent(kw)}`
-              } else {
-                window.location.href = '/map'
-              }
-            }}
-            className="flex items-center gap-2 bg-gray-100 rounded-full overflow-hidden"
-            style={{ minHeight: '44px', padding: '0 16px' }}
-          >
-            <button type="submit" className="shrink-0 p-0 border-0 bg-transparent cursor-pointer flex items-center" style={{ color: '#666' }} aria-label="搜索">
-              <Search className="h-5 w-5" />
-            </button>
-            <input
-              name="mobile-search-keyword"
-              type="text"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="搜索篮球、足球场地"
-              className="flex-1 bg-transparent border-0 outline-0 text-base"
-              style={{ minWidth: 0 }}
-              autoComplete="off"
-              aria-label="搜索关键词"
-            />
-            <button type="submit" className="text-black font-medium text-sm shrink-0">
-              搜索
-            </button>
-          </form>
-        </div>
-
-        {/* 移动端下拉菜单：独立一块，避免与顶栏重叠 */}
+        {/* 移动端下拉菜单 */}
         {isMenuOpen && (
           <div 
             className="md:hidden border-t border-gray-200 bg-white"
@@ -505,13 +470,6 @@ export default function Nav() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 地图探索
-              </Link>
-              <Link
-                href="/admin/add-venue"
-                className="block w-full bg-black text-white py-3 text-center text-sm font-bold rounded"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                ➕ 添加场地
               </Link>
               {authState.isAuthenticated ? (
                 <div className="pt-3 border-t border-gray-200">

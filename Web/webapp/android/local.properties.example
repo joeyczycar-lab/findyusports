@@ -1,0 +1,4 @@
+# 复制此文件为 local.properties 并修改为你的 Android SDK 路径
+# 安装 Android Studio 后，macOS 默认路径一般为：
+# sdk.dir=/Users/你的用户名/Library/Android/sdk
+sdk.dir=/Users/Zhuanz/Library/Android/sdk

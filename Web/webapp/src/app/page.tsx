@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
 import TicketBanner from '@/components/TicketBanner'
 import HeroSearch from '@/components/HeroSearch'
+import MobileHome from '@/components/MobileHome'
 
 // 首页场地数据使用短期缓存（60 秒）以减轻后端压力、加快页面响应
 const VENUE_REVALIDATE_SECONDS = 60
@@ -58,8 +59,17 @@ export default async function HomePage() {
 
   return (
     <main className="bg-white" style={{ paddingTop: 0 }}>
-      {/* 首页 Hero 区域不需要额外的 padding-top，因为 body 已经有了 */}
-      
+      {/* 手机端：Nike 风格首页（分类 + 横向滚动 + APP 专属 + 发现更多） */}
+      <div className="for-mobile">
+        <MobileHome
+          venues={venues}
+          basketballVenues={basketballVenues}
+          footballVenues={footballVenues}
+        />
+      </div>
+
+      {/* 网页端：原有 Hero + 精选 + 分类 */}
+      <div className="for-web">
       {/* Hero Section - Nike 风格大图 */}
       <section className="relative text-white min-h-[600px] flex items-center overflow-hidden" style={{ position: 'relative' }}>
         
@@ -167,9 +177,6 @@ export default async function HomePage() {
               >
                 足球
               </Link>
-              <Link href="/admin/add-venue" className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors duration-200 border-2 border-white shadow-2xl !inline-flex items-center justify-center min-w-[93px]" style={{ borderRadius: '4px' }}>
-                ➕ 添加场地
-              </Link>
             </div>
           </div>
         </div>
@@ -243,12 +250,7 @@ export default async function HomePage() {
             <h2 className="text-heading font-bold tracking-tight mb-2">精选场地</h2>
             <p className="text-body-sm text-textSecondary">发现优质运动场地，开启你的运动之旅</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/add-venue" className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors !inline-flex items-center justify-center" style={{ borderRadius: '4px' }}>
-              ➕ 添加场地
-            </Link>
-            <Link href="/map" className="text-black font-medium hover:underline">查看全部 →</Link>
-          </div>
+          <Link href="/map" className="text-black font-medium hover:underline">查看全部 →</Link>
         </div>
         {/* Nike 风格：大图网格布局 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -407,6 +409,7 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </div>
     </main>
   )
 }

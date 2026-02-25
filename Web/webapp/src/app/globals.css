@@ -40,14 +40,40 @@
   }
 }
 
-/* 顶部留白：桌面端 64px，手机端含置顶搜索栏约 130px */
+/* 顶部留白：顶栏单行 64px（网页/手机一致，Nike 风格） */
 .pt-nav-offset {
   padding-top: 64px;
 }
+
+/* 底部导航栏占位，仅移动端（BottomNav 为 md:hidden） */
+.pb-bottom-nav {
+  padding-bottom: 0;
+}
 @media (max-width: 767px) {
-  .pt-nav-offset {
-    padding-top: 130px;
+  .pb-bottom-nav {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* 网页端 / 手机端设计分离：body 由 LayoutClient 设置 .layout-web 或 .layout-mobile */
+/* 可按 .layout-web / .layout-mobile 写仅对一端生效的样式 */
+.layout-web .container-page { max-width: 1200px; }
+.layout-mobile .container-page { max-width: 100%; }
+/* 仅网页端显示 / 仅手机端显示：768px 以下为新首页，768px 及以上保持原网页端风格 */
+.for-web { display: none !important; }
+.for-mobile { display: block !important; }
+@media (min-width: 768px) {
+  .for-web { display: block !important; }
+  .for-mobile { display: none !important; }
+}
+
+/* 横向滚动隐藏滚动条（Nike 风格列表） */
+.scrollbar-hide {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 :root {

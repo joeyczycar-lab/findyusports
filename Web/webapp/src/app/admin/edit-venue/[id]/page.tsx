@@ -992,7 +992,7 @@ export default function EditVenuePage() {
               几人制 <span className="text-gray-500 text-xs normal-case">(可选，可多选，主要用于足球场地)</span>
             </label>
             <div className="space-y-2">
-              {['5人制', '7人制', '8人制', '9人制', '11人制'].map((type) => (
+              {['3人制', '5人制', '7人制', '8人制', '9人制', '11人制'].map((type) => (
                 <label key={type} className="flex items-center space-x-3 cursor-pointer">
                   <input
                     type="checkbox"

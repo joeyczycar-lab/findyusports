@@ -1,7 +1,6 @@
 import './globals.css'
 import { ReactNode } from 'react'
-import Link from 'next/link'
-import Nav from '@/components/Nav'
+import LayoutClient from '@/components/LayoutClient'
 import ForceButtonRadius from '@/components/ForceButtonRadius'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 
@@ -15,13 +14,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="zh-CN">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className="pt-nav-offset" style={{ margin: 0, padding: 0 }}>
+      <body className="pt-nav-offset pb-bottom-nav" style={{ margin: 0, padding: 0 }}>
         <ForceButtonRadius />
         <AnalyticsProvider />
-        <Nav />
-        {children}
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   )
