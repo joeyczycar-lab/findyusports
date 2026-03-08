@@ -269,14 +269,19 @@ export default function Nav() {
         {/* 顶栏：Logo + 中间导航 + 右侧操作，固定高度，避免移动端重叠 */}
         <div 
           className="container-page flex items-center justify-between shrink-0"
-          style={{ height: '64px', minHeight: '64px', width: '100%', padding: '0 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}
+          style={{ height: '64px', minHeight: '64px', width: '100%', padding: '0 1rem', paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, overflow: 'visible' }}
         >
-          {/* 左侧 Logo */}
-          <Link href="/" className="flex items-center" style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          {/* 左侧 Logo：留足左边距避免被裁切，移动端略缩小 */}
+          <Link 
+            href="/" 
+            className="flex items-center shrink-0" 
+            style={{ color: '#000000', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: 32, overflow: 'visible' }}
+          >
             <img 
               src="/logo.png" 
-              alt="Find遇 Logo" 
-              style={{ height: '32px', width: 'auto', display: 'block' }}
+              alt="FY体育" 
+              className="h-8 w-auto md:h-8"
+              style={{ height: '28px', width: 'auto', maxHeight: '32px', display: 'block', objectFit: 'contain' }}
             />
           </Link>
           
