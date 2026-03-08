@@ -87,7 +87,7 @@ export default function MobileHome({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl">
-                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                      {venue.sportType === 'basketball' ? '⚽' : '⚽'}
                     </div>
                   )}
                   <div

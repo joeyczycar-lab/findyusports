@@ -5,6 +5,8 @@ import NavigationMenu from '@/components/NavigationMenu'
 import EditVenueButton from './EditVenueButton'
 import VenueBrowseRecord from './VenueBrowseRecord'
 import FavoriteButton from './FavoriteButton'
+import VenueDetailTopBar from './VenueDetailTopBar'
+import VenueDetailBottomBar from './VenueDetailBottomBar'
 
 // 使用动态导入延迟加载客户端组件，避免 SSR 问题
 // Gallery 是客户端组件（使用 useState），禁用 SSR 以避免 hydration 错误
@@ -77,47 +79,71 @@ export default async function VenueDetailPage({ params }: { params: { id: string
     : null
 
   return (
-    <main className="container-page py-12 bg-white">
+    <main className="bg-white min-h-screen">
       {v && (
-        <VenueBrowseRecord venueId={String(v.id)} name={v.name} sportType={v.sportType} />
+        <>
+          <VenueBrowseRecord venueId={String(v.id)} name={v.name} sportType={v.sportType} />
+          {/* 产品详情风格：固定顶栏 */}
+          <VenueDetailTopBar venueName={v.name} venueId={venueId} sportType={v.sportType} />
+          {/* 固定底栏：联系、收藏、导航 */}
+          <VenueDetailBottomBar
+            venueId={venueId}
+            venueName={v.name}
+            sportType={v.sportType}
+            contact={v.contact}
+            address={v.address}
+            navUrl={v.location ? `https://uri.amap.com/marker?position=${v.location[0]},${v.location[1]}&name=${encodeURIComponent(v.name)}` : undefined}
+          />
+        </>
       )}
-      <div className="mb-6 md:mb-8 flex flex-wrap items-center gap-3 md:gap-0 md:justify-between">
-        <Link href="/map" className="link-nike inline-flex items-center gap-2 min-h-[44px] md:min-h-0 md:py-0 py-2">
-          ← 返回地图
-        </Link>
-        <EditVenueButton venueId={venueId} />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
+      {!v && (
+        <VenueDetailTopBar venueName="场地详情" venueId={venueId} />
+      )}
+      {/* 内容区：预留顶栏与底栏高度 */}
+      <div
+        className="container-page px-0"
+        style={{
+          paddingTop: 'calc(48px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        <div className="hidden md:flex flex-wrap items-center gap-3 mb-4 px-4">
+          <Link href="/map" className="link-nike inline-flex items-center gap-2">← 返回地图</Link>
+          <EditVenueButton venueId={venueId} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
         <div>
-          <div className="mb-8">
-            <Gallery urls={imageItems} venueId={venueId} />
-            <p className="text-xs text-textSecondary mt-2 text-center">
+          {/* 大图 + 圆点指示器（产品详情风格） */}
+          <div className="mb-6">
+            <Gallery urls={imageItems} venueId={venueId} showDots />
+            <p className="text-xs text-textSecondary mt-2 text-center px-4">
               所有图片大多来自网友上传，如有侵权请联系删除。
             </p>
           </div>
-          <h1 className="text-heading font-bold mb-4 tracking-tight">{v ? v.name : '加载中…'}</h1>
-          <div className="text-body-sm text-textSecondary mb-8 uppercase tracking-wide">
-            {v ? (
-              <>
-                {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'} · {getPriceSummary(v)}
-                {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
-              </>
-            ) : '加载中…'}
+
+          {/* 标题 + 副标题 + 价格（与参考图一致） */}
+          <div className="px-4 mb-6">
+            <h1 className="text-xl md:text-2xl font-bold mb-1 tracking-tight">{v ? v.name : '加载中…'}</h1>
+            <p className="text-sm text-textSecondary mb-2">
+              {v ? (
+                <>
+                  {v.sportType === 'basketball' ? '篮球' : '足球'} · {v.indoor ? '室内' : '室外'}
+                  {avgRating !== null && <span className="ml-2">· {avgRating.toFixed(1)} 评分</span>}
+                </>
+              ) : '加载中…'}
+            </p>
+            <p className="text-lg font-semibold text-black">
+              {v ? getPriceSummary(v) : '—'}
+            </p>
           </div>
 
-          {/* 手机端：在标题区下方提供收藏按钮，符合 APP 使用习惯 */}
+          {/* 桌面端收藏按钮保留在侧边栏；移动端已在顶栏与底栏 */}
           {v && (
-            <div className="mb-6 lg:hidden">
-              <FavoriteButton
-                venueId={venueId}
-                name={v.name}
-                sportType={v.sportType}
-                className="btn-secondary w-full"
-              />
+            <div className="mb-6 px-4 lg:hidden">
+              <FavoriteButton venueId={venueId} name={v.name} sportType={v.sportType} className="btn-secondary w-full" />
             </div>
           )}
-
-          <section className="border-t border-border pt-8 mb-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">关键信息</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-body-sm">
               {v?.districtCode && (() => {
@@ -235,11 +261,11 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 </div>
               )}
             </div>
-          </section>
+            </section>
 
           {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
             v?.hasFence === true || v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
-            <section className="border-t border-border pt-8 mb-8">
+            <section className="border-t border-gray-200 pt-6 mb-6 px-4">
               <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {v?.hasLighting === true && (
@@ -294,12 +320,12 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             </section>
           )}
 
-          <section className="border-t border-border pt-8 mb-8">
+          <section className="border-t border-gray-200 pt-6 mb-6 px-4">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">用户点评</h2>
             <Reviews items={reviews?.items ?? []} />
           </section>
 
-          <section className="border-t border-border pt-8">
+          <section className="border-t border-gray-200 pt-6 pb-6 px-4">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">写点评</h2>
             <ReviewForm venueId={venueId} />
           </section>

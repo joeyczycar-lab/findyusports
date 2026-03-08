@@ -273,7 +273,7 @@ export default async function HomePage() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-textMuted text-6xl">
-                        {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                        {venue.sportType === 'basketball' ? '⚽' : '⚽'}
                       </div>
                     )}
                     {/* Nike 风格：白色按钮覆盖在图片左下角 */}
@@ -329,7 +329,7 @@ export default async function HomePage() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-textMuted text-5xl">
-                          🏀
+                          ⚽
                         </div>
                       )}
                       {/* Nike 风格：白色按钮 */}

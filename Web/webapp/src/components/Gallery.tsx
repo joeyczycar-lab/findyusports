@@ -15,9 +15,11 @@ type Props = {
   urls: string[] | ImageItem[]
   venueId?: string
   onImageAdded?: (url: string) => void
+  /** 产品详情风格：大图下方显示圆点指示器，隐藏缩略图条 */
+  showDots?: boolean
 }
 
-export default function Gallery({ urls, venueId, onImageAdded }: Props) {
+export default function Gallery({ urls, venueId, onImageAdded, showDots }: Props) {
   const [active, setActive] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -244,6 +246,23 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
         )}
       </div>
       
+      {showDots && imageItems.length > 1 && (
+        <div className="flex justify-center gap-1.5 mt-3">
+          {imageItems.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`第 ${i + 1} 张`}
+              onClick={() => setActive(i)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                i === active ? 'bg-black' : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+      
+      {!showDots && (
       <div className="flex gap-2 overflow-x-auto">
         {imageItems.map((item, i) => (
           <div key={i} className="relative flex-shrink-0">
@@ -291,6 +310,7 @@ export default function Gallery({ urls, venueId, onImageAdded }: Props) {
           </div>
         ))}
       </div>
+      )}
       
       {venueId && (
         <div className="mt-4">

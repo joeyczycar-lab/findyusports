@@ -195,7 +195,7 @@ export default function DataViewPage() {
             
             <div className="card-nike p-6">
               <div className="text-3xl font-bold mb-2">{stats.basketballVenues}</div>
-              <div className="text-body-sm text-textSecondary uppercase tracking-wide">🏀 篮球场地</div>
+              <div className="text-body-sm text-textSecondary uppercase tracking-wide">⚽ 篮球场地</div>
             </div>
             
             <div className="card-nike p-6">
@@ -249,7 +249,7 @@ export default function DataViewPage() {
                       <td className="py-3 text-body-sm">{venue.id}</td>
                       <td className="py-3 text-body-sm font-medium">{venue.name}</td>
                       <td className="py-3 text-body-sm">
-                        {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                        {venue.sportType === 'basketball' ? '⚽' : '⚽'}
                       </td>
                       <td className="py-3 text-body-sm">{venue.cityCode || '-'}</td>
                       <td className="py-3 text-body-sm">

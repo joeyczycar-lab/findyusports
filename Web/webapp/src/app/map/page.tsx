@@ -252,14 +252,14 @@ function MapPageContent() {
                         if (parent && !parent.querySelector('.fallback-icon')) {
                           const fallback = document.createElement('div')
                           fallback.className = 'fallback-icon w-full h-full flex items-center justify-center text-textMuted text-4xl absolute inset-0'
-                          fallback.textContent = venue.sportType === 'basketball' ? '🏀' : '⚽'
+                          fallback.textContent = venue.sportType === 'basketball' ? '⚽' : '⚽'
                           parent.appendChild(fallback)
                         }
                       }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
-                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
+                      {venue.sportType === 'basketball' ? '⚽' : '⚽'}
                     </div>
                   )}
                 </div>
@@ -273,7 +273,7 @@ function MapPageContent() {
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
-                          {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
+                          {venue.sportType === 'basketball' ? '⚽ 篮球' : '⚽ 足球'}
                         </span>
                         {venue.indoor && (
                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
