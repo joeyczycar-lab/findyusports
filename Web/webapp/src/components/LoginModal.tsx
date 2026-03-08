@@ -161,6 +161,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
+            aria-label="关闭"
           >
             <X size={20} />
           </button>
@@ -208,6 +209,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? '隐藏密码' : '显示密码'}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>

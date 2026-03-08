@@ -1,4 +1,5 @@
 import AppDownloadQrImage from '@/components/AppDownloadQrImage'
+import AppDownloadRedirect, { APK_URL } from '@/components/AppDownloadRedirect'
 
 export const metadata = {
   title: '下载 FY体育 App',
@@ -8,6 +9,9 @@ export const metadata = {
 export default function AppDownloadPage() {
   return (
     <main className="bg-white min-h-screen">
+      {/* 手机访问时直接跳转 APK 下载 */}
+      <AppDownloadRedirect />
+
       <section className="container-page py-12 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-center">
           {/* 左侧文案区域 */}
@@ -31,14 +35,24 @@ export default function AppDownloadPage() {
                 <li>iOS 版本正在筹备中，敬请期待</li>
               </ul>
             </div>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={APK_URL}
+                download="findyusports.apk"
+                className="inline-flex items-center justify-center bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                style={{ borderRadius: '4px' }}
+              >
+                安卓直接下载 APK
+              </a>
+            </div>
             <div className="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-700">
               <p className="font-medium text-black mb-1">如何使用本页面？</p>
               <p>
-                部署到正式域名后，请使用该页面地址（例如
+                二维码请指向本页地址
                 <span className="mx-1 font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">
-                  https://你的域名.com/app
+                  https://findyusports.com/app
                 </span>
-                ）生成二维码图片，并命名为
+                。手机扫码后会<strong>自动跳转下载 APK</strong>；电脑访问可点击上方「安卓直接下载 APK」或查看右侧二维码说明。将二维码图片命名为
                 <span className="mx-1 font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">
                   app-download-qrcode.png
                 </span>
@@ -46,7 +60,7 @@ export default function AppDownloadPage() {
                 <span className="mx-1 font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">
                   public
                 </span>
-                目录。之后，用户扫描任意地方的「下载 App」二维码都会先打开本页面，再从这里进入对应下载入口。
+                目录即可。
               </p>
             </div>
           </div>
@@ -57,7 +71,7 @@ export default function AppDownloadPage() {
               <AppDownloadQrImage />
             </div>
             <p className="text-sm text-gray-600 text-center max-w-[220px]">
-              使用手机相机或扫一扫功能，扫描二维码在手机浏览器中打开本页面，再根据提示下载 FY体育 App。
+              扫码后手机会直接下载 APK；电脑访问可点击左侧「安卓直接下载 APK」。
             </p>
           </div>
         </div>

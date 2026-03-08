@@ -24,4 +24,10 @@
 - 文件名：`app-download-qrcode.png`
 - 建议尺寸：约 200×200 像素以上，正方形
 
+## 安卓 APK 直链（扫码直接下载）
+
+手机访问 `/app` 时会自动跳转到 APK 下载。请将构建好的安卓安装包命名为 `findyusports.apk` 并放在此目录（`public/findyusports.apk`），这样扫码或访问 https://findyusports.com/app 时即可直接下载。
+
+- 文件名：`findyusports.apk`（必须）
+- 来源：执行 `npm run cap:build:android` 或 `npm run cap:build:android:release` 后，将 `android/app/build/outputs/apk/debug/app-debug.apk` 或 `release/app-release.apk` 复制并重命名为 `findyusports.apk` 放到 `public/` 下。
 
