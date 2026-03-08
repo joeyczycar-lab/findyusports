@@ -5,8 +5,16 @@ import ForceButtonRadius from '@/components/ForceButtonRadius'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 
 export const metadata = {
-  title: 'Find遇体育，体育场地在线分享',
-  description: '分享与发现中国各地的篮球、足球场地，地图导航、点评与上传',
+  title: 'FY体育（Find遇体育） - 篮球足球场地分享与地图',
+  description: '分享与发现中国各地的篮球、足球场地，地图导航、点评与上传。查找附近篮球场、足球场。',
+  openGraph: {
+    title: 'FY体育 - 篮球足球场地分享与地图',
+    description: '分享与发现中国各地的篮球、足球场地，地图导航、点评与上传。',
+    url: 'https://findyusports.com',
+    siteName: 'FY体育',
+    locale: 'zh_CN',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

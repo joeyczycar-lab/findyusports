@@ -332,7 +332,22 @@ export default function Nav() {
 
           {/* 右侧：搜索栏 + 用户菜单（移动端单行：Logo + 圆角搜索 + 菜单，Nike 风格） */}
           <div className="flex items-center gap-2 md:gap-4 min-w-0" style={{ display: 'flex', alignItems: 'center' }}>
-            {/* 搜索栏 - 桌面端与移动端同栏，移动端占满中间 */}
+            {/* 移动端：仅保留搜索图标，点击进入地图页搜索 */}
+            <button
+              type="button"
+              className="md:hidden shrink-0 p-1.5 text-black"
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              aria-label="搜索场地"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/map'
+                }
+              }}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
+            {/* 搜索栏 - 仅桌面端显示，移动端只显示图标 */}
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -345,7 +360,7 @@ export default function Nav() {
                   window.location.href = '/map'
                 }
               }}
-              className="flex items-center gap-2 bg-gray-100 min-w-0 rounded-full hover:bg-gray-200 transition-colors"
+              className="hidden md:flex items-center gap-2 bg-gray-100 min-w-0 rounded-full hover:bg-gray-200 transition-colors"
               style={{
                 backgroundColor: '#f3f3f3',
                 padding: '8px 14px',

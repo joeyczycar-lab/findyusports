@@ -15,7 +15,10 @@ const nextConfig = {
         source: '/user',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
       },
-    ]
+      {
+        source: '/app',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
+      },
   },
   images: {
     remotePatterns: [

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import AppDownloadQrImage from '@/components/AppDownloadQrImage'
 
 export const metadata = {
   title: '下载 FY体育 App',
@@ -54,22 +54,7 @@ export default function AppDownloadPage() {
           {/* 右侧二维码区域 */}
           <div className="flex flex-col items-center justify-center gap-4">
             <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="relative w-40 h-40">
-                <Image
-                  src="/app-download-qrcode.png"
-                  alt="FY体育 App 下载二维码"
-                  fill
-                  sizes="160px"
-                  className="object-contain"
-                  onError={(e) => {
-                    const img = e.currentTarget as HTMLImageElement
-                    if (img.src.endsWith('/app-download-qrcode.png')) {
-                      img.src = '/wechat-qrcode.jpg'
-                      img.alt = '扫码添加微信'
-                    }
-                  }}
-                />
-              </div>
+              <AppDownloadQrImage />
             </div>
             <p className="text-sm text-gray-600 text-center max-w-[220px]">
               使用手机相机或扫一扫功能，扫描二维码在手机浏览器中打开本页面，再根据提示下载 FY体育 App。

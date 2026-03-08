@@ -81,8 +81,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
       {v && (
         <VenueBrowseRecord venueId={String(v.id)} name={v.name} sportType={v.sportType} />
       )}
-      <div className="mb-8 flex items-center justify-between">
-        <Link href="/map" className="link-nike inline-flex items-center gap-2">
+      <div className="mb-6 md:mb-8 flex flex-wrap items-center gap-3 md:gap-0 md:justify-between">
+        <Link href="/map" className="link-nike inline-flex items-center gap-2 min-h-[44px] md:min-h-0 md:py-0 py-2">
           ← 返回地图
         </Link>
         <EditVenueButton venueId={venueId} />
@@ -104,6 +104,18 @@ export default async function VenueDetailPage({ params }: { params: { id: string
               </>
             ) : '加载中…'}
           </div>
+
+          {/* 手机端：在标题区下方提供收藏按钮，符合 APP 使用习惯 */}
+          {v && (
+            <div className="mb-6 lg:hidden">
+              <FavoriteButton
+                venueId={venueId}
+                name={v.name}
+                sportType={v.sportType}
+                className="btn-secondary w-full"
+              />
+            </div>
+          )}
 
           <section className="border-t border-border pt-8 mb-8">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">关键信息</h2>
@@ -293,7 +305,8 @@ export default async function VenueDetailPage({ params }: { params: { id: string
           </section>
         </div>
 
-        <aside className="space-y-6">
+        {/* 侧边栏仅桌面端展示，手机端不再重复场地信息 */}
+        <aside className="space-y-6 hidden lg:block">
           {v && v.location && (
             <div className="border border-border p-6" style={{ borderRadius: '4px' }}>
               <h3 className="text-heading-sm font-bold mb-4">位置信息</h3>
@@ -306,132 +319,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                     name={v.name}
                   />
                 </div>
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">全部价格</div>
-                  <div className="space-y-2 text-body-sm">
-                    {getAllPriceLines(v).map((line) => (
-                      <div key={line.label} className="flex items-baseline gap-2">
-                        <span className="font-medium text-gray-900 shrink-0">{line.label}：</span>
-                        <span className="text-gray-700">{line.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">是否对外开放</div>
-                  <div className="font-medium">{v.isPublic !== false ? '对外开放' : '仅限内部'}</div>
-                </div>
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">联系方式</div>
-                  <div className="font-medium">{v.contact || '未提供'}</div>
-                </div>
-                {v.requiresReservation !== undefined && v.requiresReservation !== null && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">是否需要预约</div>
-                    <div className="font-medium">
-                      {v.requiresReservation ? '需要预约' : '无需预约'}
-                    </div>
-                  </div>
-                )}
-                {v.requiresReservation && v.reservationMethod && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">预约方式</div>
-                    <div className="font-medium whitespace-pre-line">{v.reservationMethod}</div>
-                  </div>
-                )}
-                {v.courtCount && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">场地数量</div>
-                    <div className="font-medium">{v.courtCount} 个{v.sportType === 'basketball' ? '篮球场' : '足球场'}</div>
-                  </div>
-                )}
-                {v.floorType && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">地板类型</div>
-                    <div className="font-medium">
-                      {v.floorType.includes('、') ? (
-                        <div className="flex flex-wrap gap-1">
-                          {v.floorType.split('、').map((type: string, idx: number) => (
-                            <span key={idx} className="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs">
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        v.floorType
-                      )}
-                    </div>
-                  </div>
-                )}
-                {v.playersPerSide && v.sportType === 'football' && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">几人制</div>
-                    <div className="font-medium">{v.playersPerSide}</div>
-                  </div>
-                )}
-                {v.openHours && (
-                  <div>
-                    <div className="text-textSecondary uppercase tracking-wide mb-1">开放时间</div>
-                    <div className="font-medium">{v.openHours}</div>
-                  </div>
-                )}
               </div>
-              {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
-                v?.hasFence === true || v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <h4 className="text-body-sm font-bold mb-3 uppercase tracking-wide">设施信息</h4>
-                  <div className="space-y-2 text-body-sm">
-                    {v?.hasLighting === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有灯光</span>
-                      </div>
-                    )}
-                    {v?.hasAirConditioning === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有空调</span>
-                      </div>
-                    )}
-                    {v?.hasParking === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有停车场</span>
-                      </div>
-                    )}
-                    {v?.hasFence === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有围栏</span>
-                      </div>
-                    )}
-                    {v?.hasRestArea === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有休息区</span>
-                      </div>
-                    )}
-                    {v?.hasShower === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有沐浴间</span>
-                      </div>
-                    )}
-                    {v?.hasLocker === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有储物柜</span>
-                      </div>
-                    )}
-                    {v?.hasShop === true && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">✅</span>
-                        <span className="font-medium">有小卖部</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
           <FavoriteButton

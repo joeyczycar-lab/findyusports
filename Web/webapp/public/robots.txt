@@ -1,0 +1,6 @@
+# 允许所有搜索引擎抓取
+User-agent: *
+Allow: /
+
+# 站点地图（请将 findyusports.com 改为你的实际域名）
+Sitemap: https://findyusports.com/sitemap.xml

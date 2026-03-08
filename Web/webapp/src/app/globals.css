@@ -59,6 +59,69 @@
 /* 可按 .layout-web / .layout-mobile 写仅对一端生效的样式 */
 .layout-web .container-page { max-width: 1200px; }
 .layout-mobile .container-page { max-width: 100%; }
+
+/* 手机端子页面：文字、按钮、触控区域符合移动端规范 */
+.layout-mobile main.container-page {
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+.layout-mobile .btn-primary,
+.layout-mobile .btn-secondary {
+  min-height: 44px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.layout-mobile a.link-nike,
+.layout-mobile .link-nike {
+  min-height: 44px;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
+}
+.layout-mobile .text-body-sm {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.layout-mobile .text-heading {
+  font-size: 22px;
+  line-height: 1.3;
+}
+.layout-mobile .text-heading-sm {
+  font-size: 18px;
+  line-height: 1.35;
+}
+.layout-mobile input[type="text"],
+.layout-mobile input[type="email"],
+.layout-mobile input[type="password"],
+.layout-mobile input[type="number"],
+.layout-mobile input[type="search"],
+.layout-mobile select,
+.layout-mobile textarea {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px; /* 避免 iOS 输入框聚焦时放大 */
+}
+.layout-mobile textarea {
+  min-height: 88px;
+}
+.layout-mobile select {
+  padding-right: 36px;
+}
+/* 场地详情、地图页等列表中的可点击卡片 */
+.layout-mobile a[href*="/venues/"] {
+  -webkit-tap-highlight-color: transparent;
+}
+.layout-mobile .card-nike,
+.layout-mobile [class*="border"].p-6 {
+  padding: 1rem;
+}
+
 /* 仅网页端显示 / 仅手机端显示：768px 以下为新首页，768px 及以上保持原网页端风格 */
 .for-web { display: none !important; }
 .for-mobile { display: block !important; }

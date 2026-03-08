@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 import Nav from '@/components/Nav'
 import BottomNav from '@/components/BottomNav'
 import MobileOnboarding from '@/components/MobileOnboarding'
+import SiteFooter from '@/components/SiteFooter'
 
 const BODY_CLASS_WEB = 'layout-web'
 const BODY_CLASS_MOBILE = 'layout-mobile'
@@ -29,7 +30,10 @@ export default function LayoutClient({ children }: { children: ReactNode }) {
     <>
       <MobileOnboarding />
       <Nav />
-      {children}
+      <div style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1 }}>{children}</div>
+        <SiteFooter />
+      </div>
       <BottomNav />
     </>
   )
