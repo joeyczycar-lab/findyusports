@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { User, Heart, History, Lock, Phone, Camera, Award, Star } from 'lucide-react'
+import { User, Heart, History, Lock, Phone, Camera, Award, Star, CalendarCheck } from 'lucide-react'
 import { getAuthState, setAuthState, getAuthHeader } from '@/lib/auth'
 import {
   getFavorites,
@@ -19,6 +19,7 @@ export default function UserCenterPage() {
   const [authState, setAuthStateLocal] = useState(getAuthState())
   const [favorites, setFavorites] = useState<FavoriteItem[]>([])
   const [history, setHistory] = useState<HistoryItem[]>([])
+  const [bookings, setBookings] = useState<{ id: number; venueId: number; venueName?: string; bookingDate: string; timeSlot: string; status: string }[]>([])
   const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [phoneMsg, setPhoneMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [avatarMsg, setAvatarMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -50,6 +51,9 @@ export default function UserCenterPage() {
           }
         })
         .catch(() => {})
+      fetchJson<{ items?: { id: number; venueId: number; venueName?: string; bookingDate: string; timeSlot: string; status: string }[] }>('/bookings')
+        .then((data) => setBookings(data?.items ?? []))
+        .catch(() => setBookings([]))
     }
   }, [])
 
@@ -377,6 +381,40 @@ export default function UserCenterPage() {
           </div>
         </section>
       )}
+
+      {/* 我的预订 */}
+      <section id="bookings" className="mb-10 scroll-mt-4">
+        <h2 className="flex items-center gap-2 text-heading-sm font-bold mb-4 tracking-tight">
+          <CalendarCheck size={20} />
+          我的预订
+        </h2>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          {!authState.isAuthenticated ? (
+            <div className="p-6 text-center text-textSecondary text-body-sm">
+              登录后可查看预订记录
+            </div>
+          ) : bookings.length === 0 ? (
+            <div className="p-6 text-center text-textSecondary text-body-sm">
+              暂无预订，在
+              <Link href="/map" className="text-black underline ml-1">场地详情</Link>
+              页可进行在线预订
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {bookings.map((b) => (
+                <li key={b.id} className="px-4 py-3 hover:bg-gray-50">
+                  <Link href={`/venues/${b.venueId}`} className="block">
+                    <span className="font-medium text-gray-900 block truncate">{b.venueName || `场地 #${b.venueId}`}</span>
+                    <span className="text-xs text-gray-500">
+                      {b.bookingDate} {b.timeSlot} · {b.status === 'pending' ? '待确认' : b.status === 'confirmed' ? '已确认' : '已取消'}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
 
       {/* 收藏场地 */}
       <section id="favorites" className="mb-10 scroll-mt-4">

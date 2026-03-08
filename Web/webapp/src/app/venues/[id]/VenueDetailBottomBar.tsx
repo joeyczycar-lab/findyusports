@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import FavoriteButton from './FavoriteButton'
+import BookingModal from '@/components/BookingModal'
 
 type Props = {
   venueId: string
@@ -20,6 +22,8 @@ export default function VenueDetailBottomBar({
   address,
   navUrl,
 }: Props) {
+  const [showBookingModal, setShowBookingModal] = useState(false)
+
   const handleContact = () => {
     if (contact && /^[\d\-+]+$/.test(contact.replace(/\s/g, ''))) {
       window.location.href = `tel:${contact}`
@@ -40,6 +44,7 @@ export default function VenueDetailBottomBar({
   }
 
   return (
+    <>
     <div
       className="fixed bottom-0 left-0 right-0 z-[99998] flex items-center gap-4 bg-white border-t border-gray-200 px-4 py-3"
       style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}
@@ -68,6 +73,21 @@ export default function VenueDetailBottomBar({
       >
         导航
       </button>
+      <button
+        type="button"
+        onClick={() => setShowBookingModal(true)}
+        className="flex-1 h-12 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-700"
+      >
+        在线预订
+      </button>
     </div>
+    {showBookingModal && (
+      <BookingModal
+        venueId={venueId}
+        venueName={venueName}
+        onClose={() => setShowBookingModal(false)}
+      />
+    )}
+    </>
   )
 }

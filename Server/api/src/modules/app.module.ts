@@ -5,10 +5,11 @@ import { OssModule } from './oss/oss.module'
 import { ImageModule } from './image/image.module'
 import { AuthModule } from './auth/auth.module'
 import { AnalyticsModule } from './analytics/analytics.module'
+import { BookingsModule } from './bookings/bookings.module'
 import { HealthController } from '../health.controller'
 
 @Module({
-  imports: [DbModule, VenuesModule, OssModule, ImageModule, AuthModule, AnalyticsModule],
+  imports: [DbModule, VenuesModule, OssModule, ImageModule, AuthModule, AnalyticsModule, BookingsModule],
   controllers: [HealthController],
 })
 export class AppModule {}
