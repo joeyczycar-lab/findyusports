@@ -74,9 +74,17 @@ export default async function VenueDetailPage({ params }: { params: { id: string
   const imageItems = images?.items?.map((x: any) => ({ id: x.id, url: x.url })) ?? []
   
   // 计算平均评分（确保格式一致）
-  const avgRating = reviews?.items?.length > 0
-    ? Number((reviews.items.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.items.length).toFixed(1))
-    : null
+  const avgRating =
+    reviews?.items?.length > 0
+      ? Number(
+          (
+            reviews.items.reduce(
+              (sum: number, r: any) => sum + (r.rating || 0),
+              0,
+            ) / reviews.items.length
+          ).toFixed(1),
+        )
+      : null
 
   return (
     <main className="bg-white min-h-screen">
@@ -113,7 +121,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-12">
-        <div>
+          <div>
           {/* 大图 + 圆点指示器（产品详情风格） */}
           <div className="mb-6">
             <Gallery urls={imageItems} venueId={venueId} showDots />
@@ -144,6 +152,7 @@ export default async function VenueDetailPage({ params }: { params: { id: string
               <FavoriteButton venueId={venueId} name={v.name} sportType={v.sportType} className="btn-secondary w-full" />
             </div>
           )}
+          <section className="mb-6 px-4">
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">关键信息</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-body-sm">
               {v?.districtCode && (() => {
@@ -193,20 +202,6 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                   </div>
                 )
               })()}
-              <div>
-                <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
-                <div className="font-medium">
-                  {v && v.location ? (
-                    <NavigationMenu
-                      address={v.address || '地址未填写'}
-                      location={v.location}
-                      name={v.name}
-                    />
-                  ) : (
-                    <span>{v?.address ?? '-'}</span>
-                  )}
-                </div>
-              </div>
               <div className="sm:col-span-2">
                 <div className="text-textSecondary uppercase tracking-wide mb-1">全部价格</div>
                 <div className="space-y-2">
@@ -261,9 +256,9 @@ export default async function VenueDetailPage({ params }: { params: { id: string
                 </div>
               )}
             </div>
-            </section>
+          </section>
 
-          {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true || 
+          {(v?.hasLighting === true || v?.hasAirConditioning === true || v?.hasParking === true ||
             v?.hasFence === true || v?.hasRestArea === true || v?.hasShower === true || v?.hasLocker === true || v?.hasShop === true) && (
             <section className="border-t border-gray-200 pt-6 mb-6 px-4">
               <h2 className="text-heading-sm font-bold mb-6 tracking-tight">设施信息</h2>
@@ -329,32 +324,33 @@ export default async function VenueDetailPage({ params }: { params: { id: string
             <h2 className="text-heading-sm font-bold mb-6 tracking-tight">写点评</h2>
             <ReviewForm venueId={venueId} />
           </section>
-        </div>
+          </div>
 
-        {/* 侧边栏仅桌面端展示，手机端不再重复场地信息 */}
-        <aside className="space-y-6 hidden lg:block">
-          {v && v.location && (
-            <div className="border border-border p-6" style={{ borderRadius: '4px' }}>
-              <h3 className="text-heading-sm font-bold mb-4">位置信息</h3>
-              <div className="space-y-3 text-body-sm">
-                <div>
-                  <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
-                  <NavigationMenu
-                    address={v.address || '地址未填写'}
-                    location={v.location}
-                    name={v.name}
-                  />
+          {/* 侧边栏仅桌面端展示，手机端不再重复场地信息 */}
+          <aside className="space-y-6 hidden lg:block">
+            {v && v.location && (
+              <div className="border border-border p-6" style={{ borderRadius: '4px' }}>
+                <h3 className="text-heading-sm font-bold mb-4">位置信息</h3>
+                <div className="space-y-3 text-body-sm">
+                  <div>
+                    <div className="text-textSecondary uppercase tracking-wide mb-1">地址</div>
+                    <NavigationMenu
+                      address={v.address || '地址未填写'}
+                      location={v.location}
+                      name={v.name}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          <FavoriteButton
-            venueId={venueId}
-            name={v?.name ?? ''}
-            sportType={v?.sportType}
-            className="btn-secondary w-full"
-          />
-        </aside>
+            )}
+            <FavoriteButton
+              venueId={venueId}
+              name={v?.name ?? ''}
+              sportType={v?.sportType}
+              className="btn-secondary w-full"
+            />
+          </aside>
+        </div>
       </div>
     </main>
   )
