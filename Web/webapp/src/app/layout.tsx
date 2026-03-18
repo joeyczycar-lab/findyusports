@@ -37,6 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         {/* Baidu 站长平台 HTML 标签验证 */}
         <meta name="baidu-site-verification" content="codeva-5UFFf011c" />
+        <meta name="baidu-site-verification" content="codeva-iO2Y0n6FI9" />
       </head>
       <body className="pt-nav-offset pb-bottom-nav" style={{ margin: 0, padding: 0 }}>
         <ForceButtonRadius />
