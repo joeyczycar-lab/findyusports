@@ -38,6 +38,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Baidu 站长平台 HTML 标签验证 */}
         <meta name="baidu-site-verification" content="codeva-5UFFf011c" />
         <meta name="baidu-site-verification" content="codeva-iO2Y0n6FI9" />
+        {/* Google Search Console HTML 标签验证 */}
+        <meta name="google-site-verification" content="jPaLTGdTN_lSkcmVFOOKtaY3zgIWHsCfABKS_VP40tQ" />
       </head>
       <body className="pt-nav-offset pb-bottom-nav" style={{ margin: 0, padding: 0 }}>
         <ForceButtonRadius />
