@@ -69,14 +69,14 @@ export default function VenueDetailBottomBar({
       <button
         type="button"
         onClick={handleNav}
-        className="flex-1 h-12 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800"
+        className="flex-none h-12 px-5 min-w-[5rem] bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800"
       >
         导航
       </button>
       <button
         type="button"
         onClick={() => setShowBookingModal(true)}
-        className="flex-1 h-12 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-700"
+        className="flex-none h-12 px-5 min-w-[5.5rem] bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-700"
       >
         在线预订
       </button>

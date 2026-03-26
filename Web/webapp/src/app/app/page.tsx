@@ -48,11 +48,7 @@ export default function AppDownloadPage() {
             <div className="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-700">
               <p className="font-medium text-black mb-1">如何使用本页面？</p>
               <p>
-                二维码请指向本页地址
-                <span className="mx-1 font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">
-                  https://findyusports.com/app
-                </span>
-                。手机扫码后会<strong>自动跳转下载 APK</strong>；电脑访问可点击上方「安卓直接下载 APK」或查看右侧二维码说明。将二维码图片命名为
+                二维码请指向<strong>本页地址</strong>（当前访问的域名 + /app）。手机扫码后会<strong>自动跳转下载 APK</strong>；电脑访问可点击上方「安卓直接下载 APK」或查看右侧二维码说明。将二维码图片命名为
                 <span className="mx-1 font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">
                   app-download-qrcode.png
                 </span>

@@ -1,13 +1,13 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// 开发时让模拟器连本地：Android 用 CAP_DEV_SERVER=http://10.0.2.2:3000，iOS 用 CAP_DEV_SERVER=http://127.0.0.1:3000
+// 开发时让模拟器连本地：npm run cap:sync:dev 会注入 10.0.2.2:3000（Android）或 127.0.0.1:3000（iOS）
+// 默认加载线上站，避免未开 dev 时打开 App 空白
 const config: CapacitorConfig = {
   appId: 'com.findyusports.app',
-  appName: 'Find遇体育',
+  appName: 'FY体育',
   webDir: 'public',
-  // 开发阶段：Android 模拟器固定连本地 3000 端口
   server: {
-    url: 'http://10.0.2.2:3000',
+    url: 'https://findyusports.com',
     cleartext: true,
   },
 };
