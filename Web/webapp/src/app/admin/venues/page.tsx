@@ -17,6 +17,7 @@ export default function VenuesListPage() {
   const [mounted, setMounted] = useState(false)
   const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
   const [deletingVenueId, setDeletingVenueId] = useState<number | null>(null)
+  const [approvingVenueId, setApprovingVenueId] = useState<number | null>(null)
   const [authState, setAuthState] = useState(getAuthState())
   const pageSize = 20
 
@@ -42,6 +43,7 @@ export default function VenuesListPage() {
         page: String(page),
         pageSize: String(pageSize),
         sortBy: sortBy,
+        includePending: 'true',
       })
       // 如果有关键词，添加到查询参数
       if (keyword && keyword.trim()) {
@@ -101,6 +103,27 @@ export default function VenuesListPage() {
       alert(error.message || '删除场地失败，请稍后重试')
     } finally {
       setDeletingVenueId(null)
+    }
+  }
+
+  const handleApproveVenue = async (venueId: number, venueName: string) => {
+    if (!confirm(`确认审核通过并发布场地 "${venueName}" 吗？`)) return
+    try {
+      setApprovingVenueId(venueId)
+      const result = await fetchJson(`/venues/${venueId}/approve`, {
+        method: 'POST',
+      })
+      if (result?.error) {
+        throw new Error(result.error.message || '审核发布失败')
+      }
+      setVenues((prev) =>
+        prev.map((v) => (String(v.id) === String(venueId) ? { ...v, approvalStatus: 'approved' } : v))
+      )
+      alert('审核通过，已发布到前台')
+    } catch (error: any) {
+      alert(error.message || '审核发布失败，请稍后重试')
+    } finally {
+      setApprovingVenueId(null)
     }
   }
 
@@ -341,6 +364,21 @@ export default function VenuesListPage() {
                         <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
                           {venue.sportType === 'basketball' ? '⚽ 篮球' : '⚽ 足球'}
                         </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            venue.approvalStatus === 'pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : venue.approvalStatus === 'rejected'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-green-100 text-green-700'
+                          }`}
+                        >
+                          {venue.approvalStatus === 'pending'
+                            ? '待审核'
+                            : venue.approvalStatus === 'rejected'
+                            ? '已拒绝'
+                            : '已发布'}
+                        </span>
                         {venue.indoor && (
                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
                             室内
@@ -383,6 +421,17 @@ export default function VenuesListPage() {
                         </div>
                       )}
                     </div>
+                    {isAdmin && venue.approvalStatus === 'pending' && (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => handleApproveVenue(venue.id, venue.name)}
+                          disabled={approvingVenueId === venue.id}
+                          className="bg-green-600 text-white px-3 py-1 text-xs font-bold rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {approvingVenueId === venue.id ? '发布中...' : '✅ 一键发布'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

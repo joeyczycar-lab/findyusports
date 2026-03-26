@@ -13,17 +13,18 @@ export class VenuesController {
   constructor(private readonly venuesService: VenuesService) {}
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  async list(@Query() query: QueryVenuesDto) {
-    return this.venuesService.search(query)
+  async list(@Query() query: QueryVenuesDto, @CurrentUser() user?: { id: number; role?: string }) {
+    return this.venuesService.search(query, user)
   }
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
   @Post()
-  async create(@Body() dto: CreateVenueDto, @CurrentUser() user?: { id: number }) {
+  async create(@Body() dto: CreateVenueDto, @CurrentUser() user?: { id: number; role?: string }) {
     try {
-      const result = await this.venuesService.createVenue(dto, user?.id)
+      const result = await this.venuesService.createVenue(dto, user)
       // 如果返回的是错误对象，直接返回
       if (result && (result as any).error) {
         return result
@@ -53,9 +54,10 @@ export class VenuesController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
-  async detail(@Param('id', ParseIntPipe) id: number) {
-    return this.venuesService.detail(id)
+  async detail(@Param('id', ParseIntPipe) id: number, @CurrentUser() user?: { id: number; role?: string }) {
+    return this.venuesService.detail(id, user)
   }
 
   @Post(':id/delete')
@@ -93,6 +95,11 @@ export class VenuesController {
         },
       }
     }
+  }
+
+  @Post(':id/approve')
+  async approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.venuesService.approveVenue(id, user)
   }
 
   @Public()

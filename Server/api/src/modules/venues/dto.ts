@@ -77,6 +77,10 @@ export class QueryVenuesDto {
   @IsOptional()
   @IsString()
   keyword?: string // 关键词搜索（按名称或地址）
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  includePending?: boolean // 管理端可请求包含待审核数据
 }
 
 export class CreateReviewDto {

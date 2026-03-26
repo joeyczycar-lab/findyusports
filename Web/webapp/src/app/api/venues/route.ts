@@ -35,6 +35,17 @@ export async function GET(req: NextRequest) {
     
     console.log('📡 [API Route] Proxying request to:', backendUrl)
     
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    const xAuthToken = req.headers.get('x-auth-token') || req.headers.get('X-Auth-Token')
+    const xFindyuBearer = req.headers.get('x-findyu-bearer') || req.headers.get('X-Findyu-Bearer')
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    }
+    if (authHeader) headers['Authorization'] = authHeader
+    if (xAuthToken) headers['X-Auth-Token'] = xAuthToken
+    if (xFindyuBearer) headers['X-Findyu-Bearer'] = xFindyuBearer
+
     // 添加超时和重试机制
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
@@ -44,9 +55,7 @@ export async function GET(req: NextRequest) {
       res = await fetch(backendUrl, {
         cache: 'no-store',
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       })
       clearTimeout(timeoutId)
     } catch (fetchError: any) {

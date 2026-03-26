@@ -400,6 +400,8 @@ export default function AddVenuePage() {
       }
       
       const venueId = data.id
+      const approvalStatus = data.approvalStatus || 'approved'
+      const isPendingReview = approvalStatus === 'pending'
 
       // 登录用户上传场地加 1 分
       const authState = getAuthState()
@@ -467,11 +469,11 @@ export default function AddVenuePage() {
             })
             
             if (failed === 0) {
-              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已成功上传 ${successful} 张图片。\n\n点击下方按钮查看所有场地。` })
+              setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n${isPendingReview ? '🕒 已进入待审核，管理员审核通过后才会在前台展示。' : '✅ 已直接发布到前台。'}\n📸 已成功上传 ${successful} 张图片。\n\n点击下方按钮查看所有场地。` })
             } else if (successful > 0) {
-              setMessage({ type: 'warning', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 已上传 ${successful} 张图片，${failed} 张失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传失败的图片。` })
+              setMessage({ type: 'warning', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n${isPendingReview ? '🕒 已进入待审核，管理员审核通过后才会在前台展示。' : '✅ 已直接发布到前台。'}\n📸 已上传 ${successful} 张图片，${failed} 张失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传失败的图片。` })
             } else {
-              setMessage({ type: 'error', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n❌ 图片上传全部失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传图片。` })
+              setMessage({ type: 'error', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n${isPendingReview ? '🕒 已进入待审核，管理员审核通过后才会在前台展示。' : '✅ 已直接发布到前台。'}\n❌ 图片上传全部失败：\n${failures.join('\n')}\n\n请稍后在场地详情页面上传图片。` })
             }
             setSelectedImages([])
             // 清除 localStorage 中保存的图片
@@ -488,7 +490,7 @@ export default function AddVenuePage() {
           
           setMessage({ 
             type: 'error', 
-            text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n\n❌ 图片上传失败：${errorMsg}\n\n请稍后在场地详情页面上传图片。` 
+            text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n${isPendingReview ? '🕒 已进入待审核，管理员审核通过后才会在前台展示。' : '✅ 已直接发布到前台。'}\n\n❌ 图片上传失败：${errorMsg}\n\n请稍后在场地详情页面上传图片。` 
           })
           // 即使上传失败，也清除 localStorage（因为场地已创建成功）
           localStorage.removeItem(STORAGE_KEY)
@@ -496,7 +498,7 @@ export default function AddVenuePage() {
           setUploadingImages(false)
         }
       } else {
-        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
+        setMessage({ type: 'success', text: `✅ 场地 "${formData.name}" 添加成功！ID: ${venueId}\n${isPendingReview ? '🕒 已进入待审核，管理员审核通过后才会在前台展示。' : '✅ 已直接发布到前台。'}\n📸 提示：您可以在场地详情页面上传场地图片。\n\n点击下方按钮查看所有场地。` })
         // 清除 localStorage 中保存的图片
         localStorage.removeItem(STORAGE_KEY)
       }

@@ -87,9 +87,9 @@ export class VenuesService {
     private readonly hotlinkProtection: HotlinkProtectionService
   ) {}
 
-  async search(query: QueryVenuesDto) {
+  async search(query: QueryVenuesDto, user?: { id: number; role?: string }) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword } = query
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword, includePending } = query
       
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
@@ -102,13 +102,14 @@ export class VenuesService {
       let hasLocker = false
       let hasShop = false
       let hasCreatedByUserId = false
+      let hasApprovalStatus = false
       
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('geom', 'price_display', 'has_shower', 'has_locker', 'has_shop', 'created_by_user_id')
+          AND column_name IN ('geom', 'price_display', 'has_shower', 'has_locker', 'has_shop', 'created_by_user_id', 'approval_status')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasGeomColumn = existingColumns.includes('geom')
@@ -117,6 +118,7 @@ export class VenuesService {
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
         hasCreatedByUserId = existingColumns.includes('created_by_user_id')
+        hasApprovalStatus = existingColumns.includes('approval_status')
       } catch (error) {
         console.warn('⚠️  Error checking columns:', error instanceof Error ? error.message : String(error))
         hasGeomColumn = false
@@ -143,13 +145,24 @@ export class VenuesService {
       if (hasShower) selectColumns.push('v.hasShower')
       if (hasLocker) selectColumns.push('v.hasLocker')
       if (hasShop) selectColumns.push('v.hasShop')
+      if (hasApprovalStatus) selectColumns.push('v.approvalStatus')
       
       qb.select(selectColumns)
 
-      // 仅展示“信任账号”或历史数据（created_by_user_id 为 NULL）的场地
-      const trustedIds = getTrustedUserIds()
-      if (trustedIds && hasCreatedByUserId) {
-        qb.andWhere('(v.created_by_user_id IS NULL OR v.created_by_user_id IN (:...trustedIds))', { trustedIds })
+      const isAdmin = user?.role === 'admin'
+
+      // 新规则：非管理员上传默认待审核，只有审核通过后才在前台展示
+      if (hasApprovalStatus) {
+        const allowPending = Boolean(includePending && isAdmin)
+        if (!allowPending) {
+          qb.andWhere('v.approval_status = :approvalStatus', { approvalStatus: 'approved' })
+        }
+      } else {
+        // 兼容旧库：若还没加 approval_status 列，沿用历史“信任账号”过滤逻辑
+        const trustedIds = getTrustedUserIds()
+        if (trustedIds && hasCreatedByUserId) {
+          qb.andWhere('(v.created_by_user_id IS NULL OR v.created_by_user_id IN (:...trustedIds))', { trustedIds })
+        }
       }
     
       // 筛选条件
@@ -390,6 +403,7 @@ export class VenuesService {
       firstImage: firstImagesMap[r.id] || null,
       reviewCount: reviewStatsMap[r.id]?.count || 0,
       avgRating: reviewStatsMap[r.id]?.avgRating || 0,
+      approvalStatus: (r as any).approvalStatus ?? 'approved',
     }))
     return { items, page, pageSize: actualPageSize, total }
     } catch (error) {
@@ -403,7 +417,7 @@ export class VenuesService {
     }
   }
 
-  async detail(id: number) {
+  async detail(id: number, user?: { id: number; role?: string }) {
     try {
       // 检查数据库中是否存在 geom 列
       let hasGeomColumn = false
@@ -441,12 +455,13 @@ export class VenuesService {
       let hasFullCourtPriceMin = false
       let hasFullCourtPriceMax = false
       let hasCreatedByUserId = false
+      let hasApprovalStatus = false
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id')
+          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'has_shower', 'has_locker', 'has_shop', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id', 'approval_status')
         `, [tableName])
         const existingColumns = columnCheck.map((row: any) => row.column_name)
         hasPriceDisplay = existingColumns.includes('price_display')
@@ -467,6 +482,7 @@ export class VenuesService {
         hasFullCourtPriceMin = existingColumns.includes('full_court_price_min')
         hasFullCourtPriceMax = existingColumns.includes('full_court_price_max')
         hasCreatedByUserId = existingColumns.includes('created_by_user_id')
+        hasApprovalStatus = existingColumns.includes('approval_status')
       } catch (error) {
         console.warn('⚠️ Error checking facility columns in detail:', error instanceof Error ? error.message : String(error))
       }
@@ -517,6 +533,7 @@ export class VenuesService {
         if (hasFullCourtPriceMax) selectColumns.push('v.fullCourtPriceMax')
         if (hasFullCourtPriceDisplay) selectColumns.push('v.fullCourtPriceDisplay')
         if (hasCreatedByUserId) selectColumns.push('v.createdByUserId')
+        if (hasApprovalStatus) selectColumns.push('v.approvalStatus')
         
         qb.select(selectColumns)
       }
@@ -525,12 +542,20 @@ export class VenuesService {
       
       if (!v) return { error: { code: 'NotFound', message: 'Venue not found' } }
 
-      // 仅展示“信任账号”或历史数据（created_by_user_id 为 NULL）的场地
-      const trustedIds = getTrustedUserIds()
-      if (trustedIds && hasCreatedByUserId) {
-        const createdBy = (v as any).createdByUserId
-        if (createdBy != null && !trustedIds.includes(Number(createdBy))) {
+      const isAdmin = user?.role === 'admin'
+      if (hasApprovalStatus) {
+        const status = (v as any).approvalStatus
+        if (status !== 'approved' && !isAdmin) {
           return { error: { code: 'NotFound', message: 'Venue not found' } }
+        }
+      } else {
+        // 兼容旧库：若还没加 approval_status 列，沿用历史“信任账号”过滤逻辑
+        const trustedIds = getTrustedUserIds()
+        if (trustedIds && hasCreatedByUserId) {
+          const createdBy = (v as any).createdByUserId
+          if (createdBy != null && !trustedIds.includes(Number(createdBy))) {
+            return { error: { code: 'NotFound', message: 'Venue not found' } }
+          }
         }
       }
       
@@ -553,6 +578,7 @@ export class VenuesService {
         hasLighting: v.hasLighting,
         hasAirConditioning: v.hasAirConditioning,
         hasParking: v.hasParking,
+        approvalStatus: hasApprovalStatus ? (v as any).approvalStatus : 'approved',
         location: [v.lng, v.lat] as [number, number],
       }
       
@@ -586,9 +612,11 @@ export class VenuesService {
     }
   }
 
-  async createVenue(dto: CreateVenueDto, userId?: number) {
+  async createVenue(dto: CreateVenueDto, user?: { id: number; role?: string }) {
     try {
-      console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode, createdByUserId: userId ?? null })
+      const userId = user?.id
+      const isAdmin = user?.role === 'admin'
+      console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode, createdByUserId: userId ?? null, role: user?.role ?? 'guest' })
       
       const venue = new VenueEntity()
       venue.name = (dto.name && dto.name.length > VENUE_STRING_MAX) ? dto.name.slice(0, VENUE_STRING_MAX) : (dto.name ?? '')
@@ -629,13 +657,14 @@ export class VenuesService {
       let hasLocker = false
       let hasShop = false
       let hasCreatedByUserId = false
+      let hasApprovalStatus = false
       
       try {
         const columnCheck = await this.repo.query(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = $1 
-          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id')
+          AND column_name IN ('price_display', 'walk_in_price_display', 'full_court_price_display', 'court_count', 'floor_type', 'open_hours', 'has_lighting', 'has_air_conditioning', 'has_parking', 'has_rest_area', 'has_fence', 'supports_walk_in', 'supports_full_court', 'walk_in_price_min', 'walk_in_price_max', 'full_court_price_min', 'full_court_price_max', 'has_shower', 'has_locker', 'has_shop', 'requires_reservation', 'reservation_method', 'players_per_side', 'created_by_user_id', 'approval_status')
         `, [tableName])
         
         const existingColumns = columnCheck.map((row: any) => row.column_name)
@@ -663,6 +692,7 @@ export class VenuesService {
         hasShower = existingColumns.includes('has_shower')
         hasLocker = existingColumns.includes('has_locker')
         hasShop = existingColumns.includes('has_shop')
+        hasApprovalStatus = existingColumns.includes('approval_status')
       } catch (error) {
         console.warn('⚠️ [createVenue] Error checking columns:', error instanceof Error ? error.message : String(error))
       }
@@ -866,6 +896,11 @@ export class VenuesService {
           values.push((venue as any).createdByUserId ?? null)
           paramIndex++
         }
+        if (hasApprovalStatus) {
+          columns.push('approval_status')
+          values.push(isAdmin ? 'approved' : 'pending')
+          paramIndex++
+        }
         
         // 添加 geom 列（如果存在）
         if (hasGeomColumn && venue.lng && venue.lat) {
@@ -926,6 +961,7 @@ export class VenuesService {
           requiresReservation: hasRequiresReservation ? (row.requiresReservation !== undefined ? row.requiresReservation : row.requires_reservation) : undefined,
           reservationMethod: hasReservationMethod ? (row.reservationMethod || row.reservation_method) : undefined,
           playersPerSide: hasPlayersPerSide ? (row.playersPerSide || row.players_per_side) : undefined,
+          approvalStatus: hasApprovalStatus ? (row.approvalStatus || row.approval_status) : undefined,
         } as VenueEntity
       }
       
@@ -948,6 +984,7 @@ export class VenuesService {
         requiresReservation: hasRequiresReservation ? saved.requiresReservation : undefined,
         reservationMethod: hasReservationMethod ? saved.reservationMethod : undefined,
         isPublic: saved.isPublic !== undefined ? saved.isPublic : true,
+        approvalStatus: hasApprovalStatus ? ((saved as any).approvalStatus ?? (isAdmin ? 'approved' : 'pending')) : 'approved',
         location: [saved.lng, saved.lat] as [number, number],
       }
     } catch (error) {
@@ -1320,6 +1357,52 @@ export class VenuesService {
         console.error('Error stack:', error.stack)
       }
       throw error
+    }
+  }
+
+  async approveVenue(venueId: number, user: { id: number; role?: string }) {
+    if (!user || user.role !== 'admin') {
+      return { error: { code: 'Forbidden', message: '只有管理员可以审核发布场地' } }
+    }
+
+    try {
+      const tableName = this.repo.metadata.tableName
+      const columnCheck = await this.repo.query(
+        `
+          SELECT column_name
+          FROM information_schema.columns
+          WHERE table_name = $1 AND column_name = 'approval_status'
+          LIMIT 1
+        `,
+        [tableName]
+      )
+
+      if (!Array.isArray(columnCheck) || columnCheck.length === 0) {
+        return { error: { code: 'BadRequest', message: '数据库缺少 approval_status 列，请先执行迁移' } }
+      }
+
+      const result = await this.repo.query(
+        `UPDATE venue SET approval_status = 'approved' WHERE id = $1 RETURNING id, name, approval_status`,
+        [venueId]
+      )
+
+      if (!result || result.length === 0) {
+        return { error: { code: 'NotFound', message: '场地不存在' } }
+      }
+
+      return {
+        id: String(result[0].id),
+        name: result[0].name,
+        approvalStatus: result[0].approval_status ?? 'approved',
+      }
+    } catch (error) {
+      console.error('❌ Error in approveVenue:', error)
+      return {
+        error: {
+          code: 'InternalServerError',
+          message: error instanceof Error ? error.message : '审核发布失败',
+        },
+      }
     }
   }
 

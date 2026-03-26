@@ -36,6 +36,16 @@ export async function GET(
     
     console.log('📡 [API Route] GET /venues/[id], proxying to:', backendUrl)
     
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    const xAuthToken = req.headers.get('x-auth-token') || req.headers.get('X-Auth-Token')
+    const xFindyuBearer = req.headers.get('x-findyu-bearer') || req.headers.get('X-Findyu-Bearer')
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    }
+    if (authHeader) headers['Authorization'] = authHeader
+    if (xAuthToken) headers['X-Auth-Token'] = xAuthToken
+    if (xFindyuBearer) headers['X-Findyu-Bearer'] = xFindyuBearer
+
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000)
     
@@ -44,9 +54,7 @@ export async function GET(
       res = await fetch(backendUrl, {
         cache: 'no-store',
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       })
       clearTimeout(timeoutId)
     } catch (fetchError: any) {

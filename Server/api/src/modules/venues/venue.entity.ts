@@ -126,6 +126,9 @@ export class VenueEntity {
 
   @Column({ type: 'int', nullable: true, name: 'created_by_user_id', select: false })
   createdByUserId?: number // 创建者用户 id，仅“信任账号”的场地会在网页展示
+
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'approval_status', default: 'approved' })
+  approvalStatus?: 'pending' | 'approved' | 'rejected'
 }
 
 
