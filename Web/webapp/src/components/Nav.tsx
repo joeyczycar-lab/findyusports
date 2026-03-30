@@ -433,11 +433,22 @@ export default function Nav() {
               </div>
             </div>
 
-            {/* 用户菜单（仅已登录时显示头像，下方移动端菜单保留登录入口） */}
-            {authState.isAuthenticated && (
+            {/* 网页端登录入口/用户菜单 */}
+            {authState.isAuthenticated ? (
               <div className="shrink-0 hidden md:block" style={{ position: 'relative', zIndex: 100000 }}>
                 <UserMenu user={authState.user!} onLogout={handleLogout} />
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
+                className="hidden md:inline-flex items-center gap-1 text-black text-sm font-medium hover:underline shrink-0"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
+                aria-label="登录或注册"
+              >
+                <LogIn className="h-4 w-4" />
+                登录 / 注册
+              </button>
             )}
 
             {/* 移动端菜单按钮（Nike 风格单行顶栏） */}
