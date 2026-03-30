@@ -40,6 +40,7 @@ export default function AnalyticsPage() {
       // 检查是否已登录且是管理员
       if (!authState.isAuthenticated) {
         console.log('📊 [Analytics Page] Not authenticated, showing login modal')
+        setError('请先登录管理员账号后查看访问统计')
         setIsLoginModalOpen(true)
         setLoading(false)
         return
@@ -90,7 +91,7 @@ export default function AnalyticsPage() {
       })
       
       if (!currentAuth.isAuthenticated || !currentAuth.token) {
-        setError('请先登录')
+        setError('请先登录管理员账号后查看访问统计')
         setIsLoginModalOpen(true)
         setLoading(false)
         return

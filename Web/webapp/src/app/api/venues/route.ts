@@ -46,25 +46,44 @@ export async function GET(req: NextRequest) {
     if (xAuthToken) headers['X-Auth-Token'] = xAuthToken
     if (xFindyuBearer) headers['X-Findyu-Bearer'] = xFindyuBearer
 
-    // 添加超时和重试机制
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
-    
-    let res: Response
-    try {
-      res = await fetch(backendUrl, {
-        cache: 'no-store',
-        signal: controller.signal,
-        headers,
-      })
-      clearTimeout(timeoutId)
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId)
-      if (fetchError.name === 'AbortError') {
-        console.error('❌ [API Route] Request timeout after 10 seconds')
+    // 添加超时和重试机制（Railway/数据库偶发抖动时自动重试）
+    const timeoutMs = process.env.NODE_ENV === 'production' ? 10000 : 40000
+    const maxAttempts = process.env.NODE_ENV === 'production' ? 1 : 3
+    let res: Response | null = null
+    let lastFetchError: any = null
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        res = await fetch(backendUrl, {
+          cache: 'no-store',
+          signal: controller.signal,
+          headers,
+        })
+        clearTimeout(timeoutId)
+        break
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        lastFetchError = fetchError
+        const isTimeout = fetchError?.name === 'AbortError'
+        const isNetwork = fetchError?.message?.includes?.('fetch')
+        console.warn(`⚠️ [API Route] Attempt ${attempt}/${maxAttempts} failed`, {
+          reason: isTimeout ? 'timeout' : 'network',
+          message: fetchError?.message,
+        })
+        if (!(isTimeout || isNetwork) || attempt === maxAttempts) {
+          break
+        }
+      }
+    }
+
+    if (!res) {
+      if (lastFetchError?.name === 'AbortError') {
+        console.error('❌ [API Route] Request timeout after retries:', timeoutMs / 1000, 'seconds')
         throw new Error('请求超时：后端服务响应时间过长')
       }
-      throw fetchError
+      throw lastFetchError || new Error('后端请求失败')
     }
     
     if (!res.ok) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { fetchJson } from '@/lib/api'
+import Link from 'next/link'
 
 export default function DataViewPage() {
   const [stats, setStats] = useState<any>(null)
@@ -146,11 +147,19 @@ export default function DataViewPage() {
 
   return (
     <div className="container-page py-8">
-      <div className="mb-8">
-        <h1 className="text-heading font-bold mb-2">数据统计</h1>
-        <p className="text-body text-textSecondary">
-          查看数据库中的所有数据统计信息
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-heading font-bold mb-2">数据统计</h1>
+          <p className="text-body text-textSecondary">
+            查看数据库中的所有数据统计信息
+          </p>
+        </div>
+        <Link
+          href="/admin/analytics"
+          className="px-4 py-2 bg-black text-white text-sm font-bold rounded hover:bg-gray-900"
+        >
+          查看浏览统计
+        </Link>
       </div>
 
       {loading && (
