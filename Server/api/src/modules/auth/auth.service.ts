@@ -4,11 +4,23 @@ import { Repository } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { UserEntity } from './user.entity'
-import { RegisterDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ChangePhoneDto } from './auth.dto'
+import { RegisterDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ChangePhoneDto, ResetPasswordByCodeDto } from './auth.dto'
 import { OssService } from '../oss/oss.service'
+
+type PasswordResetCodeRecord = {
+  code: string
+  expiresAt: number
+  lastSentAt: number
+  attempts: number
+}
 
 @Injectable()
 export class AuthService {
+  private readonly passwordResetCodes = new Map<string, PasswordResetCodeRecord>()
+  private readonly codeExpireMs = 10 * 60 * 1000 // 10分钟
+  private readonly sendCooldownMs = 60 * 1000 // 60秒
+  private readonly maxVerifyAttempts = 5
+
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
@@ -123,6 +135,68 @@ export class AuthService {
     user.phone = dto.newPhone
     await this.userRepo.save(user)
     return this.sanitizeUser(user)
+  }
+
+  async sendPasswordResetCode(phone: string) {
+    const now = Date.now()
+    const oldRecord = this.passwordResetCodes.get(phone)
+    if (oldRecord && now - oldRecord.lastSentAt < this.sendCooldownMs) {
+      const waitSec = Math.ceil((this.sendCooldownMs - (now - oldRecord.lastSentAt)) / 1000)
+      throw new BadRequestException(`发送过于频繁，请 ${waitSec} 秒后再试`)
+    }
+
+    const user = await this.userRepo.findOne({ where: { phone } })
+    if (!user) throw new BadRequestException('该手机号未注册')
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    this.passwordResetCodes.set(phone, {
+      code,
+      expiresAt: now + this.codeExpireMs,
+      lastSentAt: now,
+      attempts: 0,
+    })
+
+    // 这里可接入真实短信服务（阿里云短信/腾讯云短信等）
+    // 当前先保证流程可用：开发环境返回验证码，生产环境仅记录日志。
+    console.log(`📨 [AuthService] Password reset code for ${phone}: ${code}`)
+
+    const baseResp: any = {
+      success: true,
+      message: '验证码已发送，请注意查收',
+      expiresInSeconds: Math.floor(this.codeExpireMs / 1000),
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      baseResp.debugCode = code
+    }
+    return baseResp
+  }
+
+  async resetPasswordByCode(dto: ResetPasswordByCodeDto) {
+    const { phone, code, newPassword } = dto
+    const now = Date.now()
+    const record = this.passwordResetCodes.get(phone)
+    if (!record) throw new BadRequestException('请先获取短信验证码')
+    if (record.expiresAt < now) {
+      this.passwordResetCodes.delete(phone)
+      throw new BadRequestException('验证码已过期，请重新获取')
+    }
+    if (record.attempts >= this.maxVerifyAttempts) {
+      this.passwordResetCodes.delete(phone)
+      throw new BadRequestException('验证码尝试次数过多，请重新获取')
+    }
+    if (record.code !== code.trim()) {
+      record.attempts += 1
+      this.passwordResetCodes.set(phone, record)
+      throw new BadRequestException('验证码错误')
+    }
+
+    const user = await this.userRepo.findOne({ where: { phone } })
+    if (!user) throw new BadRequestException('该手机号未注册')
+
+    user.password = await bcrypt.hash(newPassword, 10)
+    await this.userRepo.save(user)
+    this.passwordResetCodes.delete(phone)
+    return { success: true, message: '密码重置成功，请使用新密码登录' }
   }
 
   async addPoints(userId: number, reason: string) {

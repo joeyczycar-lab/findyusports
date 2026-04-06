@@ -64,3 +64,27 @@ export class AddPointsDto {
   @IsNotEmpty()
   reason!: string // 例如 'venue_upload'
 }
+
+export class SendPasswordResetCodeDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^1[3-9]\d{9}$/, { message: '请输入正确的手机号' })
+  phone!: string
+}
+
+export class ResetPasswordByCodeDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^1[3-9]\d{9}$/, { message: '请输入正确的手机号' })
+  phone!: string
+
+  @IsString()
+  @IsNotEmpty({ message: '请输入短信验证码' })
+  @Length(4, 8, { message: '验证码格式不正确' })
+  code!: string
+
+  @IsString()
+  @IsNotEmpty()
+  @Length(6, 20, { message: '新密码长度6-20位' })
+  newPassword!: string
+}

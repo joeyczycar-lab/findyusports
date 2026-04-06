@@ -1,7 +1,16 @@
 import { Controller, Post, Body, Get, Put, UseInterceptors, UploadedFile, BadRequestException, UseGuards } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { AuthService } from './auth.service'
-import { RegisterDto, LoginDto, UpdateProfileDto, ChangePasswordDto, ChangePhoneDto, AddPointsDto } from './auth.dto'
+import {
+  RegisterDto,
+  LoginDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+  ChangePhoneDto,
+  AddPointsDto,
+  SendPasswordResetCodeDto,
+  ResetPasswordByCodeDto,
+} from './auth.dto'
 import { JwtAuthGuard } from './auth.guard'
 import { CurrentUser } from './current-user.decorator'
 import { Public } from './public.decorator'
@@ -21,6 +30,18 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto)
+  }
+
+  @Public()
+  @Post('password-reset/send-code')
+  async sendPasswordResetCode(@Body() dto: SendPasswordResetCodeDto) {
+    return this.authService.sendPasswordResetCode(dto.phone)
+  }
+
+  @Public()
+  @Post('password-reset/reset')
+  async resetPasswordByCode(@Body() dto: ResetPasswordByCodeDto) {
+    return this.authService.resetPasswordByCode(dto)
   }
 
   @Get('profile')

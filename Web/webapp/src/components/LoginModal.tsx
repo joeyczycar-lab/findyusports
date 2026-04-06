@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Eye, EyeOff } from 'lucide-react'
 import { setAuthState } from '@/lib/auth'
 
@@ -11,22 +11,66 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
-  const [isLogin, setIsLogin] = useState(true)
+  const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [sendingCode, setSendingCode] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [resetMsg, setResetMsg] = useState('')
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     phone: '',
     password: '',
-    nickname: ''
+    nickname: '',
+    smsCode: '',
+    newPassword: '',
   })
+
+  const isLogin = mode === 'login'
+  const isRegister = mode === 'register'
+  const isReset = mode === 'reset'
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = setInterval(() => {
+      setCountdown((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [countdown])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setResetMsg('')
 
     try {
+      if (isReset) {
+        const response = await fetch('/api/auth/password-reset/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: formData.phone.trim(),
+            code: formData.smsCode.trim(),
+            newPassword: formData.newPassword.trim(),
+          }),
+          cache: 'no-store',
+        })
+        const data = await response.json().catch(() => ({}))
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error?.message || data?.message || '重置密码失败')
+        }
+        setResetMsg('密码重置成功，请使用新密码登录')
+        setMode('login')
+        setFormData((prev) => ({
+          ...prev,
+          password: '',
+          smsCode: '',
+          newPassword: '',
+        }))
+        return
+      }
+
       // 使用 Next.js API 路由作为代理
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register'
       console.log('🔐 [LoginModal] Sending request to:', endpoint)
@@ -142,6 +186,37 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     }
   }
 
+  const handleSendCode = async () => {
+    if (!formData.phone.trim()) {
+      setError('请先输入手机号')
+      return
+    }
+    setError('')
+    setResetMsg('')
+    setSendingCode(true)
+    try {
+      const response = await fetch('/api/auth/password-reset/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formData.phone.trim() }),
+        cache: 'no-store',
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || data?.error) {
+        throw new Error(data?.error?.message || data?.message || '发送验证码失败')
+      }
+      setCountdown(60)
+      const msg = data?.debugCode
+        ? `验证码已发送（开发调试码：${data.debugCode}）`
+        : '验证码已发送，请注意查收'
+      setResetMsg(msg)
+    } catch (err: any) {
+      setError(err?.message || '发送验证码失败')
+    } finally {
+      setSendingCode(false)
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
@@ -156,7 +231,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       <div className="bg-white w-full max-w-md" style={{ borderRadius: '4px' }}>
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {isLogin ? '登录' : '注册'}
+            {isLogin ? '登录' : isRegister ? '注册' : '找回密码'}
           </h2>
           <button
             onClick={onClose}
@@ -171,6 +246,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3" style={{ borderRadius: '4px' }}>
               {error}
+            </div>
+          )}
+          {resetMsg && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3" style={{ borderRadius: '4px' }}>
+              {resetMsg}
             </div>
           )}
 
@@ -192,15 +272,15 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              密码
+              {isReset ? '登录新密码' : '密码'}
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
+                name={isReset ? 'newPassword' : 'password'}
+                value={isReset ? formData.newPassword : formData.password}
                 onChange={handleInputChange}
-                placeholder="请输入密码"
+                placeholder={isReset ? '请输入新密码（6-20位）' : '请输入密码'}
                 className="w-full px-3 py-2 pr-10 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{ borderRadius: '4px' }}
                 required
@@ -216,7 +296,35 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
             </div>
           </div>
 
-          {!isLogin && (
+          {isReset && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                短信验证码
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  name="smsCode"
+                  value={formData.smsCode}
+                  onChange={handleInputChange}
+                  placeholder="请输入验证码"
+                  className="flex-1 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ borderRadius: '4px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  disabled={sendingCode || countdown > 0}
+                  onClick={handleSendCode}
+                  className="px-3 py-2 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {countdown > 0 ? `${countdown}s后重发` : sendingCode ? '发送中...' : '发送验证码'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {isRegister && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 昵称（可选）
@@ -239,17 +347,37 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
             className="w-full bg-blue-600 text-white py-2 px-4 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ borderRadius: '4px' }}
           >
-            {loading ? '处理中...' : (isLogin ? '登录' : '注册')}
+            {loading ? '处理中...' : isLogin ? '登录' : isRegister ? '注册' : '重置密码'}
           </button>
 
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-blue-600 hover:text-blue-700 text-sm"
-            >
-              {isLogin ? '没有账号？立即注册' : '已有账号？立即登录'}
-            </button>
+          <div className="text-center space-y-2">
+            {isLogin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  className="text-blue-600 hover:text-blue-700 text-sm block w-full"
+                >
+                  没有账号？立即注册
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('reset')}
+                  className="text-gray-600 hover:text-gray-800 text-sm block w-full"
+                >
+                  忘记密码？短信找回
+                </button>
+              </>
+            )}
+            {!isLogin && (
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                className="text-blue-600 hover:text-blue-700 text-sm block w-full"
+              >
+                返回登录
+              </button>
+            )}
           </div>
         </form>
       </div>
