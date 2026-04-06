@@ -1,6 +1,6 @@
 "use client"
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
@@ -14,13 +14,18 @@ function getKeywordFromUrl(): string {
   return (new URLSearchParams(window.location.search).get('keyword') || '').trim()
 }
 
+const SORT_VALUES = ['city', 'popularity', 'name', 'newest'] as const
+type SortByValue = (typeof SORT_VALUES)[number]
+
 function MapPageContent() {
   const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
   const [items, setItems] = useState<Array<any>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filters, setFilters] = useState<Filters>({ sport: 'basketball' })
-  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name' | 'newest'>('popularity')
+  const [sortBy, setSortBy] = useState<SortByValue>('popularity')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const pageSize = 20
@@ -33,6 +38,7 @@ function MapPageContent() {
   // 支持 URL 参数 sport、cityCode，便于直达「上海足球」等
   const urlSport = searchParams?.get('sport') as 'basketball' | 'football' | null
   const urlCity = searchParams?.get('cityCode') || undefined
+  const urlSortBy = searchParams?.get('sortBy') || undefined
 
   useEffect(() => {
     const fromUrl = getKeywordFromUrl()
@@ -59,7 +65,10 @@ function MapPageContent() {
         ...(urlCity ? { city: urlCity } : {}),
       }))
     }
-  }, [urlSport, urlCity])
+    if (urlSortBy && (SORT_VALUES as readonly string[]).includes(urlSortBy)) {
+      setSortBy(urlSortBy as SortByValue)
+    }
+  }, [urlSport, urlCity, urlSortBy])
 
   function toQuery(filters: Filters) {
     const p = new URLSearchParams()
@@ -122,6 +131,19 @@ function MapPageContent() {
   const totalPages = Math.ceil(total / pageSize) || 1
   const currentSport = filters.sport === undefined ? 'all' : filters.sport
 
+  function setSortByWithUrl(next: SortByValue) {
+    setSortBy(next)
+    setPage(1)
+    const params = new URLSearchParams(searchParams?.toString() || '')
+    if (next === 'popularity') {
+      params.delete('sortBy')
+    } else {
+      params.set('sortBy', next)
+    }
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname)
+  }
+
   return (
     <main className="container-page py-12 bg-white">
       <div className="flex items-center justify-between mb-8">
@@ -136,15 +158,15 @@ function MapPageContent() {
         <select
           value={sortBy}
           onChange={(e) => {
-            setSortBy(e.target.value as 'city' | 'popularity' | 'name' | 'newest')
-            setPage(1) // 重置到第一页
+            setSortByWithUrl(e.target.value as SortByValue)
           }}
           className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
+          aria-label="场地排序方式"
         >
           <option value="popularity">🔥 按热度</option>
           <option value="city">📍 按地区</option>
           <option value="name">🔤 按名称</option>
-          <option value="newest">🕐 按添加时间</option>
+          <option value="newest">📋 按添加顺序（最新在前）</option>
         </select>
       </div>
       {/* 运动类型：全部 / 篮球 / 足球；有搜索关键词时默认「全部」同时显示篮球与足球 */}

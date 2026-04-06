@@ -81,6 +81,10 @@ export class QueryVenuesDto {
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   includePending?: boolean // 管理端可请求包含待审核数据
+
+  @IsOptional()
+  @IsString()
+  approvalStatus?: 'pending' | 'approved' | 'rejected' // 管理端审核状态筛选
 }
 
 export class CreateReviewDto {

@@ -15,7 +15,8 @@ export default function VenuesListPage() {
   const [total, setTotal] = useState(0)
   const [keyword, setKeyword] = useState('') // 关键词搜索
   const [mounted, setMounted] = useState(false)
-  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name'>('popularity')
+  const [sortBy, setSortBy] = useState<'city' | 'popularity' | 'name' | 'newest'>('popularity')
+  const [approvalFilter, setApprovalFilter] = useState<'all' | 'pending'>('all')
   const [deletingVenueId, setDeletingVenueId] = useState<number | null>(null)
   const [approvingVenueId, setApprovingVenueId] = useState<number | null>(null)
   const [authState, setAuthState] = useState(getAuthState())
@@ -31,7 +32,7 @@ export default function VenuesListPage() {
 
   useEffect(() => {
     loadVenues()
-  }, [page, sortBy, keyword])
+  }, [page, sortBy, keyword, approvalFilter])
 
   async function loadVenues() {
     try {
@@ -45,6 +46,9 @@ export default function VenuesListPage() {
         sortBy: sortBy,
         includePending: 'true',
       })
+      if (approvalFilter === 'pending') {
+        params.append('approvalStatus', 'pending')
+      }
       // 如果有关键词，添加到查询参数
       if (keyword && keyword.trim()) {
         params.append('keyword', keyword.trim())
@@ -172,7 +176,7 @@ export default function VenuesListPage() {
             <select
               value={sortBy}
               onChange={(e) => {
-                setSortBy(e.target.value as 'city' | 'popularity' | 'name')
+                setSortBy(e.target.value as 'city' | 'popularity' | 'name' | 'newest')
                 setPage(1) // 重置到第一页
               }}
               className="px-4 py-2 border border-gray-300 rounded text-sm bg-white"
@@ -180,7 +184,36 @@ export default function VenuesListPage() {
               <option value="popularity">🔥 按热度</option>
               <option value="city">📍 按地区</option>
               <option value="name">🔤 按名称</option>
+              <option value="newest">📋 按添加顺序（最新在前）</option>
             </select>
+            <button
+              type="button"
+              onClick={() => {
+                setApprovalFilter('all')
+                setPage(1)
+              }}
+              className={`px-3 py-2 border rounded text-sm ${
+                approvalFilter === 'all'
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-black border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              全部
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setApprovalFilter('pending')
+                setPage(1)
+              }}
+              className={`px-3 py-2 border rounded text-sm ${
+                approvalFilter === 'pending'
+                  ? 'bg-yellow-500 text-white border-yellow-500'
+                  : 'bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50'
+              }`}
+            >
+              仅待审核
+            </button>
             <Link 
               href="/admin/add-venue" 
               className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors"
@@ -215,6 +248,7 @@ export default function VenuesListPage() {
           <div>venues.length: {venues.length}</div>
           <div>total: {total}</div>
           <div>page: {page}</div>
+          <div>approvalFilter: {approvalFilter}</div>
         </div>
       )}
 

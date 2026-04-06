@@ -89,7 +89,7 @@ export class VenuesService {
 
   async search(query: QueryVenuesDto, user?: { id: number; role?: string }) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword, includePending } = query
+      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword, includePending, approvalStatus } = query
       
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
@@ -156,6 +156,9 @@ export class VenuesService {
         const allowPending = Boolean(includePending && isAdmin)
         if (!allowPending) {
           qb.andWhere('v.approval_status = :approvalStatus', { approvalStatus: 'approved' })
+        }
+        if (isAdmin && approvalStatus && ['pending', 'approved', 'rejected'].includes(approvalStatus)) {
+          qb.andWhere('v.approval_status = :filterApprovalStatus', { filterApprovalStatus: approvalStatus })
         }
       } else {
         // 兼容旧库：若还没加 approval_status 列，沿用历史“信任账号”过滤逻辑
