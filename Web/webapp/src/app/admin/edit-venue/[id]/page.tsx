@@ -129,6 +129,7 @@ export default function EditVenuePage() {
       { value: '440309', label: '龙华区' },
       { value: '440310', label: '坪山区' },
       { value: '440311', label: '光明区' },
+      { value: '440312', label: '大鹏新区' },
     ],
     '330100': [ // 杭州
       { value: '330102', label: '上城区' },
