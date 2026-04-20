@@ -153,7 +153,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         onSuccess(data.user, data.token)
       }, 100)
       onClose()
-      setFormData({ phone: '', password: '', nickname: '' })
+      setFormData({
+        phone: '',
+        password: '',
+        nickname: '',
+        smsCode: '',
+        newPassword: '',
+      })
     } catch (err: any) {
       console.error('❌ [LoginModal] Error:', {
         name: err.name,
