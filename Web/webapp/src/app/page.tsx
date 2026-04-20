@@ -243,6 +243,37 @@ export default async function HomePage() {
       {/* 在线打票横幅 - 在场地列表上方 */}
       <TicketBanner />
 
+      {/* 场地征集计划 - 放在二维码广告下方 */}
+      <section className="bg-white py-10">
+        <div className="container-page">
+          <div
+            className="border border-gray-200 rounded-xl px-6 py-8 md:px-10 md:py-10"
+            style={{ background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)' }}
+          >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <p className="text-xs md:text-sm font-semibold tracking-wide text-gray-500 mb-2">
+                  VENUE RECRUITMENT
+                </p>
+                <h2 className="text-heading font-bold tracking-tight mb-2">场地征集计划</h2>
+                <p className="text-body-sm text-textSecondary max-w-2xl">
+                  我们正在持续征集优质足球、篮球场地。提交场地信息后，审核通过即可在平台展示，获取更多曝光与预约机会。
+                </p>
+              </div>
+              <div className="shrink-0">
+                <Link
+                  href="/admin/add-venue"
+                  className="inline-flex items-center justify-center bg-black text-white px-6 py-3 text-sm font-semibold hover:bg-gray-800 transition-colors"
+                  style={{ borderRadius: '6px' }}
+                >
+                  立即参加 →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Venues Section - Nike 风格大图展示 */}
       <section className="container-page py-20 bg-white">
         <div className="flex items-center justify-between mb-16 flex-wrap gap-4">

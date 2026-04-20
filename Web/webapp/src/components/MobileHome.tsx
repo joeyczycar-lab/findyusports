@@ -126,6 +126,28 @@ export default function MobileHome({
         <TicketBannerMobile />
       </section>
 
+      {/* 场地征集计划 - 放在二维码广告下方 */}
+      <section className="px-4 pb-6">
+        <div
+          className="rounded-xl border border-gray-200 p-4"
+          style={{ background: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)' }}
+        >
+          <p className="text-[11px] font-semibold tracking-wide text-gray-500 mb-1">
+            VENUE RECRUITMENT
+          </p>
+          <h3 className="text-lg font-bold text-black mb-2 tracking-tight">场地征集计划</h3>
+          <p className="text-sm text-gray-600 leading-6 mb-4">
+            征集优质足球、篮球场地，审核通过即可在平台展示，获得更多曝光与预约机会。
+          </p>
+          <Link
+            href="/admin/add-venue"
+            className="inline-flex items-center justify-center w-full h-10 rounded-md bg-black text-white text-sm font-semibold"
+          >
+            立即参加
+          </Link>
+        </div>
+      </section>
+
       {/* 发现更多 - 深色卡片横向滚动（Nike 达人任务风格） */}
       <section className="px-4 pt-4 pb-8">
         <h2 className="text-xl font-bold text-black mb-2 tracking-tight">
