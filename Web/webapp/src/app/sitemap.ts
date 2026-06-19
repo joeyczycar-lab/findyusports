@@ -7,11 +7,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://findyu.cn'
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const headersList = await headers()
   const host = headersList.get('host') || ''
-  const base = host && !host.includes('localhost') ? `https://${host}` : FALLBACK_BASE
+  const base = host && !host.includes('localhost') ? 'https://' + host : FALLBACK_BASE
 
-  let venueUrls: { url: string; lastModified: Date; changeFrequency?: string; priority?: number }[] = []
+  let venueUrls: MetadataRoute.Sitemap = []
   try {
-    const res = await fetch(`${API_BASE}/api/venues?limit=2000`)
+    const res = await fetch(API_BASE + '/api/venues?limit=2000')
     const data = await res.json()
     if (data?.items?.length > 0) {
       venueUrls = data.items
@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((v: any) => ({
           url: `${base}/venues/${v.id}`,
           lastModified: v.updatedAt ? new Date(v.updatedAt) : new Date(),
-          changeFrequency: 'weekly' as const,
+          changeFrequency: 'weekly',
           priority: 0.6,
         }))
     }
