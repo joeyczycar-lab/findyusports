@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import dynamic from 'next/dynamic'
 import { fetchJson } from '@/lib/api'
 import NavigationMenu from '@/components/NavigationMenu'
@@ -51,6 +52,37 @@ function getPriceSummary(venue: any): string {
   return lines.map((l) => (l.label === '价格' ? l.value : `${l.label} ${l.value}`)).join(' · ')
 }
 
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  let venue: any = null
+  try {
+    venue = await fetchJson(`/venues/${params.id}`)
+  } catch {
+    // ignore fetch errors during metadata generation
+  }
+
+  const name = venue?.name || '场馆详情'
+  const sport = venue?.sportType || '体育场馆'
+  const address = venue?.address || ''
+  const title = `${name} - ${sport}预定 | FY体育`
+  const description = `${name}，${sport}${address ? `，地址：${address}` : ''}。查看场地图片、价格、营业时间、联系方式和用户真实评价，就在 FY体育 场馆预定平台。`
+  const imageUrl = venue?.images?.[0]?.url || venue?.image || venue?.coverImage
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `/venues/${params.id}`,
+      type: 'article',
+      ...(imageUrl ? { images: [{ url: imageUrl }] } : {}),
+    },
+    alternates: {
+      canonical: `/venues/${params.id}`,
+    },
+  }
+}
 export default async function VenueDetailPage({ params }: { params: { id: string } }) {
   const venueId = params.id
   
