@@ -46,6 +46,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   });
 
+  // 2.5 FAQ 页面
+  entries.push({
+    url: `${baseUrl}/faq`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.9,
+  });
+
   // 3. 城市详情页（每个城市一个条目）
   for (const code of CITY_CODES) {
     entries.push({
