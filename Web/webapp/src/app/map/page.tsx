@@ -24,7 +24,8 @@ function MapPageContent() {
   const [items, setItems] = useState<Array<any>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<Filters>({ sport: 'basketball' })
+  // 默认展示全部（篮球+足球），用户可通过顶部按钮切换
+  const [filters, setFilters] = useState<Filters>({ sport: undefined })
   const [sortBy, setSortBy] = useState<SortByValue>('popularity')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
