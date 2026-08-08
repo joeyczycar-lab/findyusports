@@ -48,19 +48,19 @@ export class QueryVenuesDto {
   page?: number
 
   @IsOptional()
-  @Transform(({ value }) => Number(value))
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  pageSize?: number
+    @Transform(({ value }) => Number(value))
+    @IsNumber()
+    @Min(1)
+    @Max(5000)
+    pageSize?: number
 
   // 支持 limit 参数（兼容前端调用）
-  @IsOptional()
-  @Transform(({ value }) => Number(value))
-  @IsNumber()
-  @Min(1)
-  @Max(100)
-  limit?: number
+    @IsOptional()
+    @Transform(({ value }) => Number(value))
+    @IsNumber()
+    @Min(1)
+    @Max(5000)
+    limit?: number
 
   @IsOptional()
   @IsString()
