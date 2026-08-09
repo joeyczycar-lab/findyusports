@@ -562,6 +562,18 @@ export class VenuesService {
         }
       }
       
+      // 查询首图
+      let firstImage: string | undefined
+      try {
+        const firstImg = await this.imageRepo.findOne({
+          where: { venue: { id } as any },
+          order: { sort: 'ASC', id: 'ASC' },
+        })
+        if (firstImg) firstImage = firstImg.url
+      } catch (imgErr) {
+        console.warn('⚠️  Error loading first image in detail:', imgErr instanceof Error ? imgErr.message : String(imgErr))
+      }
+
       const result: any = {
         id: String(v.id),
         name: v.name,
@@ -583,6 +595,7 @@ export class VenuesService {
         hasParking: v.hasParking,
         approvalStatus: hasApprovalStatus ? (v as any).approvalStatus : 'approved',
         location: [v.lng, v.lat] as [number, number],
+        firstImage,
       }
       
       // 只添加存在的列
