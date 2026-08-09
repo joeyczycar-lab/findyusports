@@ -26,18 +26,26 @@ interface CityPageData {
 }
 
 async function getCityData(code: string): Promise<CityPageData | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-  if (!baseUrl) return null;
-  
-  const fullCode = code.substring(0, 4) + '00';
-  
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://findyu.cn';
+  const cityCodePrefix = code.substring(0, 4);
+
   try {
-    const res = await fetch(`${baseUrl}/api/venues?limit=2000`, {
-      next: { revalidate: 3600 }
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const allVenues: Venue[] = (data.items || []);
+    // 分页拉取全部场馆（API 单页上限 5000），确保覆盖该城市所有场馆
+    let allVenues: Venue[] = [];
+    let page = 1;
+    let hasMore = true;
+    while (hasMore) {
+      const res = await fetch(`${baseUrl}/api/venues?page=${page}&limit=5000`, {
+        next: { revalidate: 3600 }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const items: Venue[] = data.items || [];
+      if (items.length === 0) break;
+      allVenues = allVenues.concat(items);
+      hasMore = items.length >= 5000;
+      page++;
+    }
     
     const cityVenues = allVenues.filter(v => 
       (v.cityCode || '').startsWith(code.substring(0, 4))
@@ -45,7 +53,6 @@ async function getCityData(code: string): Promise<CityPageData | null> {
     
     if (cityVenues.length === 0) return null;
     
-    const cityCodePrefix = code.substring(0, 4);
     const name = getCityName(cityCodePrefix);
     const basketball = cityVenues.filter(v => v.sportType === 'basketball').length;
     const football = cityVenues.filter(v => v.sportType === 'football').length;
