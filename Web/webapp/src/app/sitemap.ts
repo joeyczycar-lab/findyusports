@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next'
 
 // 城市代码列表（需与 cityMap.ts 保持一致）
 const CITY_CODES = [
@@ -19,24 +19,24 @@ const CITY_CODES = [
   '370400', '370500', '370600', '370700', '370800', '370900', '371000',
   '371100', '371400', '371500', '371600', '371700', '410300', '410700',
   '411300', '430200', '430600', '441200', '442000', '110000',
-];
+]
 
 interface VenueItem {
-  id: string;
-  updatedAt?: string;
+  id: string | number
+  updatedAt?: string
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://findyu.cn';
-  const entries: MetadataRoute.Sitemap = [];
-  
+  const baseUrl = 'https://findyu.cn'
+  const entries: MetadataRoute.Sitemap = []
+
   // 1. 首页
   entries.push({
     url: baseUrl,
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 1,
-  });
+  })
 
   // 2. 城市索引页
   entries.push({
@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.9,
-  });
+  })
 
   // 2.5 FAQ 页面
   entries.push({
@@ -52,42 +52,66 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 0.9,
-  });
+  })
 
-  // 3. 城市详情页（每个城市一个条目）
+  // 3. 城市详情页
   for (const code of CITY_CODES) {
     entries.push({
       url: `${baseUrl}/cities/${code}`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
-    });
+    })
   }
 
-  // 4. 场馆详情页（动态从 API 获取）
+  // 4. 场馆详情页 — 分页拉全量（每页 2000，fetch 到空页为止）
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL 
-      ? `${process.env.NEXT_PUBLIC_API_URL}/api/venues?limit=2000`
-      : `${baseUrl}/api/venues?limit=2000`;
-    
-    const res = await fetch(apiUrl, { next: { revalidate: 3600 } });
-    
-    if (res.ok) {
-      const data = await res.json();
-      const venueItems: VenueItem[] = data.items || [];
-      
-      for (const venue of venueItems) {
-        entries.push({
-          url: `${baseUrl}/venues/${venue.id}`,
-          lastModified: venue.updatedAt ? new Date(venue.updatedAt) : new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        });
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+      ? `${process.env.NEXT_PUBLIC_API_URL}/api/venues`
+      : `${baseUrl}/api/venues`
+
+    let page = 1
+    let hasMore = true
+    let totalFetched = 0
+
+    while (hasMore) {
+      const res = await fetch(
+        `${apiBase}?page=${page}&limit=2000`,
+        { next: { revalidate: 3600 } }
+      )
+
+      if (!res.ok) {
+        console.error(`sitemap: API page ${page} returned ${res.status}`)
+        break
       }
+
+      const data = await res.json()
+      const items: VenueItem[] = data.items || []
+
+      if (items.length === 0) {
+        hasMore = false
+        break
+      }
+
+      for (const venue of items) {
+        const id = typeof venue === 'object' ? (venue.id ?? venue['id']) : venue
+        entries.push({
+          url: `${baseUrl}/venues/${id}`,
+          lastModified: venue.updatedAt ? new Date(venue.updatedAt) : new Date(),
+          changeFrequency: 'weekly',
+          priority: 0.7,
+        })
+      }
+
+      totalFetched += items.length
+      hasMore = items.length === 2000
+      page++
     }
+
+    console.log(`sitemap: fetched ${totalFetched} venues across ${page - 1} page(s)`)
   } catch (error) {
-    console.error('Failed to fetch venues for sitemap:', error);
+    console.error('Failed to fetch venues for sitemap:', error)
   }
 
-  return entries;
+  return entries
 }
