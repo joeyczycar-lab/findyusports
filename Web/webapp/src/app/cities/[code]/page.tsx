@@ -6,6 +6,7 @@ import { getCityName, getCityTag, getCityDescription } from '../cityMap';
 interface Venue {
   id: string;
   name: string;
+  cityCode: string;
   address: string;
   sportType: string;
   indoor: boolean;
@@ -79,7 +80,7 @@ export async function generateMetadata({ params }: { params: { code: string } })
   };
 }
 
-function VenueCard({ venue }: { venue: Venue }) {
+function VenueCard({ venue, cityName }: { venue: Venue; cityName: string }) {
   const sportLabel = venue.sportType === 'basketball' ? '篮球' : 
                      venue.sportType === 'football' ? '足球' : '综合';
   const indoorLabel = venue.indoor ? '室内' : '室外';
@@ -221,7 +222,7 @@ export default async function CityDetailPage({ params }: { params: { code: strin
         {/* Venue grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {city.venues.map(venue => (
-            <VenueCard key={venue.id} venue={venue} />
+            <VenueCard key={venue.id} venue={venue} cityName={city.name} />
           ))}
         </div>
         

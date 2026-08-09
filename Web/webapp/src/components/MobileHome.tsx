@@ -13,6 +13,7 @@ type Venue = {
   indoor?: boolean
   priceMin?: number
   priceDisplay?: string
+  cityCode?: string
 }
 
 const CATEGORIES = [
