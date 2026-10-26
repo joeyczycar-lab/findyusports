@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { getApiBase } from '@/lib/api';
 import { getCityName } from './cityMap';
 
 interface CityGroup {
@@ -10,28 +11,38 @@ interface CityGroup {
 }
 
 async function getCityGroups(): Promise<CityGroup[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-  if (!baseUrl) return [];
-  
+  const base = getApiBase()
+  if (!base) return [];
+
   try {
-    const res = await fetch(`${baseUrl}/api/venues?limit=2000`, {
-      next: { revalidate: 3600 }
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const venues = data.items || [];
-    
-    const cityMap = new Map<string, { total: number; basketball: number; football: number }>();
-    
-    for (const v of venues) {
-      const code = (v.cityCode || 'unk').substring(0, 4);
-      const entry = cityMap.get(code) || { total: 0, basketball: 0, football: 0 };
-      entry.total++;
-      if (v.sportType === 'basketball') entry.basketball++;
-      if (v.sportType === 'football') entry.football++;
-      cityMap.set(code, entry);
+    // 库已 5.8 万条，循环分页拉取全量（每页 5000），最多 60 页保护
+    const allVenues: any[] = []
+    let page = 1
+    const pageSize = 5000
+    while (page <= 60) {
+      const res = await fetch(`${base}/venues?page=${page}&pageSize=${pageSize}`, {
+        next: { revalidate: 3600 },
+      })
+      if (!res.ok) break
+      const data = await res.json()
+      const items = data.items || []
+      allVenues.push(...items)
+      const total = data.total || 0
+      if (items.length < pageSize || allVenues.length >= total) break
+      page++
     }
-    
+
+    const cityMap = new Map<string, { total: number; basketball: number; football: number }>()
+
+    for (const v of allVenues) {
+      const code = (v.cityCode || 'unk').substring(0, 4)
+      const entry = cityMap.get(code) || { total: 0, basketball: 0, football: 0 }
+      entry.total++
+      if (v.sportType === 'basketball') entry.basketball++
+      if (v.sportType === 'football') entry.football++
+      cityMap.set(code, entry)
+    }
+
     return Array.from(cityMap.entries())
       .map(([code, stats]) => ({
         code,
@@ -40,18 +51,18 @@ async function getCityGroups(): Promise<CityGroup[]> {
         football: stats.football,
       }))
       .filter(c => c.count >= 3) // 只显示 3+ 场馆的城市
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => b.count - a.count)
   } catch {
-    return [];
+    return []
   }
 }
 
 export const metadata: Metadata = {
   title: '全国体育场馆预订平台 | 篮球场·足球场在线预订 | FY体育',
-  description: '覆盖全国50+城市、1000+体育场馆的预订平台。找篮球馆、足球场、室内体育馆，在线查看真实图片和地址信息，快速找到身边的运动场地。',
+  description: '覆盖全国2900+城市、近6万家体育场馆的预订平台。找篮球馆、足球场、室内体育馆，在线查看真实图片和地址信息，快速找到身边的运动场地。',
   openGraph: {
     title: '全国体育场馆预订 | FY体育',
-    description: '覆盖全国50+城市、1000+体育场馆，在线查看和预订场馆。',
+    description: '覆盖全国2900+城市、近6万家体育场馆，在线查看和预订场馆。',
   },
 };
 
@@ -71,6 +82,11 @@ export default async function CitiesPage() {
   
   const totalVenues = cities.reduce((s, c) => s + c.count, 0);
   const totalCities = cities.length;
+  // 动态取城市场馆数（code 为 cityCode 前 4 位）
+  const cityCount = (code: string) => {
+    const c = cities.find((x) => x.code === code);
+    return c ? c.count : null;
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -112,7 +128,7 @@ export default async function CitiesPage() {
             无论你在哪个城市，都能快速找到附近的运动场地，查看真实图片和详细地址。
           </p>
           <p>
-            热门城市如杭州（247家）、上海（139家）、深圳（62家）场馆资源丰富，
+            热门城市如杭州（{cityCount('3301') ?? '—'}家）、上海（{cityCount('3101') ?? '—'}家）、深圳（{cityCount('4403') ?? '—'}家）场馆资源丰富，
             北京、成都、广州、武汉、重庆等城市也有大量场馆收录。
             每个场馆都有详细的地址、运动类型和图片展示，方便您对比选择。
           </p>

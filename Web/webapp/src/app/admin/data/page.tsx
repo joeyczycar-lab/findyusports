@@ -10,6 +10,13 @@ export default function DataViewPage() {
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
+  // 表格分页：按需加载单页，避免一次性渲染数万行导致浏览器卡死
+  const [rows, setRows] = useState<any[]>([])
+  const [tablePage, setTablePage] = useState(1)
+  const [tableTotal, setTableTotal] = useState(0)
+  const [tableLoading, setTableLoading] = useState(false)
+  const TABLE_PAGE_SIZE = 50
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -24,109 +31,54 @@ export default function DataViewPage() {
     try {
       setLoading(true)
       setError(null)
-      console.log('📊 [Data Page] Starting to load stats...')
-      
-      // 获取所有场地数据（不使用坐标参数，获取所有场地）
-      // 使用较大的 pageSize 获取所有数据
-      let allVenues: any[] = []
-      let page = 1
-      const pageSize = 100
-      let hasMore = true
-      
-      while (hasMore) {
-        try {
-          const params = new URLSearchParams({
-            page: String(page),
-            pageSize: String(pageSize),
-            sortBy: 'name', // 按名称排序
-          })
-          
-          console.log(`📊 [Data Page] Fetching page ${page}...`)
-          const venuesData = await fetchJson(`/venues?${params.toString()}`)
-          console.log(`📊 [Data Page] Received response for page ${page}:`, {
-            hasError: !!venuesData.error,
-            itemsCount: venuesData.items?.length || 0,
-            total: venuesData.total || 0,
-          })
-          
-          // 检查是否有错误
-          if (venuesData.error) {
-            console.error(`❌ [Data Page] Error in response:`, venuesData.error)
-            throw new Error(venuesData.error.message || '获取场地数据失败')
-          }
-          
-          const items = venuesData.items || []
-          const total = venuesData.total || 0
-          
-          allVenues = [...allVenues, ...items]
-          
-          console.log(`📊 [Data Page] Loaded page ${page}: ${items.length} items, total: ${total}, accumulated: ${allVenues.length}`)
-          
-          // 如果返回的数据少于 pageSize，或者已经获取了所有数据，说明没有更多数据了
-          if (items.length < pageSize || allVenues.length >= total) {
-            hasMore = false
-          } else {
-            page++
-          }
-          
-          // 防止无限循环，最多获取 1000 个场地
-          if (allVenues.length >= 1000) {
-            console.warn('⚠️ [Data Page] Reached maximum limit of 1000 venues')
-            hasMore = false
-          }
-          
-          // 防止无限循环，最多尝试 20 页
-          if (page > 20) {
-            console.warn('⚠️ [Data Page] Reached maximum page limit of 20')
-            hasMore = false
-          }
-        } catch (pageError: any) {
-          console.error(`❌ [Data Page] Error loading page ${page}:`, pageError)
-          // 如果第一页就失败，抛出错误
-          if (page === 1) {
-            throw pageError
-          }
-          // 如果后续页面失败，停止加载，使用已加载的数据
-          hasMore = false
-        }
-      }
-      
-      const venues = allVenues
-      console.log(`📊 [Data Page] Total venues loaded: ${venues.length}`)
-      
-      // 统计信息
-      const stats = {
-        totalVenues: venues.length,
-        basketballVenues: venues.filter((v: any) => v.sportType === 'basketball').length,
-        footballVenues: venues.filter((v: any) => v.sportType === 'football').length,
-        indoorVenues: venues.filter((v: any) => v.indoor === true).length,
-        outdoorVenues: venues.filter((v: any) => v.indoor === false).length,
-        // 兼容 price 和 priceMin 两种字段名（API 可能返回 price）
-        venuesWithPrice: venues.filter((v: any) => {
-          const price = v.priceMin ?? v.price ?? 0
-          return price > 0
-        }).length,
-        freeVenues: venues.filter((v: any) => {
-          const price = v.priceMin ?? v.price ?? 0
-          return price === 0
-        }).length,
-        venues: venues,
-      }
-      
-      console.log('📊 [Data Page] Stats calculated:', stats)
-      setStats(stats)
-      console.log('✅ [Data Page] Successfully loaded all data')
+      // 用最小数据量（pageSize=1）拿到真实总数与各类筛选总数，
+      // 不拉取全部 5.8 万条，既准确又不拖垮浏览器
+      const [all, bk, fb, indoor, paid, free] = await Promise.all([
+        fetchJson('/venues?pageSize=1'),
+        fetchJson('/venues?sport=basketball&pageSize=1'),
+        fetchJson('/venues?sport=football&pageSize=1'),
+        fetchJson('/venues?indoor=true&pageSize=1'),
+        fetchJson('/venues?minPrice=1&pageSize=1'),
+        fetchJson('/venues?minPrice=0&maxPrice=0&pageSize=1'),
+      ])
+
+      const total = all.total || 0
+      const basketball = bk.total || 0
+      const football = fb.total || 0
+      const indoorCount = indoor.total || 0
+      const withPrice = paid.total || 0
+      const freeCount = free.total || 0
+
+      setStats({
+        totalVenues: total,
+        basketballVenues: basketball,
+        footballVenues: football,
+        indoorVenues: indoorCount,
+        outdoorVenues: total - indoorCount,
+        venuesWithPrice: withPrice,
+        freeVenues: freeCount,
+      })
+      setTableTotal(total)
+      setLoading(false)
+      await loadTablePage(1)
     } catch (err: any) {
       console.error('❌ [Data Page] Failed to load data:', err)
-      const errorMessage = err.message || '加载数据失败'
-      setError(errorMessage)
-      console.error('❌ [Data Page] Error details:', {
-        message: errorMessage,
-        error: err,
-        stack: err.stack,
-      })
-    } finally {
+      setError(err.message || '加载数据失败')
       setLoading(false)
+    }
+  }
+
+  async function loadTablePage(p: number) {
+    try {
+      setTableLoading(true)
+      const data = await fetchJson(`/venues?page=${p}&pageSize=${TABLE_PAGE_SIZE}&sortBy=name`)
+      setRows(data.items || [])
+      if (typeof data.total === 'number') setTableTotal(data.total)
+      setTablePage(p)
+    } catch (err: any) {
+      setError(err.message || '加载列表失败')
+    } finally {
+      setTableLoading(false)
     }
   }
 
@@ -144,6 +96,8 @@ export default function DataViewPage() {
       </div>
     )
   }
+
+  const totalPages = Math.max(1, Math.ceil(tableTotal / TABLE_PAGE_SIZE))
 
   return (
     <div className="container-page py-8">
@@ -198,22 +152,22 @@ export default function DataViewPage() {
           {/* 统计卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="card-nike p-6">
-              <div className="text-3xl font-bold mb-2">{stats.totalVenues}</div>
+              <div className="text-3xl font-bold mb-2">{stats.totalVenues.toLocaleString()}</div>
               <div className="text-body-sm text-textSecondary uppercase tracking-wide">场地总数</div>
             </div>
-            
+
             <div className="card-nike p-6">
-              <div className="text-3xl font-bold mb-2">{stats.basketballVenues}</div>
+              <div className="text-3xl font-bold mb-2">{stats.basketballVenues.toLocaleString()}</div>
               <div className="text-body-sm text-textSecondary uppercase tracking-wide">⚽ 篮球场地</div>
             </div>
-            
+
             <div className="card-nike p-6">
-              <div className="text-3xl font-bold mb-2">{stats.footballVenues}</div>
+              <div className="text-3xl font-bold mb-2">{stats.footballVenues.toLocaleString()}</div>
               <div className="text-body-sm text-textSecondary uppercase tracking-wide">⚽ 足球场地</div>
             </div>
-            
+
             <div className="card-nike p-6">
-              <div className="text-3xl font-bold mb-2">{stats.indoorVenues}</div>
+              <div className="text-3xl font-bold mb-2">{stats.indoorVenues.toLocaleString()}</div>
               <div className="text-body-sm text-textSecondary uppercase tracking-wide">室内场地</div>
             </div>
           </div>
@@ -224,22 +178,24 @@ export default function DataViewPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <div className="text-body-sm text-textSecondary mb-1">室外场地</div>
-                <div className="text-heading-sm font-bold">{stats.outdoorVenues}</div>
+                <div className="text-heading-sm font-bold">{stats.outdoorVenues.toLocaleString()}</div>
               </div>
               <div>
                 <div className="text-body-sm text-textSecondary mb-1">收费场地</div>
-                <div className="text-heading-sm font-bold">{stats.venuesWithPrice}</div>
+                <div className="text-heading-sm font-bold">{stats.venuesWithPrice.toLocaleString()}</div>
               </div>
               <div>
                 <div className="text-body-sm text-textSecondary mb-1">免费场地</div>
-                <div className="text-heading-sm font-bold">{stats.freeVenues}</div>
+                <div className="text-heading-sm font-bold">{stats.freeVenues.toLocaleString()}</div>
               </div>
             </div>
           </div>
 
-          {/* 场地列表 */}
+          {/* 场地列表（分页加载，不一次性渲染全部） */}
           <div className="card-nike p-6">
-            <h2 className="text-heading-sm font-bold mb-4">所有场地 ({stats.venues.length})</h2>
+            <h2 className="text-heading-sm font-bold mb-4">
+              场地列表（第 {tablePage} / {totalPages} 页，共 {tableTotal.toLocaleString()} 个）
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -253,7 +209,7 @@ export default function DataViewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.venues.map((venue: any) => (
+                  {rows.map((venue: any) => (
                     <tr key={venue.id} className="border-b border-gray-100">
                       <td className="py-3 text-body-sm">{venue.id}</td>
                       <td className="py-3 text-body-sm font-medium">{venue.name}</td>
@@ -272,10 +228,31 @@ export default function DataViewPage() {
                 </tbody>
               </table>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+                  onClick={() => loadTablePage(Math.max(1, tablePage - 1))}
+                  disabled={tablePage === 1 || tableLoading}
+                  className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  上一页
+                </button>
+                <span className="text-body text-textSecondary">
+                  第 {tablePage} / {totalPages} 页
+                </span>
+                <button
+                  onClick={() => loadTablePage(Math.min(totalPages, tablePage + 1))}
+                  disabled={tablePage === totalPages || tableLoading}
+                  className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  下一页
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
     </div>
   )
 }
-
