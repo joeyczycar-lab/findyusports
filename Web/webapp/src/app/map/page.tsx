@@ -17,19 +17,32 @@ function getKeywordFromUrl(): string {
 const SORT_VALUES = ['city', 'popularity', 'name', 'newest'] as const
 type SortByValue = (typeof SORT_VALUES)[number]
 
+// 上线闸：仅展示「有具体地址 + 有场地图片」的场馆（电话留作后续补全项）
+function isPublicReady(v: any): boolean {
+  return !!v && typeof v.address === 'string' && v.address.trim().length >= 4 && !!v.firstImage
+}
+
 function MapPageContent() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
   const [items, setItems] = useState<Array<any>>([])
+  const [totalLoaded, setTotalLoaded] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   // 默认展示全部（篮球+足球），用户可通过顶部按钮切换
   const [filters, setFilters] = useState<Filters>({ sport: undefined })
   const [sortBy, setSortBy] = useState<SortByValue>('popularity')
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const pageSize = 20
+  const [visible, setVisible] = useState(20)
+  const [allLoaded, setAllLoaded] = useState(false)
+
+  // 已加载的合格场馆缓冲（有地址+有图），跨"加载更多"累积
+  const loadedRef = useRef<Array<any>>([])
+  const rawPageRef = useRef(1)
+  const doneRef = useRef(false)
+  const loadingRef = useRef(false)
+
   // 从 URL 取 keyword：首帧从 window 读（整页跳转后 useSearchParams 可能滞后），再用 effect 同步
   const paramsKeyword = (searchParams?.get('keyword') || '').trim()
   const [urlKeyword, setUrlKeyword] = useState(() =>
@@ -71,70 +84,85 @@ function MapPageContent() {
     }
   }, [urlSport, urlCity, urlSortBy])
 
-  function toQuery(filters: Filters) {
+  function toQuery(f: Filters, sb: SortByValue, kw: string, page: number, pageSize: number) {
     const p = new URLSearchParams()
-    if (filters.city) p.set('cityCode', filters.city)
-    if (filters.districtCode) p.set('districtCode', filters.districtCode)
-    if (filters.sport) p.set('sport', filters.sport)
+    if (f.city) p.set('cityCode', f.city)
+    if (f.districtCode) p.set('districtCode', f.districtCode)
+    if (f.sport) p.set('sport', f.sport)
     // 价格：免费 = minPrice=0&maxPrice=0，收费 = minPrice=1
-    if (filters.priceType === 'free') {
+    if (f.priceType === 'free') {
       p.set('minPrice', '0')
       p.set('maxPrice', '0')
-    } else if (filters.priceType === 'paid') {
+    } else if (f.priceType === 'paid') {
       p.set('minPrice', '1')
     }
-    if (typeof filters.indoor === 'boolean') p.set('indoor', String(filters.indoor))
-    if (keyword.trim()) p.set('keyword', keyword.trim())
-    // 添加排序参数和分页参数，不传坐标参数
-    p.set('sortBy', sortBy)
+    if (typeof f.indoor === 'boolean') p.set('indoor', String(f.indoor))
+    if (kw.trim()) p.set('keyword', kw.trim())
+    p.set('sortBy', sb)
     p.set('page', String(page))
     p.set('pageSize', String(pageSize))
     return p
   }
 
-  async function fetchVenues() {
+  // 拉取合格场馆直到缓冲不少于 target 条（或已扫完所有页）
+  async function loadMore(target: number) {
+    if (loadingRef.current || doneRef.current) return
+    loadingRef.current = true
+    setLoadingMore(true)
+    if (loadedRef.current.length === 0) setLoading(true)
+
+    const acc: Array<any> = []
+    let page = rawPageRef.current
+    let guard = 0
     try {
-      setLoading(true)
-      setError(null)
-      const p = toQuery(filters)
-      const qs = p.toString()
-      console.log('🔍 [MapPage] Fetching venues with query:', qs)
-      const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
-      console.log('✅ [MapPage] Received response:', { itemsCount: json.items?.length || 0, total: json.total || 0, hasError: !!json.error })
-      
-      if (json.error) {
-        console.error('❌ [MapPage] API returned error:', json.error)
-        throw new Error(json.error.message || '获取场地列表失败')
+      while (loadedRef.current.length + acc.length < target && !doneRef.current && guard < 700) {
+        const qs = toQuery(filters, sortBy, keyword, page, 100).toString()
+        const json = await fetchJson(`/venues${qs ? `?${qs}` : ''}`)
+        if (json.error) throw new Error(json.error.message || '获取场地列表失败')
+        const pageItems: Array<any> = json.items || []
+        for (const v of pageItems) {
+          if (isPublicReady(v)) acc.push(v)
+        }
+        if (pageItems.length < 100) doneRef.current = true
+        page++
+        guard++
       }
-      
-      setItems(json.items || [])
-      setTotal(json.total || 0)
     } catch (err: any) {
-      console.error('❌ [MapPage] Error fetching venues:', err)
       setError(err.message || '加载场地失败')
-      setItems([])
-      setTotal(0)
-    } finally {
-      setLoading(false)
     }
+
+    rawPageRef.current = page
+    loadedRef.current = [...loadedRef.current, ...acc]
+    setTotalLoaded(loadedRef.current.length)
+    setItems(loadedRef.current.slice(0, Math.min(target, loadedRef.current.length)))
+    if (doneRef.current) setAllLoaded(true)
+    setLoading(false)
+    setLoadingMore(false)
+    loadingRef.current = false
   }
 
-  useEffect(() => { 
-    setPage(1) // 筛选条件变化时重置到第一页
+  // 筛选/排序/关键词变化时重置并重新加载
+  function resetAndLoad() {
+    loadedRef.current = []
+    rawPageRef.current = 1
+    doneRef.current = false
+    setItems([])
+    setTotalLoaded(0)
+    setAllLoaded(false)
+    setError(null)
+    setVisible(20)
+    loadMore(20)
+  }
+
+  useEffect(() => {
+    resetAndLoad()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy, filters, keyword])
-  
-  useEffect(() => { 
-    fetchVenues() 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, sortBy, filters, keyword])
-  
-  const totalPages = Math.ceil(total / pageSize) || 1
+
   const currentSport = filters.sport === undefined ? 'all' : filters.sport
 
   function setSortByWithUrl(next: SortByValue) {
     setSortBy(next)
-    setPage(1)
     const params = new URLSearchParams(searchParams?.toString() || '')
     if (next === 'popularity') {
       params.delete('sortBy')
@@ -145,6 +173,12 @@ function MapPageContent() {
     router.replace(qs ? `${pathname}?${qs}` : pathname)
   }
 
+  function handleLoadMore() {
+    const next = visible + 20
+    setVisible(next)
+    loadMore(next)
+  }
+
   return (
     <main className="container-page py-12 bg-white">
       <div className="flex items-center justify-between mb-8">
@@ -153,7 +187,10 @@ function MapPageContent() {
             {keyword ? `搜索「${keyword}」` : '全部场地'}
           </h1>
           <p className="text-body text-textSecondary">
-            {keyword ? `共找到 ${total} 个相关场地` : `共 ${total} 个场地`} · 第 {page} / {totalPages} 页
+            {allLoaded
+              ? `共 ${totalLoaded} 个场地`
+              : `已加载 ${totalLoaded} 个场地`}
+            {' · '}仅展示含具体地址与场地图片的场馆
           </p>
         </div>
         <select
@@ -183,7 +220,6 @@ function MapPageContent() {
             }`}
             onClick={() => {
               setFilters((prev) => ({ ...prev, sport: undefined }))
-              setPage(1)
             }}
           >
             全部
@@ -197,7 +233,6 @@ function MapPageContent() {
             }`}
             onClick={() => {
               setFilters((prev) => ({ ...prev, sport: 'basketball' }))
-              setPage(1)
             }}
           >
             篮球场地
@@ -211,7 +246,6 @@ function MapPageContent() {
             }`}
             onClick={() => {
               setFilters((prev) => ({ ...prev, sport: 'football' }))
-              setPage(1)
             }}
           >
             足球场地
@@ -232,14 +266,17 @@ function MapPageContent() {
         </div>
       )}
 
-      {!loading && !error && items.length === 0 && (
+      {!loading && !error && items.length === 0 && allLoaded && (
         <div className="text-center py-16 text-textSecondary">
           <div className="text-4xl mb-4">📭</div>
           <div className="text-body mb-4">
-            {keyword ? `没有找到与「${keyword}」相关的场地` : '没有找到场地'}
+            {keyword ? `没有找到与「${keyword}」相关的场地` : '没有找到符合条件的场地'}
           </div>
-          <Link 
-            href="/admin/add-venue" 
+          <p className="text-sm mb-6">
+            目前仅展示「含具体地址 + 场地图片」的场馆，其余正在完善中。
+          </p>
+          <Link
+            href="/admin/add-venue"
             className="bg-black text-white px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-900 transition-colors inline-block"
             style={{ borderRadius: '4px' }}
           >
@@ -251,7 +288,8 @@ function MapPageContent() {
       {!loading && !error && items.length > 0 && (
         <>
           <div className="mb-4 text-sm text-textSecondary">
-            显示 {items.length} 个场地（共 {total} 个）
+            显示 {items.length} 个场地
+            {allLoaded ? `（共 ${totalLoaded} 个）` : '（继续加载更多）'}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {items.map((venue) => (
@@ -263,8 +301,8 @@ function MapPageContent() {
                 {/* 图片区域 */}
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
                   {venue.firstImage ? (
-                    <img 
-                      src={venue.firstImage} 
+                    <img
+                      src={venue.firstImage}
                       alt={venue.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -275,18 +313,18 @@ function MapPageContent() {
                         if (parent && !parent.querySelector('.fallback-icon')) {
                           const fallback = document.createElement('div')
                           fallback.className = 'fallback-icon w-full h-full flex items-center justify-center text-textMuted text-4xl absolute inset-0'
-                          fallback.textContent = venue.sportType === 'basketball' ? '⚽' : '⚽'
+                          fallback.textContent = venue.sportType === 'basketball' ? '🏀' : '⚽'
                           parent.appendChild(fallback)
                         }
                       }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
-                      {venue.sportType === 'basketball' ? '⚽' : '⚽'}
+                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
                     </div>
                   )}
                 </div>
-                
+
                 {/* 内容区域 */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
@@ -296,7 +334,7 @@ function MapPageContent() {
                       </h3>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs px-2 py-1 bg-gray-100 rounded uppercase">
-                          {venue.sportType === 'basketball' ? '⚽ 篮球' : '⚽ 足球'}
+                          {venue.sportType === 'basketball' ? '🏀 篮球' : '⚽ 足球'}
                         </span>
                         {venue.indoor && (
                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
@@ -306,7 +344,7 @@ function MapPageContent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-body-sm text-textSecondary space-y-1">
                     {venue.address && (
                       <div className="flex items-center gap-2">
@@ -350,27 +388,15 @@ function MapPageContent() {
             ))}
           </div>
 
-          {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4">
+          {/* 加载更多 */}
+          {!allLoaded && (
+            <div className="flex items-center justify-center">
               <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="px-6 py-3 bg-black text-white rounded hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                上一页
-              </button>
-              
-              <span className="text-body text-textSecondary">
-                第 {page} / {totalPages} 页
-              </span>
-              
-              <button
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                下一页
+                {loadingMore ? '加载中...' : '加载更多场地'}
               </button>
             </div>
           )}
