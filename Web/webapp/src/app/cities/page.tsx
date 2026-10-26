@@ -59,10 +59,10 @@ async function getCityGroups(): Promise<CityGroup[]> {
 
 export const metadata: Metadata = {
   title: '全国体育场馆预订平台 | 篮球场·足球场在线预订 | FY体育',
-  description: '覆盖全国2900+城市、近6万家体育场馆的预订平台。找篮球馆、足球场、室内体育馆，在线查看真实图片和地址信息，快速找到身边的运动场地。',
+  description: '覆盖全国300+城市、近6万家体育场馆的预订平台。找篮球馆、足球场、室内体育馆，在线查看真实图片和地址信息，快速找到身边的运动场地。',
   openGraph: {
     title: '全国体育场馆预订 | FY体育',
-    description: '覆盖全国2900+城市、近6万家体育场馆，在线查看和预订场馆。',
+    description: '覆盖全国300+城市、近6万家体育场馆，在线查看和预订场馆。',
   },
 };
 
