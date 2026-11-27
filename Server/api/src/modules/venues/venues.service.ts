@@ -29,6 +29,19 @@ function normalizeText(value?: string | null): string {
     .replace(/[\s（）()【】\[\]{}·•\-—_，,。.、/\\:：;；#＃'"'“”‘’!?！？]/g, '')
 }
 
+/** HTTP query 字符串 → 数字；空/非数字返回 undefined */
+function toFilterNumber(v: any): number | undefined {
+  if (v === undefined || v === null || v === '') return undefined
+  const n = Number(v)
+  return Number.isFinite(n) ? n : undefined
+}
+
+/** HTTP query 字符串 → 布尔；仅显式 true/false 识别，未传返回 undefined */
+function toFilterBool(v: any): boolean | undefined {
+  if (v === undefined || v === null || v === '') return undefined
+  return v === true || v === 'true'
+}
+
 /** 简易 Haversine 距离（米）；坐标缺失返回 null */
 function haversineMeters(aLng: number, aLat: number, bLng: number, bLat: number): number | null {
   if (![aLng, aLat, bLng, bLat].every((n) => Number.isFinite(n))) return null
@@ -109,8 +122,15 @@ export class VenuesService {
 
   async search(query: QueryVenuesDto, user?: { id: number; role?: string }) {
     try {
-      const { ne, sw, sport, minPrice, maxPrice, indoor, page = 1, pageSize, limit, cityCode, districtCode, sortBy, keyword, includePending, approvalStatus } = query
-      
+      const { ne, sw, sport, cityCode, districtCode, sortBy, keyword, includePending, approvalStatus } = query
+      // HTTP query 均为字符串，这里显式转成数字/布尔（全局未注册 ValidationPipe，DTO @Transform 不生效）
+      const minPrice = toFilterNumber((query as any).minPrice)
+      const maxPrice = toFilterNumber((query as any).maxPrice)
+      const indoor = toFilterBool((query as any).indoor)
+      const page = Math.max(1, toFilterNumber((query as any).page) ?? 1)
+      const pageSize = toFilterNumber((query as any).pageSize)
+      const limit = toFilterNumber((query as any).limit)
+
       // 支持 limit 参数（兼容前端调用）
       const actualPageSize = limit || pageSize || 20
 
@@ -192,9 +212,9 @@ export class VenuesService {
       if (sport) qb.andWhere('v.sportType = :sport', { sport })
       if (cityCode) qb.andWhere('v.cityCode = :cityCode', { cityCode })
       if (districtCode && districtCode.trim()) qb.andWhere('v.districtCode = :districtCode', { districtCode: districtCode.trim() })
-      if (typeof indoor === 'boolean') qb.andWhere('v.indoor = :indoor', { indoor })
-      if (typeof minPrice === 'number') qb.andWhere('(v.priceMin IS NULL OR v.priceMin >= :minPrice)', { minPrice })
-      if (typeof maxPrice === 'number') qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
+      if (indoor !== undefined) qb.andWhere('v.indoor = :indoor', { indoor })
+      if (minPrice !== undefined) qb.andWhere('v.priceMin IS NOT NULL AND v.priceMin >= :minPrice', { minPrice })
+      if (maxPrice !== undefined) qb.andWhere('(v.priceMax IS NULL OR v.priceMax <= :maxPrice)', { maxPrice })
       // 关键词搜索（按名称或地址）
       if (keyword && keyword.trim()) {
         const searchKeyword = `%${keyword.trim()}%`
