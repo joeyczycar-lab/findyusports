@@ -21,7 +21,7 @@ export class BookingsService {
       status: 'pending',
     })
     await this.bookingRepo.save(booking)
-    return { id: booking.id, ...booking }
+    return { ...booking, id: booking.id }
   }
 
   async findByUser(userId: number) {

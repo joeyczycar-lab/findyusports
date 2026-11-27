@@ -31,9 +31,17 @@ export async function geocodeAddress(
     const city = cityHint(addr, cityCode)
     if (city) params.set('city', city)
 
-    const res = await fetch(`https://restapi.amap.com/v3/geocode/geo?${params.toString()}`, {
-      signal: AbortSignal.timeout(8000),
-    })
+    // 手动超时，兼容 Node 18 早期版本（AbortSignal.timeout 需 18.17+）
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
+    let res: Response
+    try {
+      res = await fetch(`https://restapi.amap.com/v3/geocode/geo?${params.toString()}`, {
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timer)
+    }
     const data = await res.json()
     if (String(data.status) !== '1' || !Array.isArray(data.geocodes) || data.geocodes.length === 0) {
       console.warn(`⚠️ 地理编码未命中: ${addr}`, data.info || '')
