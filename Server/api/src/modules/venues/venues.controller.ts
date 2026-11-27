@@ -21,6 +21,23 @@ export class VenuesController {
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
+  @Get('duplicates')
+  async listDuplicates(@Query('sport') sport?: string, @Query('minCount') minCount?: string) {
+    return this.venuesService.listDuplicates({ sport, minCount: Number(minCount || 2) })
+  }
+
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
+  @Post('check-duplicate')
+  async checkDuplicate(@Body() body: any) {
+    const dto: CreateVenueDto = body || {}
+    const dup = await this.venuesService.findDuplicateVenue(dto)
+    if (dup) return { duplicate: dup, isDuplicate: true }
+    return { isDuplicate: false }
+  }
+
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Post()
   async create(@Body() dto: CreateVenueDto, @CurrentUser() user?: { id: number; role?: string }) {
     try {

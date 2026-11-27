@@ -43,7 +43,10 @@ export default function AddVenuePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedImages, setSelectedImages] = useState<File[]>([])
   const [previewIndex, setPreviewIndex] = useState<number | null>(null)
-  
+  // 实时查重结果
+  const [dupHint, setDupHint] = useState<{ name: string; id: string | number; reason?: string } | null>(null)
+  const dupTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [formData, setFormData] = useState({
     name: '',
     sportType: 'basketball' as 'basketball' | 'football',
@@ -303,6 +306,27 @@ export default function AddVenuePage() {
     }
   }
 
+  // 防抖实时查重：名称或地址变化 600ms 后调用后端比对
+  const scheduleDupCheck = (name: string, address: string, sportType: string) => {
+    if (dupTimer.current) clearTimeout(dupTimer.current)
+    if (!name?.trim() && !address?.trim()) { setDupHint(null); return }
+    dupTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetchJson('/venues/check-duplicate', {
+          method: 'POST',
+          body: JSON.stringify({ name: name.trim(), address: address.trim(), sportType }),
+        })
+        if (res?.isDuplicate && res.duplicate) {
+          setDupHint({ name: res.duplicate.name, id: res.duplicate.id, reason: res.duplicate.reason })
+        } else {
+          setDupHint(null)
+        }
+      } catch {
+        // 查重接口失败不打断录入，静默忽略
+      }
+    }, 600)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -392,6 +416,13 @@ export default function AddVenuePage() {
         method: 'POST',
         body: JSON.stringify(payload),
       })
+
+      // 后端查重命中：提示已有场地，不写入
+      if (data.duplicate) {
+        setMessage({ type: 'error', text: `❌ ${data.error?.message || '该场地可能已存在，请勿重复添加'}` })
+        setLoading(false)
+        return
+      }
 
       if (data.error) {
         const errorMsg = data.error.message || data.error.code || '添加失败，请检查输入'
@@ -591,11 +622,20 @@ export default function AddVenuePage() {
               id="name"
               required
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value })
+                scheduleDupCheck(e.target.value, formData.address, formData.sportType)
+              }}
               className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
               style={{ borderRadius: '4px' }}
               placeholder="例如：朝阳体育中心篮球场"
             />
+            {dupHint && (
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+                ⚠️ 可能与已有场地重复：<strong>{dupHint.name}</strong>（ID: {dupHint.id}）
+                {dupHint.reason ? ` · ${dupHint.reason}` : ''}。请先到场地管理中核对，避免重复录入。
+              </div>
+            )}
           </div>
 
           <div>
@@ -671,7 +711,10 @@ export default function AddVenuePage() {
               id="address"
               required
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, address: e.target.value })
+                scheduleDupCheck(formData.name, e.target.value, formData.sportType)
+              }}
               className="w-full px-4 py-3 border border-gray-900 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900"
               style={{ borderRadius: '4px' }}
               placeholder="例如：北京市朝阳区朝阳路1号"

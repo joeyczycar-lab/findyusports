@@ -29,7 +29,8 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "git:push": "cd ../.. && ./git-push.sh",
-    "git:push:auto": "cd ../.. && ./git-push.sh \"Update: $(date +'%Y-%m-%d %H:%M:%S')\""
+    "git:push:auto": "cd ../.. && ./git-push.sh \"Update: $(date +'%Y-%m-%d %H:%M:%S')\"",
+    "add-venue:bulk": "ts-node src/add-venue-bulk.ts"
   },
   "dependencies": {
     "@nestjs/common": "10.3.7",

@@ -28,6 +28,7 @@ export default function AdminNav() {
 
   const navItems = [
     { href: '/admin/venues', label: '📋 场地管理', icon: '📋' },
+    { href: '/admin/duplicates', label: '🔁 查重去重', icon: '🔁' },
     { href: '/admin/add-venue', label: '➕ 添加场地', icon: '➕' },
     { href: '/admin/analytics', label: '📊 数据分析', icon: '📊' },
     { href: '/admin/data', label: '📈 数据统计', icon: '📈' },

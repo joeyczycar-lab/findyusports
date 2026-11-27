@@ -22,6 +22,26 @@ function truncateVenueStr(value: string | null | undefined, max: number = VENUE_
   return value.length <= max ? value : value.slice(0, max)
 }
 
+/** 名称/地址规范化：去空白、标点、括号、大小写，便于查重 */
+function normalizeText(value?: string | null): string {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/[\s（）()【】\[\]{}·•\-—_，,。.、/\\:：;；#＃'"'“”‘’!?！？]/g, '')
+}
+
+/** 简易 Haversine 距离（米）；坐标缺失返回 null */
+function haversineMeters(aLng: number, aLat: number, bLng: number, bLat: number): number | null {
+  if (![aLng, aLat, bLng, bLat].every((n) => Number.isFinite(n))) return null
+  const R = 6371000
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(bLat - aLat)
+  const dLng = toRad(bLng - aLng)
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(s))
+}
+
 /** 仅展示该用户（或 NULL 历史数据）的场地；未设置则展示全部 */
 function getTrustedUserIds(): number[] | null {
   const raw = process.env.TRUSTED_USER_ID ?? process.env.TRUSTED_USER_IDS ?? ''
@@ -633,7 +653,19 @@ export class VenuesService {
       const userId = user?.id
       const isAdmin = user?.role === 'admin'
       console.log('📝 Creating venue:', { name: dto.name, sportType: dto.sportType, cityCode: dto.cityCode, createdByUserId: userId ?? null, role: user?.role ?? 'guest' })
-      
+
+      // 提交前查重：同名（规范化）+ 同运动类型视为重复；名称不同但地址规范化相同也提示
+      const dup = await this.findDuplicateVenue(dto)
+      if (dup) {
+        return {
+          error: {
+            code: 'DuplicateVenue',
+            message: `该场地可能已存在：${dup.name}（ID: ${dup.id}），请勿重复添加`,
+          },
+          duplicate: dup,
+        }
+      }
+
       const venue = new VenueEntity()
       venue.name = (dto.name && dto.name.length > VENUE_STRING_MAX) ? dto.name.slice(0, VENUE_STRING_MAX) : (dto.name ?? '')
       if (userId !== undefined && userId !== null) (venue as any).createdByUserId = userId
@@ -1012,6 +1044,150 @@ export class VenuesService {
       }
       throw error // 重新抛出，让控制器处理
     }
+  }
+
+  /**
+   * 查重：同运动类型下 （公开，供控制器与批量导入脚本复用）
+   * 1) 规范化名称相同 → 强重复；
+   * 2) 规范化地址相同且名称高度相似 → 提示重复；
+   * 3) 坐标距离 < 80m 且名称相似 → 辅助提示（现有数据多为占位坐标，仅作弱匹配）。
+   * 返回命中的场地（取最近一条），无重复返回 null。
+   */
+  async findDuplicateVenue(dto: CreateVenueDto): Promise<any | null> {
+    try {
+      const normName = normalizeText(dto.name)
+      const normAddr = normalizeText(dto.address)
+      if (!normName) return null
+
+      // 同运动类型、同名（规范化）直接查库
+      const byName = await this.repo.query(
+        `SELECT id, name, address, lng, lat, "sportType", "cityCode"
+         FROM venue
+         WHERE "sportType" = $1
+           AND REPLACE(REPLACE(REPLACE(LOWER(name), ' ', ''), '（', ''), '）', '') = REPLACE(REPLACE(REPLACE(LOWER($2), ' ', ''), '（', ''), '）', '')
+         LIMIT 5`,
+        [dto.sportType, dto.name]
+      )
+
+      const hit = (rows: any[], reason: string) => {
+        if (!rows || rows.length === 0) return null
+        const r = rows[0]
+        return {
+          id: String(r.id),
+          name: r.name,
+          address: r.address,
+          sportType: r.sportType,
+          cityCode: r.cityCode,
+          reason,
+          location: r.lng != null && r.lat != null ? [r.lng, r.lat] : undefined,
+        }
+      }
+
+      if (byName && byName.length > 0) return hit(byName, '同名')
+
+      // 名称不同时，规范化地址相同才视为重复（避免误判不同场地）
+      if (normAddr) {
+        const byAddr = await this.repo.query(
+          `SELECT id, name, address, lng, lat, "sportType", "cityCode"
+           FROM venue
+           WHERE "sportType" = $1
+             AND address IS NOT NULL
+             AND REPLACE(REPLACE(REPLACE(REPLACE(LOWER(address), ' ', ''), '（', ''), '）', ''), ',', '') = REPLACE(REPLACE(REPLACE(REPLACE(LOWER($2), ' ', ''), '（', ''), '）', ''), ',', '')
+           LIMIT 5`,
+          [dto.sportType, dto.address]
+        )
+        if (byAddr && byAddr.length > 0) return hit(byAddr, '同地址')
+      }
+
+      // 坐标邻近辅助：仅当坐标非占位、距离 < 80m 且名称包含关键字时提示
+      if (Number.isFinite(dto.lng) && Number.isFinite(dto.lat)) {
+        const near = await this.repo.query(
+          `SELECT id, name, address, lng, lat, "sportType", "cityCode"
+           FROM venue
+           WHERE "sportType" = $1
+             AND lng IS NOT NULL AND lat IS NOT NULL
+             AND lng BETWEEN $2 - 0.001 AND $2 + 0.001
+             AND lat BETWEEN $3 - 0.001 AND $3 + 0.001
+           LIMIT 20`,
+          [dto.sportType, dto.lng, dto.lat]
+        )
+        for (const r of near || []) {
+          const meters = haversineMeters(dto.lng, dto.lat, r.lng, r.lat)
+          if (meters != null && meters < 80) {
+            const existingName = normalizeText(r.name)
+            const core = normName.length >= 4 ? normName.slice(0, 4) : normName
+            if (core && existingName.includes(core)) {
+              return hit([r], `坐标邻近（约 ${Math.round(meters)} 米）`)
+            }
+          }
+        }
+      }
+
+      return null
+    } catch (error) {
+      // 查重失败不阻断正常录入，仅记录
+      console.warn('⚠️ [findDuplicateVenue] 查重失败:', error instanceof Error ? error.message : String(error))
+      return null
+    }
+  }
+
+  /** 管理端：列出疑似重复场地分组（同名规范化 / 同地址规范化），按重复数量降序 */
+  async listDuplicates(query: { sport?: string; minCount?: number }) {
+    const minCount = Math.max(2, Number(query.minCount || 2))
+    const sportFilter =
+      query.sport === 'basketball' || query.sport === 'football' ? `AND "sportType" = $1` : ''
+    const params: any[] =
+      query.sport === 'basketball' || query.sport === 'football' ? [query.sport] : []
+
+    const groups: any[] = []
+
+    // 同名分组
+    const nameRows = await this.repo.query(
+      `SELECT name,
+              ARRAY_AGG(json_build_object(
+                'id', id, 'name', name, 'address', address,
+                'sportType', "sportType", 'cityCode', "cityCode",
+                'lng', lng, 'lat', lat, 'approvalStatus', approval_status
+              ) ORDER BY id) AS items,
+              COUNT(*) AS count
+       FROM venue
+       ${sportFilter ? `WHERE ${sportFilter.replace(/^AND\s*/, '')}` : ''}
+       GROUP BY name
+       HAVING COUNT(*) >= $${params.length + 1}
+       ORDER BY COUNT(*) DESC, name ASC
+       LIMIT 200`,
+      [...params, minCount]
+    )
+    for (const r of nameRows || []) {
+      groups.push({ key: `name:${normalizeText(r.name)}`, reason: '同名', name: r.name, count: Number(r.count), items: r.items })
+    }
+
+    // 同地址分组（地址非空）
+    const addrRows = await this.repo.query(
+      `SELECT address,
+              ARRAY_AGG(json_build_object(
+                'id', id, 'name', name, 'address', address,
+                'sportType', "sportType", 'cityCode', "cityCode",
+                'lng', lng, 'lat', lat, 'approvalStatus', approval_status
+              ) ORDER BY id) AS items,
+              COUNT(*) AS count
+       FROM venue
+       WHERE address IS NOT NULL AND address <> ''
+         ${sportFilter}
+       GROUP BY address
+       HAVING COUNT(*) >= $${params.length + 1}
+       ORDER BY COUNT(*) DESC, address ASC
+       LIMIT 200`,
+      [...params, minCount]
+    )
+    for (const r of addrRows || []) {
+      // 与同名分组去重：若该组场地已全部被某个同名分组覆盖，则跳过
+      const covered = groups.some((g) => g.items.every((it: any) => (r.items || []).some((o: any) => String(o.id) === String(it.id))))
+      if (!covered) groups.push({ key: `addr:${normalizeText(r.address)}`, reason: '同地址', name: r.address, count: Number(r.count), items: r.items })
+    }
+
+    groups.sort((a, b) => b.count - a.count)
+    return { total: groups.length, items: groups }
   }
 
   async updateVenue(venueId: number, dto: UpdateVenueDto, userId: number) {
