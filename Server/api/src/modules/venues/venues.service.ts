@@ -1139,6 +1139,15 @@ export class VenuesService {
     const params: any[] =
       query.sport === 'basketball' || query.sport === 'football' ? [query.sport] : []
 
+    // 兼容旧库：approval_status 列可能尚未迁移，存在才纳入查询
+    const tableName = this.repo.metadata.tableName
+    const colCheck = await this.repo.query(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = 'approval_status'`,
+      [tableName]
+    )
+    const hasApprovalStatus = (colCheck || []).some((r: any) => r.column_name === 'approval_status')
+    const approvalField = hasApprovalStatus ? ", 'approvalStatus', approval_status" : ''
+
     const groups: any[] = []
 
     // 同名分组
@@ -1147,7 +1156,7 @@ export class VenuesService {
               ARRAY_AGG(json_build_object(
                 'id', id, 'name', name, 'address', address,
                 'sportType', "sportType", 'cityCode', "cityCode",
-                'lng', lng, 'lat', lat, 'approvalStatus', approval_status
+                'lng', lng, 'lat', lat${approvalField}
               ) ORDER BY id) AS items,
               COUNT(*) AS count
        FROM venue
@@ -1168,7 +1177,7 @@ export class VenuesService {
               ARRAY_AGG(json_build_object(
                 'id', id, 'name', name, 'address', address,
                 'sportType', "sportType", 'cityCode', "cityCode",
-                'lng', lng, 'lat', lat, 'approvalStatus', approval_status
+                'lng', lng, 'lat', lat${approvalField}
               ) ORDER BY id) AS items,
               COUNT(*) AS count
        FROM venue
