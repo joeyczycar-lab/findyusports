@@ -17,9 +17,9 @@ function getKeywordFromUrl(): string {
 const SORT_VALUES = ['city', 'popularity', 'name', 'newest'] as const
 type SortByValue = (typeof SORT_VALUES)[number]
 
-// 上线闸：仅展示「有具体地址 + 有场地图片」的场馆（电话留作后续补全项）
+// 展示闸：有名称即对外展示；缺图片用球类图标占位，缺地址则不显示地址行（图片/地址为后续补全项）
 function isPublicReady(v: any): boolean {
-  return !!v && typeof v.address === 'string' && v.address.trim().length >= 4 && !!v.firstImage
+  return !!v && typeof v.name === 'string' && v.name.trim().length > 0
 }
 
 function MapPageContent() {
@@ -37,7 +37,7 @@ function MapPageContent() {
   const [visible, setVisible] = useState(20)
   const [allLoaded, setAllLoaded] = useState(false)
 
-  // 已加载的合格场馆缓冲（有地址+有图），跨"加载更多"累积
+  // 已加载场馆缓冲，跨"加载更多"累积
   const loadedRef = useRef<Array<any>>([])
   const rawPageRef = useRef(1)
   const doneRef = useRef(false)
@@ -190,7 +190,7 @@ function MapPageContent() {
             {allLoaded
               ? `共 ${totalLoaded} 个场地`
               : `已加载 ${totalLoaded} 个场地`}
-            {' · '}仅展示含具体地址与场地图片的场馆
+            {' · '}部分场馆地址与图片正在补充完善
           </p>
         </div>
         <select
@@ -273,7 +273,7 @@ function MapPageContent() {
             {keyword ? `没有找到与「${keyword}」相关的场地` : '没有找到符合条件的场地'}
           </div>
           <p className="text-sm mb-6">
-            目前仅展示「含具体地址 + 场地图片」的场馆，其余正在完善中。
+            部分场馆信息仍在补充完善中，可稍后再来看看。
           </p>
           <Link
             href="/admin/add-venue"
