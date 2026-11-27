@@ -96,13 +96,13 @@ async function main() {
   const missing = required.filter((c) => !headers.includes(c))
   if (missing.length) { console.error('❌ 缺少必需列:', missing.join(', ')); process.exit(1) }
 
-  // 库内已有：规范化名称集合、规范化地址集合（同运动类型）
-  const existing = await repo.query(`SELECT name, address, "sportType" FROM venue`)
+  // 库内已有：规范化名称集合、规范化地址集合（同运动类型 + 同城市）
+  const existing = await repo.query(`SELECT name, address, "sportType", "cityCode" FROM venue`)
   const nameSet = new Set<string>()
   const addrSet = new Set<string>()
   for (const e of existing) {
-    nameSet.add(`${e.sportType}|${norm(e.name)}`)
-    if (e.address) addrSet.add(`${e.sportType}|${norm(e.address)}`)
+    nameSet.add(`${e.sportType}|${e.cityCode}|${norm(e.name)}`)
+    if (e.address) addrSet.add(`${e.sportType}|${e.cityCode}|${norm(e.address)}`)
   }
   console.log(`🗄️  库内已有 ${existing.length} 条场地，开始查重校验...`)
 
@@ -125,11 +125,11 @@ async function main() {
     let lat = toNum(raw.lat)
     if (lng != null && (lng < -180 || lng > 180 || lat == null || lat < -90 || lat > 90)) errors.push('坐标越界')
 
-    // 查重：库内 + 文件内重复
-    const dupKey = `${sportType}|${norm(name)}`
+    // 查重：库内 + 文件内重复（同运动类型 + 同城市）
+    const dupKey = `${sportType}|${raw.cityCode}|${norm(name)}`
     if (!errors.length) {
       if (nameSet.has(dupKey)) skipped.push({ line: i + 1, name, reason: '库内同名' })
-      else if (raw.address && addrSet.has(`${sportType}|${norm(raw.address)}`)) skipped.push({ line: i + 1, name, reason: '库内同地址' })
+      else if (raw.address && addrSet.has(`${sportType}|${raw.cityCode}|${norm(raw.address)}`)) skipped.push({ line: i + 1, name, reason: '库内同地址' })
       else if (seenInFile.has(dupKey)) skipped.push({ line: i + 1, name, reason: '文件内重复' })
     }
 

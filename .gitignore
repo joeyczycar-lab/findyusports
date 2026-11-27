@@ -43,6 +43,12 @@ yarn-error.log*
 *.db
 *.sqlite
 
+# Build cache
+*.tsbuildinfo
+
+# POI 备查原始 JSON（含照片 URL，本地留存，不入库）
+Web/webapp/data/poi-*.json
+
 # Temporary files
 *.tmp
 *.temp

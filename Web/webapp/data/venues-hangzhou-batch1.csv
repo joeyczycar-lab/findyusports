@@ -1,0 +1,8 @@
+name,sportType,cityCode,districtCode,address,lng,lat,priceMin,priceMax,priceDisplay,supportsWalkIn,walkInPriceDisplay,supportsFullCourt,fullCourtPriceDisplay,indoor,contact,requiresReservation,reservationMethod,isPublic,courtCount,floorType,playersPerSide,openHours,hasLighting,hasAirConditioning,hasParking,hasFence,hasRestArea,hasShower,hasLocker,hasShop
+硬核篮球公园城北馆,basketball,330100,,杭州市拱墅区白石路127号城北体育公园内,,,,参考平日60-90元/小时 周末80-120元/小时,,,,,true,15957115468,true,小程序/大众点评/电话,true,,运动地胶,,每日9:00-22:00,true,false,true,true,true,false,false,false
+因吹斯汀篮球馆,basketball,330100,,杭州市上城区侯潮东路165号上城区全民健身中心,,,,参考工作日30-50元/小时 周末40-60元/小时,,,,,true,18058694060,true,浙里办/公众号/前台,true,,运动地胶,,每日9:00-22:00,true,false,false,false,true,false,false,false
+高达体育篮球公园,basketball,330100,,杭州市萧山区南虹路859号,,,,参考平日60-90元/小时 周末80-120元/小时,,,,,true,17386138532,true,线上平台预约,true,,运动地胶,,每日9:00-22:00,true,false,true,false,true,false,false,false
+力德篮球公园,basketball,330100,,杭州市萧山区南秀路2668号,,,,参考80-120元/小时,,,,,true,15968806897,true,线上平台预约,true,,运动地胶,,每日9:00-22:00,true,false,false,false,true,false,false,false
+虎贲足球场,football,330100,,杭州市余杭区联胜路2-1号,,,,五人制平日80-120元/小时 晚间及周末130-180元/小时,,,,,false,13221801998,true,美团/大众点评/电话,true,,人造草皮,5人制、7人制,每日9:00-22:00,true,false,false,true,true,false,false,false
+云上足球公园,football,330100,,杭州市萧山区皓月路与民和路交叉口南80米,,,,5人制平日120-180元/小时 周末160-220元/小时 7人制200-300元/小时,,,,,false,,true,线上平台/电话,true,,人造草皮,5人制、7人制,每日9:00-22:00,true,false,false,false,true,false,false,false
+凯迪拉克颐高城市足球公园,football,330100,,杭州市西湖区黄姑山路颐高产业园C座顶楼,,,,平日150-250元/小时 周末200-350元/小时,,,,,false,0571-85180565,true,线上平台/电话,true,,人造草皮,5人制、7人制,每日9:00-22:00,true,false,true,true,false,false,false,false
