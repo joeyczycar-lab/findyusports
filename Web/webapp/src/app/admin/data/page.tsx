@@ -1,8 +1,43 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import { fetchJson } from '@/lib/api'
 import Link from 'next/link'
+
+// 轻量 CSV 解析（支持双引号、逗号转义、换行），与后端批量导入口径一致
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
+  let field = ''
+  let inQuotes = false
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++ } else inQuotes = false
+      } else field += ch
+    } else {
+      if (ch === '"') inQuotes = true
+      else if (ch === ',') { row.push(field); field = '' }
+      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = '' }
+      else if (ch === '\r') { /* skip */ }
+      else field += ch
+    }
+  }
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row) }
+  return rows.filter((r) => r.some((c) => c.trim() !== ''))
+}
+
+function csvToObjects(text: string): Record<string, string>[] {
+  const rows = parseCsv(text)
+  if (rows.length < 2) return []
+  const headers = rows[0].map((h) => h.trim())
+  return rows.slice(1).map((cells) => {
+    const obj: Record<string, string> = {}
+    headers.forEach((h, idx) => (obj[h] = (cells[idx] ?? '').trim()))
+    return obj
+  })
+}
 
 export default function DataViewPage() {
   const [stats, setStats] = useState<any>(null)
@@ -16,6 +51,13 @@ export default function DataViewPage() {
   const [tableTotal, setTableTotal] = useState(0)
   const [tableLoading, setTableLoading] = useState(false)
   const TABLE_PAGE_SIZE = 50
+
+  // 批量导入
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importRows, setImportRows] = useState<Record<string, string>[]>([])
+  const [importing, setImporting] = useState(false)
+  const [importReport, setImportReport] = useState<any>(null)
+  const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -79,6 +121,48 @@ export default function DataViewPage() {
       setError(err.message || '加载列表失败')
     } finally {
       setTableLoading(false)
+    }
+  }
+
+  function handlePickFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    setImportError(null)
+    setImportReport(null)
+    if (!file) { setImportRows([]); return }
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const rows = csvToObjects(String(reader.result || ''))
+        setImportRows(rows)
+        if (rows.length === 0) setImportError('CSV 未解析到有效数据行，请检查表头与格式')
+      } catch (err: any) {
+        setImportRows([])
+        setImportError(err instanceof Error ? err.message : 'CSV 解析失败')
+      }
+    }
+    reader.readAsText(file, 'utf-8')
+  }
+
+  async function handleImport() {
+    if (importRows.length === 0) return
+    setImporting(true)
+    setImportError(null)
+    setImportReport(null)
+    try {
+      const report = await fetchJson('/venues/admin/bulk-import', {
+        method: 'POST',
+        body: JSON.stringify({ rows: importRows }),
+      })
+      if (report?.error) throw new Error(report.error.message || '导入失败')
+      setImportReport(report)
+      setImportRows([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      // 导入完成后刷新统计与列表
+      loadStats()
+    } catch (err: any) {
+      setImportError(err instanceof Error ? err.message : '导入失败')
+    } finally {
+      setImporting(false)
     }
   }
 
@@ -189,6 +273,83 @@ export default function DataViewPage() {
                 <div className="text-heading-sm font-bold">{stats.freeVenues.toLocaleString()}</div>
               </div>
             </div>
+          </div>
+
+          {/* 批量导入 */}
+          <div className="card-nike p-6 mb-8">
+            <h2 className="text-heading-sm font-bold mb-2">批量导入场地</h2>
+            <p className="text-body-sm text-textSecondary mb-4">
+              上传对齐导入模板的 CSV（可含 <code>firstImage</code> 首图链接列）。系统逐条校验并按「运动类型 + 城市 + 名称/地址」自动查重，重复与不合格条目会在报告中列出，不会入库。
+            </p>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={handlePickFile}
+            />
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                className="px-4 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+              >
+                选择 CSV 文件
+              </button>
+              {importRows.length > 0 && (
+                <span className="text-body-sm text-textSecondary">已解析 {importRows.length} 条待导入</span>
+              )}
+              <button
+                onClick={handleImport}
+                disabled={importing || importRows.length === 0}
+                className="px-4 py-2 bg-black text-white rounded hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
+              >
+                {importing ? '导入中…' : `开始导入（${importRows.length}）`}
+              </button>
+            </div>
+
+            {importError && (
+              <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
+                ❌ {importError}
+              </div>
+            )}
+
+            {importReport && (
+              <div className="mt-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <div className="text-heading-sm font-bold">{importReport.total}</div>
+                    <div className="text-body-sm text-textSecondary">总数</div>
+                  </div>
+                  <div>
+                    <div className="text-heading-sm font-bold text-green-600">{importReport.success}</div>
+                    <div className="text-body-sm text-textSecondary">成功入库</div>
+                  </div>
+                  <div>
+                    <div className="text-heading-sm font-bold text-amber-600">{importReport.skipped}</div>
+                    <div className="text-body-sm text-textSecondary">跳过</div>
+                  </div>
+                </div>
+
+                {importReport.skippedList?.length > 0 && (
+                  <div className="border border-gray-200 rounded p-4">
+                    <div className="font-bold text-body-sm mb-2">跳过明细（{importReport.skippedList.length}）</div>
+                    <ul className="list-disc list-inside text-body-sm text-textSecondary space-y-1 max-h-48 overflow-y-auto">
+                      {importReport.skippedList.map((s: any, i: number) => (
+                        <li key={i}>{s.name} — {s.reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {importReport.successList?.length > 0 && (
+                  <div className="mt-3 text-body-sm text-textSecondary">
+                    已入库 {importReport.successList.length} 条，其中挂载首图 {importReport.successList.filter((x: any) => x.image).length} 条。
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 场地列表（分页加载，不一次性渲染全部） */}

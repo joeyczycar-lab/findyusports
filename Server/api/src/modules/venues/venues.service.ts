@@ -1066,6 +1066,138 @@ export class VenuesService {
     }
   }
 
+  /** 批量导入行字段清洗：字符串 → 数字/布尔，对齐 CreateVenueDto */
+  private normalizeBulkRow(raw: any): any {
+    const num = (v: any): number | undefined => {
+      if (v === undefined || v === null || String(v).trim() === '') return undefined
+      const n = Number(v)
+      return Number.isFinite(n) ? n : undefined
+    }
+    const bool = (v: any): boolean | undefined => {
+      if (v === undefined || v === null || String(v).trim() === '') return undefined
+      return ['true', '1', 'yes', '是', '开放'].includes(String(v).trim().toLowerCase())
+    }
+    const str = (v: any): string | undefined => (v == null ? undefined : String(v).trim())
+    return {
+      name: str(raw.name),
+      sportType: String(raw.sportType || '').toLowerCase(),
+      cityCode: str(raw.cityCode),
+      districtCode: str(raw.districtCode),
+      address: str(raw.address),
+      lng: num(raw.lng),
+      lat: num(raw.lat),
+      priceMin: num(raw.priceMin),
+      priceMax: num(raw.priceMax),
+      priceDisplay: str(raw.priceDisplay),
+      supportsWalkIn: bool(raw.supportsWalkIn),
+      walkInPriceDisplay: str(raw.walkInPriceDisplay),
+      supportsFullCourt: bool(raw.supportsFullCourt),
+      fullCourtPriceDisplay: str(raw.fullCourtPriceDisplay),
+      indoor: bool(raw.indoor),
+      contact: str(raw.contact),
+      requiresReservation: bool(raw.requiresReservation),
+      reservationMethod: str(raw.reservationMethod),
+      isPublic: raw.isPublic === '' ? true : bool(raw.isPublic) ?? true,
+      courtCount: num(raw.courtCount),
+      floorType: str(raw.floorType),
+      playersPerSide: str(raw.playersPerSide),
+      openHours: str(raw.openHours),
+      hasLighting: bool(raw.hasLighting),
+      hasAirConditioning: bool(raw.hasAirConditioning),
+      hasParking: bool(raw.hasParking),
+      hasFence: bool(raw.hasFence),
+      hasRestArea: bool(raw.hasRestArea),
+      hasShower: bool(raw.hasShower),
+      hasLocker: bool(raw.hasLocker),
+      hasShop: bool(raw.hasShop),
+      firstImage: str(raw.firstImage) || str(raw.image),
+    }
+  }
+
+  /**
+   * 管理员批量导入：逐条校验 → 查重 → 入库（created_by_user_id 置 NULL，保证缺审核列的生产库前台可见）→ 挂首图外链。
+   * 返回成功/跳过明细报告。
+   */
+  async bulkImportVenues(rows: any[], user: { id: number; role?: string }) {
+    if (!user || user.role !== 'admin') {
+      return { error: { code: 'Forbidden', message: '只有管理员可以批量导入场地' } }
+    }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return { error: { code: 'BadRequest', message: '导入数据为空' } }
+    }
+
+    let hasCreatedByUserId = false
+    try {
+      const col = await this.repo.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = 'created_by_user_id'`,
+        [this.repo.metadata.tableName],
+      )
+      hasCreatedByUserId = Array.isArray(col) && col.length > 0
+    } catch {
+      hasCreatedByUserId = false
+    }
+
+    const success: { id: string; name: string; image: boolean }[] = []
+    const skipped: { name: string; reason: string }[] = []
+
+    for (const raw of rows) {
+      const dto = this.normalizeBulkRow(raw || {})
+      const errs: string[] = []
+      if (!dto.name) errs.push('名称为空')
+      if (!['basketball', 'football'].includes(dto.sportType)) errs.push('sportType 必须为 basketball/football')
+      if (!dto.cityCode) errs.push('cityCode 为空')
+      if (dto.lng == null || dto.lat == null || dto.lng < -180 || dto.lng > 180 || dto.lat < -90 || dto.lat > 90) errs.push('坐标缺失或越界')
+
+      if (errs.length) {
+        skipped.push({ name: dto.name || '(空)', reason: errs.join('; ') })
+        continue
+      }
+
+      // 提交前查重（同运动 + 同城市）
+      const dup = await this.findDuplicateVenue(dto)
+      if (dup) {
+        skipped.push({ name: dto.name, reason: `重复：${dup.name}（ID ${dup.id}）` })
+        continue
+      }
+
+      let created: any
+      try {
+        // 以管理员身份创建 → 有审核列时直接 approved；随后把创建人置 NULL，兼容缺审核列的生产库可见性
+        created = await this.createVenue(dto, { id: 1, role: 'admin' })
+      } catch (e: any) {
+        skipped.push({ name: dto.name, reason: e instanceof Error ? e.message : String(e) })
+        continue
+      }
+      if (created && created.error) {
+        skipped.push({ name: dto.name, reason: created.error.message })
+        continue
+      }
+
+      if (hasCreatedByUserId && created.id) {
+        await this.repo.query(`UPDATE venue SET created_by_user_id = NULL WHERE id = $1`, [created.id])
+      }
+
+      let imageOk = false
+      if (dto.firstImage) {
+        try {
+          const img = await this.addImage(Number(created.id), dto.firstImage, 0, 1)
+          imageOk = !(img && img.error)
+        } catch (e: any) {
+          console.warn(`⚠️ 首图挂载失败 ${created.id}:`, e instanceof Error ? e.message : String(e))
+        }
+      }
+      success.push({ id: String(created.id), name: created.name, image: imageOk })
+    }
+
+    return {
+      total: rows.length,
+      success: success.length,
+      skipped: skipped.length,
+      successList: success,
+      skippedList: skipped,
+    }
+  }
+
   /**
    * 查重：同运动类型下 （公开，供控制器与批量导入脚本复用）
    * 1) 规范化名称相同 → 强重复；
@@ -1079,14 +1211,17 @@ export class VenuesService {
       const normAddr = normalizeText(dto.address)
       if (!normName) return null
 
-      // 同运动类型、同名（规范化）直接查库
+      // 同运动类型、同城市、同名（规范化）直接查库（避免跨城同名连锁品牌误判）
+      const cityCondName = dto.cityCode ? 'AND "cityCode" = $3' : ''
+      const nameParams: any[] = dto.cityCode ? [dto.sportType, dto.name, dto.cityCode] : [dto.sportType, dto.name]
       const byName = await this.repo.query(
         `SELECT id, name, address, lng, lat, "sportType", "cityCode"
          FROM venue
          WHERE "sportType" = $1
            AND REPLACE(REPLACE(REPLACE(LOWER(name), ' ', ''), '（', ''), '）', '') = REPLACE(REPLACE(REPLACE(LOWER($2), ' ', ''), '（', ''), '）', '')
+           ${cityCondName}
          LIMIT 5`,
-        [dto.sportType, dto.name]
+        nameParams
       )
 
       const hit = (rows: any[], reason: string) => {
@@ -1105,16 +1240,19 @@ export class VenuesService {
 
       if (byName && byName.length > 0) return hit(byName, '同名')
 
-      // 名称不同时，规范化地址相同才视为重复（避免误判不同场地）
+      // 名称不同时，同城市 + 规范化地址相同才视为重复（避免误判不同场地）
       if (normAddr) {
+        const cityCondAddr = dto.cityCode ? 'AND "cityCode" = $3' : ''
+        const addrParams: any[] = dto.cityCode ? [dto.sportType, dto.address, dto.cityCode] : [dto.sportType, dto.address]
         const byAddr = await this.repo.query(
           `SELECT id, name, address, lng, lat, "sportType", "cityCode"
            FROM venue
            WHERE "sportType" = $1
              AND address IS NOT NULL
              AND REPLACE(REPLACE(REPLACE(REPLACE(LOWER(address), ' ', ''), '（', ''), '）', ''), ',', '') = REPLACE(REPLACE(REPLACE(REPLACE(LOWER($2), ' ', ''), '（', ''), '）', ''), ',', '')
+             ${cityCondAddr}
            LIMIT 5`,
-          [dto.sportType, dto.address]
+          addrParams
         )
         if (byAddr && byAddr.length > 0) return hit(byAddr, '同地址')
       }

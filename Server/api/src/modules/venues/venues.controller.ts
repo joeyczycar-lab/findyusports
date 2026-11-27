@@ -26,6 +26,13 @@ export class VenuesController {
     return this.venuesService.listDuplicates({ sport, minCount: Number(minCount || 2) })
   }
 
+  // 管理员批量导入（类级 JwtAuthGuard 已要求登录，service 内再校验 role=admin）
+  @Post('admin/bulk-import')
+  async bulkImport(@Body() body: any, @CurrentUser() user: any) {
+    const rows: any[] = Array.isArray(body?.rows) ? body.rows : []
+    return this.venuesService.bulkImportVenues(rows, user)
+  }
+
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
   @Post('check-duplicate')
