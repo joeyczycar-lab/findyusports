@@ -1,0 +1,11 @@
+name,sportType,cityCode,districtCode,address,lng,lat,priceMin,priceMax,priceDisplay,supportsWalkIn,walkInPriceDisplay,supportsFullCourt,fullCourtPriceDisplay,indoor,contact,requiresReservation,reservationMethod,isPublic,courtCount,floorType,playersPerSide,openHours,hasLighting,hasAirConditioning,hasParking,hasFence,hasRestArea,hasShower,hasLocker,hasShop
+文博体育公园五人制足球场,football,410300,410311,文博体育公园内五人制足球场,112.441375,34.642825,,,参考人均19元,,,,,,,,,true,,,5人制,08:00-22:30,,,,,,,,
+洛阳豪门足球俱乐部,football,410300,410305,芳菲路14号,112.400186,34.68093,,,,,,,,,13673791161,,,true,,,5人制、7人制,09:00-21:00,,,,,,,,
+洛阳文博体育公园-足球场,football,410300,410311,滨河南路洛阳文博体育公园(东北角),112.445825,34.647775,,,,,,,,,,,,true,,,5人制、7人制,周一至周日 00:00-24:00,,,,,,,,
+九粮酒业五人制足球场,football,410300,410311,开元大道333号,112.38215,34.586023,,,,,,,,,13937989598,,,true,,,5人制,09:00-22:00,,,,,,,,
+洛阳森阳足球俱乐部,football,410300,410311,滨河南路文博体育公园(文博园地铁站B2口步行360米),112.444425,34.645525,,,,,,,,,,,,true,,,5人制、7人制,08:30-21:00,,,,,,,,
+锦台游园五人制足球场,football,410300,410311,锦台广场内(西侧),112.466907,34.596512,,,,,,,,,,,,true,,,5人制,,,,,,,,,
+洛阳毅辰足球公园,football,410300,410305,凌波游园,112.378744,34.6127,,,,,,,,,18638811101,,,true,,,5人制、7人制,,,,,,,,,
+洛阳印客足球俱乐部,football,410300,410305,滨河北路66号,112.362289,34.598171,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
+大同坊游园足球场,football,410300,410311,聂泰路大同坊游园内(南侧),112.458525,34.637675,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
+磨沟足球场,football,410300,410328,,111.633098,34.405623,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
