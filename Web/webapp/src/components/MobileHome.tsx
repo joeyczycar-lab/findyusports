@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ChevronRight, Filter } from 'lucide-react'
 import TicketBannerMobile from '@/components/TicketBannerMobile'
+import { fallbackImage } from '@/lib/placeholder'
 
 type Venue = {
   id: string
@@ -80,17 +81,16 @@ export default function MobileHome({
                 className="shrink-0 w-[280px] rounded-lg overflow-hidden bg-gray-100 block"
               >
                 <div className="relative h-[180px] bg-gray-200">
-                  {venue.firstImage ? (
-                    <img
-                      src={venue.firstImage}
-                      alt={venue.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
-                      {venue.sportType === 'basketball' ? '⚽' : '⚽'}
-                    </div>
-                  )}
+                  <img
+                    src={venue.firstImage || fallbackImage(venue.sportType)}
+                    alt={venue.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const t = e.target as HTMLImageElement
+                      const fb = fallbackImage(venue.sportType)
+                      if (!t.src.endsWith(fb)) t.src = fb
+                    }}
+                  />
                   <div
                     className="absolute inset-0 flex items-end p-3"
                     style={{

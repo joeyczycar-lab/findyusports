@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getApiBase } from '@/lib/api'
+import { fallbackImage } from '@/lib/placeholder'
 import TicketBanner from '@/components/TicketBanner'
 import HeroSearch from '@/components/HeroSearch'
 import MobileHome from '@/components/MobileHome'
@@ -293,20 +294,19 @@ export default async function HomePage() {
                 <Link key={venue.id} href={`/venues/${venue.id}`} className="group relative bg-white overflow-hidden" style={{ borderRadius: '4px' }}>
                   {/* 大图展示 */}
                   <div className="relative h-[400px] bg-gray-100 overflow-hidden">
-                    {firstImage ? (
-                      <img 
-                        src={firstImage} 
-                        alt={venue.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading={isAboveFold ? 'eager' : 'lazy'}
-                        decoding="async"
-                        fetchPriority={isAboveFold ? 'high' : undefined}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-textMuted text-6xl">
-                        {venue.sportType === 'basketball' ? '⚽' : '⚽'}
-                      </div>
-                    )}
+                    <img
+                      src={firstImage || fallbackImage(venue.sportType)}
+                      alt={venue.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading={isAboveFold ? 'eager' : 'lazy'}
+                      decoding="async"
+                      fetchPriority={isAboveFold ? 'high' : undefined}
+                      onError={(e) => {
+                        const t = e.target as HTMLImageElement
+                        const fb = fallbackImage(venue.sportType)
+                        if (!t.src.endsWith(fb)) t.src = fb
+                      }}
+                    />
                     {/* Nike 风格：白色按钮覆盖在图片左下角 */}
                     <div className="absolute bottom-6 left-6">
                       <div className="bg-white text-black px-6 py-3 text-sm font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors inline-flex items-center justify-center shadow-lg" style={{ borderRadius: '4px' }}>
@@ -351,18 +351,17 @@ export default async function HomePage() {
                 return (
                   <Link key={venue.id} href={`/venues/${venue.id}`} className="group relative bg-white overflow-hidden" style={{ borderRadius: '4px' }}>
                     <div className="relative h-[320px] bg-gray-100 overflow-hidden">
-                      {firstImage ? (
-                        <img 
-                          src={firstImage} 
-                          alt={venue.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-textMuted text-5xl">
-                          ⚽
-                        </div>
-                      )}
+                      <img
+                        src={firstImage || fallbackImage('basketball')}
+                        alt={venue.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          const t = e.target as HTMLImageElement
+                          const fb = fallbackImage('basketball')
+                          if (!t.src.endsWith(fb)) t.src = fb
+                        }}
+                      />
                       {/* Nike 风格：白色按钮 */}
                       <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors inline-flex items-center justify-center shadow-lg" style={{ borderRadius: '4px' }}>
@@ -404,18 +403,17 @@ export default async function HomePage() {
                 return (
                   <Link key={venue.id} href={`/venues/${venue.id}`} className="group relative bg-white overflow-hidden" style={{ borderRadius: '4px' }}>
                     <div className="relative h-[320px] bg-gray-100 overflow-hidden">
-                      {firstImage ? (
-                        <img 
-                          src={firstImage} 
-                          alt={venue.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-textMuted text-5xl">
-                          ⚽
-                        </div>
-                      )}
+                      <img
+                        src={firstImage || fallbackImage('football')}
+                        alt={venue.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          const t = e.target as HTMLImageElement
+                          const fb = fallbackImage('football')
+                          if (!t.src.endsWith(fb)) t.src = fb
+                        }}
+                      />
                       {/* Nike 风格：白色按钮 */}
                       <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-gray-100 transition-colors inline-flex items-center justify-center shadow-lg" style={{ borderRadius: '4px' }}>

@@ -3,6 +3,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { fetchJson } from '@/lib/api'
+import { fallbackImage } from '@/lib/placeholder'
 import FiltersBar, { Filters } from '@/components/FiltersBar'
 
 // 强制动态渲染，避免静态生成问题
@@ -300,29 +301,17 @@ function MapPageContent() {
               >
                 {/* 图片区域 */}
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
-                  {venue.firstImage ? (
-                    <img
-                      src={venue.firstImage}
-                      alt={venue.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = 'none'
-                        const parent = target.parentElement
-                        if (parent && !parent.querySelector('.fallback-icon')) {
-                          const fallback = document.createElement('div')
-                          fallback.className = 'fallback-icon w-full h-full flex items-center justify-center text-textMuted text-4xl absolute inset-0'
-                          fallback.textContent = venue.sportType === 'basketball' ? '🏀' : '⚽'
-                          parent.appendChild(fallback)
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-textMuted text-4xl">
-                      {venue.sportType === 'basketball' ? '🏀' : '⚽'}
-                    </div>
-                  )}
+                  <img
+                    src={venue.firstImage || fallbackImage(venue.sportType)}
+                    alt={venue.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      const fb = fallbackImage(venue.sportType)
+                      if (!target.src.endsWith(fb)) target.src = fb
+                    }}
+                  />
                 </div>
 
                 {/* 内容区域 */}
