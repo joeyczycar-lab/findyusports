@@ -84,6 +84,70 @@ async function fetchPage(keyword: string, cityCode: string, page: number): Promi
   return (data.pois || []) as Poi[]
 }
 
+/** 对缺电话/营业时间/人均的 POI，分批调 v5 详情回填 business 字段 */
+async function enrichFromDetail(pois: Poi[]): Promise<void> {
+  const need = pois.filter(
+    (p) => !normTel(p.tel) || !cleanOpenHours(p.biz_ext) || !s(p.biz_ext?.cost),
+  )
+  if (need.length === 0) return
+  console.log(`  🔎 v5 详情回填 ${need.length} 条缺失字段...`)
+  for (let i = 0; i < need.length; i += 10) {
+    const batch = need.slice(i, i + 10)
+    const ids = batch.map((p) => p.id).join('|')
+    const url = `https://restapi.amap.com/v5/place/detail?key=${KEY}&id=${ids}&show_fields=business`
+    try {
+      const res = await fetch(url)
+      const data = await res.json()
+      for (const d of data.pois || []) {
+        const poi = pois.find((p) => p.id === d.id)
+        if (!poi) continue
+        const b = d.business || {}
+        if (!normTel(poi.tel) && b.tel) poi.tel = b.tel
+        poi.biz_ext = poi.biz_ext || {}
+        if (!s(poi.biz_ext.cost) && b.cost) poi.biz_ext.cost = b.cost
+        if (!cleanOpenHours(poi.biz_ext) && (b.opentime_week || b.opentime_today)) {
+          poi.biz_ext.opentime2 = b.opentime_week || ''
+          poi.biz_ext.open_time = b.opentime_today || ''
+        }
+      }
+    } catch (e) {
+      console.warn('  ⚠️ v5 回填批次失败:', e instanceof Error ? e.message : String(e))
+    }
+    await new Promise((r) => setTimeout(r, 150))
+  }
+}
+
+// ---- 高置信推断（仅名称/地址明确命中时填，否则留空，不编造） ----
+function inferIndoor(name: string, addr: string): string {
+  const t = `${name} ${addr}`
+  if (/室内/.test(t)) return 'true'
+  if (/露天|室外|户外/.test(t)) return 'false'
+  return ''
+}
+
+function inferCourtCount(name: string): string {
+  const m = name.match(/(\d+)\s*(?:片|块|个)\s*(?:篮球|足球)?场/)
+  return m ? m[1] : ''
+}
+
+function inferFloor(name: string, addr: string): string {
+  const t = `${name} ${addr}`
+  if (/木地板/.test(t)) return '木地板'
+  if (/塑胶/.test(t)) return '塑胶'
+  if (/人工草皮|人工草|天然草|草皮/.test(t)) return '人工草皮'
+  if (/水泥/.test(t)) return '水泥'
+  return ''
+}
+
+function inferPlayers(name: string, sport: 'basketball' | 'football'): string {
+  if (sport !== 'football') return ''
+  const arr: string[] = []
+  if (/十一|11人/.test(name)) arr.push('11人制')
+  if (/七人|7人/.test(name)) arr.push('7人制')
+  if (/五人|5人/.test(name)) arr.push('5人制')
+  return arr.length ? arr.join('、') : '5人制、7人制'
+}
+
 async function collect(cityCode: string, sport: 'basketball' | 'football'): Promise<Poi[]> {
   const seen = new Map<string, Poi>()
   for (const kw of KEYWORDS[sport]) {
@@ -150,14 +214,14 @@ function toCsvRow(poi: Poi, sport: 'basketball' | 'football', cityCode: string):
     walkInPriceDisplay: '',
     supportsFullCourt: '',
     fullCourtPriceDisplay: '',
-    indoor: '',
+    indoor: inferIndoor(poi.name, address),
     contact: normTel(poi.tel),
     requiresReservation: '',
     reservationMethod: '',
     isPublic: 'true',
-    courtCount: '',
-    floorType: '',
-    playersPerSide: sport === 'football' ? '5人制、7人制' : '',
+    courtCount: inferCourtCount(poi.name),
+    floorType: inferFloor(poi.name, address),
+    playersPerSide: inferPlayers(poi.name, sport),
     openHours,
     hasLighting: '',
     hasAirConditioning: '',
@@ -189,6 +253,7 @@ async function main() {
 
   for (const sport of sports) {
     const pois = await collect(cityCode, sport)
+    await enrichFromDetail(pois)
     console.log(`\n📌 ${cityCode} ${sport}: 过滤后 ${pois.length} 条`)
     pois.slice(0, 60).forEach((p) => console.log(`  - ${p.name} | ${p.address} | ${normTel(p.tel) || '无电话'}`))
 
