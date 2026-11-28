@@ -1137,7 +1137,7 @@ export class VenuesService {
       hasCreatedByUserId = false
     }
 
-    const success: { id: string; name: string; image: boolean }[] = []
+    const success: { id: string; name: string; image: boolean; imageReason?: string }[] = []
     const skipped: { name: string; reason: string }[] = []
 
     for (const raw of rows) {
@@ -1178,15 +1178,20 @@ export class VenuesService {
       }
 
       let imageOk = false
-      if (dto.firstImage) {
+      let imageReason: string | undefined
+      if (!dto.firstImage) {
+        imageReason = '无首图'
+      } else {
         try {
           const img = await this.addImage(Number(created.id), dto.firstImage, 0, 1)
           imageOk = !(img && img.error)
+          if (!imageOk) imageReason = img?.error?.message || '挂图返回错误'
         } catch (e: any) {
-          console.warn(`⚠️ 首图挂载失败 ${created.id}:`, e instanceof Error ? e.message : String(e))
+          imageReason = e instanceof Error ? e.message : String(e)
+          console.warn(`⚠️ 首图挂载失败 ${created.id}:`, imageReason)
         }
       }
-      success.push({ id: String(created.id), name: created.name, image: imageOk })
+      success.push({ id: String(created.id), name: created.name, image: imageOk, imageReason })
     }
 
     return {

@@ -346,6 +346,13 @@ export default function DataViewPage() {
                 {importReport.successList?.length > 0 && (
                   <div className="mt-3 text-body-sm text-textSecondary">
                     已入库 {importReport.successList.length} 条，其中挂载首图 {importReport.successList.filter((x: any) => x.image).length} 条。
+                    {importReport.successList.some((x: any) => !x.image) && (
+                      <ul className="list-disc list-inside mt-2 space-y-1 max-h-40 overflow-y-auto">
+                        {importReport.successList.filter((x: any) => !x.image).map((x: any, i: number) => (
+                          <li key={i}>{x.name} — {x.imageReason || '未挂图'}</li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </div>

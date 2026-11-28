@@ -174,3 +174,44 @@ export async function GET(
   }
 }
 
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const apiBase = getApiBase()
+    const venueId = params.id
+    const body = await req.json().catch(() => ({}))
+
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    const xAuthToken = req.headers.get('x-auth-token') || req.headers.get('X-Auth-Token')
+    const headers: HeadersInit = { 'Content-Type': 'application/json' }
+    if (authHeader) headers['Authorization'] = authHeader
+    if (xAuthToken) headers['X-Auth-Token'] = xAuthToken
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+
+    const res = await fetch(`${apiBase}/venues/${venueId}/images`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    const text = await res.text()
+    return new Response(text, {
+      status: res.status,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  } catch (error: any) {
+    const message = error?.name === 'AbortError' ? '挂图请求超时，请稍后重试' : error instanceof Error ? error.message : '上传图片失败'
+    return Response.json(
+      { error: { code: 'InternalServerError', message } },
+      { status: 500 }
+    )
+  }
+}
+
