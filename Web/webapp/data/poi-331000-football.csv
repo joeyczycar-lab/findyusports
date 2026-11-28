@@ -1,0 +1,10 @@
+name,sportType,cityCode,districtCode,address,lng,lat,priceMin,priceMax,priceDisplay,supportsWalkIn,walkInPriceDisplay,supportsFullCourt,fullCourtPriceDisplay,indoor,contact,requiresReservation,reservationMethod,isPublic,courtCount,floorType,playersPerSide,openHours,hasLighting,hasAirConditioning,hasParking,hasFence,hasRestArea,hasShower,hasLocker,hasShop
+心海足球公园,football,331000,331002,洪家街道中心大道辅路原上徐村临时房,121.409848,28.632583,,,,,,,,,18358693666,,,true,,,5人制、7人制,07:00-23:00,,,,,,,,
+双一足球俱乐部,football,331000,331082,杜桥镇礁坑村,121.503857,28.774598,,,,,,,,,,,,true,,,5人制、7人制,10:00-20:30,,,,,,,,
+始丰湖力天足球场,football,331000,331023,始丰湖公园(西南角),120.99849,29.135218,,,,,,,,,,,,true,,,5人制、7人制,08:00-23:00,,,,,,,,
+威炫足球公园,football,331000,331082,五家殿村2-27号(近开发大道),121.161509,28.86904,,,,,,,,,13634080417,,,true,,,5人制、7人制,,,,,,,,,
+苍山村笼式足球场,football,331000,331081,淋石路39号,121.577146,28.33362,,,,,,,,,,,,true,,,5人制、7人制,周一至周日 00:00-24:00,,,,,,,,
+龙溪桥下体育空间足球场,football,331000,331083,龙翔南路与漩栈线交叉口西北240米,121.313729,28.185145,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
+鸵鸟足球俱乐部,football,331000,331082,下桥路与荷花路交叉口东40米,121.129003,28.83812,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
+大屿足球俱乐部,football,331000,331083,榴岛大道与长康路交叉口东北260米,121.241075,28.125175,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
+台州城熠足球俱乐部,football,331000,331002,上椒线与机场路交叉口西440米,121.443225,28.609475,,,,,,,,,,,,true,,,5人制、7人制,,,,,,,,,
